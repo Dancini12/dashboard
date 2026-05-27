@@ -43,9 +43,9 @@ const INIT_COMM = [
   { id: "ouro", nome: "Ouro", emoji: "🥇", valor: 760.00, un: "R$/Grama", cat: "metal" },
 ];
 const INDICADORES = [
-  { nome: "IPCA", periodo: "Fev/26", valor: "+0,70%", desc: "Inflação oficial (IBGE)" },
-  { nome: "INPC", periodo: "Fev/26", valor: "+0,56%", desc: "Cesta básica (IBGE)" },
-  { nome: "IGP-M", periodo: "Fev/26", valor: "-0,73%", desc: "Aluguéis (FGV)" },
+  { nome: "IPCA", periodo: "", valor: "+0,70%", desc: "Inflação oficial (IBGE)" },
+  { nome: "INPC", periodo: "", valor: "+0,56%", desc: "Cesta básica (IBGE)" },
+  { nome: "IGP-M", periodo: "", valor: "-0,73%", desc: "Aluguéis (FGV)" },
   { nome: "Selic", periodo: "", valor: "14,75% a.a.", desc: "Meta BC" },
   { nome: "CDI", periodo: "", valor: "14,65% a.a.", desc: "Referência renda fixa" },
   { nome: "Poupança", periodo: "", valor: "0,67% a.m.", desc: "0,50% + TR" },
@@ -176,7 +176,7 @@ function PainelTab({ moedas, acoes, indices, comm, pm, pa, pi, pc, flash }) {
           <div>
             <div className="flex items-center gap-1.5 mb-0.5"><Wheat size={14} color="#fbbf24" /><span style={{ fontSize: 10, color: "#fbbf24", fontWeight: 700, letterSpacing: 1, textTransform: "uppercase" }}>Informativo Diário</span></div>
             <h1 className="text-base font-bold text-white">Mercado Agrícola</h1>
-            <div className="text-xs mt-0.5" style={{ color: "rgba(255,255,255,0.55)" }}>Santa Mariana, PR • Docente: <strong style={{ color: "rgba(255,255,255,0.8)" }}>Marcel Dancini Rodrigues</strong> • 06/05/2026</div>
+            <div className="text-xs mt-0.5" style={{ color: "rgba(255,255,255,0.55)" }}>Santa Mariana, PR • Docente: <strong style={{ color: "rgba(255,255,255,0.8)" }}>Marcel Dancini Rodrigues</strong> • {new Date().toLocaleDateString("pt-BR")}</div>
           </div>
         </div>
       </div>

@@ -241,12 +241,15 @@ function NewsCard({ item, cor }) {
   );
 }
 
+const NEWS_INTERVAL = 5 * 60;
+
 function NoticiasTab() {
   const [feed, setFeed] = useState("agro");
   const [news, setNews] = useState({ agro: [], mercado: [] });
   const [loading, setLoading] = useState(true);
   const [lastUpdate, setLastUpdate] = useState(null);
   const [hasError, setHasError] = useState(false);
+  const [cd, setCd] = useState(NEWS_INTERVAL);
 
   const fetchNews = useCallback(async () => {
     setLoading(true);
@@ -263,20 +266,45 @@ function NoticiasTab() {
       setLastUpdate(new Date());
     } catch (_) { setHasError(true); }
     setLoading(false);
+    setCd(NEWS_INTERVAL);
   }, []);
 
   useEffect(() => {
     fetchNews();
-    const t = setInterval(fetchNews, 15 * 60 * 1000);
+  }, [fetchNews]);
+
+  useEffect(() => {
+    const t = setInterval(() => {
+      setCd(prev => {
+        if (prev <= 1) { setTimeout(() => fetchNews(), 0); return NEWS_INTERVAL; }
+        return prev - 1;
+      });
+    }, 1000);
     return () => clearInterval(t);
   }, [fetchNews]);
 
   const cfg = NEWS_FEEDS[feed];
   const items = news[feed];
+  const pct = ((NEWS_INTERVAL - cd) / NEWS_INTERVAL) * 100;
+  const mm = Math.floor(cd / 60), ss = cd % 60;
 
   return (
     <div className="space-y-3">
       <Card className="p-3">
+        <div className="flex items-center gap-2 mb-2">
+          <Newspaper size={13} style={{ color: "#166534" }} />
+          <div className="flex-1">
+            <div className="h-2 rounded-full overflow-hidden" style={{ background: "#e5e7eb" }}>
+              <div className="h-full rounded-full transition-all duration-1000" style={{ width: `${pct}%`, background: "#22c55e" }} />
+            </div>
+          </div>
+          <span className="font-mono font-bold px-2 py-0.5 rounded text-xs" style={{ background: "#f0fdf4", color: "#166534" }}>
+            {String(mm).padStart(2, "0")}:{String(ss).padStart(2, "0")}
+          </span>
+          <button onClick={fetchNews} title="Atualizar agora" className="p-1 rounded-md" style={{ background: "#f1f5f9" }}>
+            <RefreshCw size={12} style={{ animation: loading ? "spin 1s linear infinite" : "none" }} />
+          </button>
+        </div>
         <div className="flex items-center justify-between">
           <div className="flex gap-2">
             {Object.entries(NEWS_FEEDS).map(([k, v]) => (
@@ -287,15 +315,12 @@ function NoticiasTab() {
               </button>
             ))}
           </div>
-          <button onClick={fetchNews} title="Atualizar" className="p-1.5 rounded-lg" style={{ background: "#f1f5f9" }}>
-            <RefreshCw size={12} style={{ animation: loading ? "spin 1s linear infinite" : "none" }} />
-          </button>
+          {lastUpdate && (
+            <span className="text-xs opacity-30">
+              {lastUpdate.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
+            </span>
+          )}
         </div>
-        {lastUpdate && (
-          <div className="text-xs opacity-30 mt-2">
-            Atualizado às {lastUpdate.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })} · atualiza a cada 15 min
-          </div>
-        )}
       </Card>
 
       {loading && items.length === 0 ? (

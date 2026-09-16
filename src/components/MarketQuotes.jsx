@@ -175,7 +175,9 @@ export function CommodityQuotes({ refresh }) {
       const url = `https://www.noticiasagricolas.com.br/widgets/cotacoes?id=${id}&fonte=Arial&largura=100%25`;
       return <article key={id} className="border rounded-lg p-2 min-w-0">
         <h3 className="font-semibold text-sm mb-2">{name} <span className="text-xs text-slate-500">· {market}</span></h3>
-        <iframe key={`${id}-${refresh}`} src={url} title={`Cotação de ${name}`} className="w-full border-0 h-80 bg-white" loading="lazy" />
+        <div className="w-full overflow-x-auto rounded-lg">
+          <iframe key={`${id}-${refresh}`} src={url} title={`Cotação de ${name}`} className="border-0 h-80 bg-white" style={{ width: '100%', minWidth: 480 }} loading="lazy" />
+        </div>
         <a className="text-xs text-blue-800 underline" href={url} target="_blank" rel="noopener noreferrer">Ver cotação na fonte / abrir se a tabela não carregar</a>
       </article>;
     })}</div>

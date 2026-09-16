@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 
-async function fetchMarket(type, symbol = '', signal) {
-  const response = await fetch(`/api/market?${new URLSearchParams({ type, symbol })}`, { signal });
+async function fetchMarket(params, signal) {
+  const response = await fetch(`/api/market?${new URLSearchParams(params)}`, { signal });
   const data = await response.json();
   if (!response.ok) throw new Error(data.error || 'Fonte indisponível.');
   return data;
@@ -14,37 +14,85 @@ function savePreference(key, value) {
   try { localStorage.setItem(key, JSON.stringify(value)); } catch { /* armazenamento opcional */ }
 }
 
+const TICKER_RE = /^[A-Z]{4}\d{1,2}$/;
+
 export function StockQuotes({ refresh }) {
   const [symbol, setSymbol] = useState(() => {
     const saved = readPreference('agroinfo.stock.v1', 'PETR4');
-    return typeof saved === 'string' && /^[A-Z]{4}\d{1,2}$/.test(saved) ? saved : 'PETR4';
+    return typeof saved === 'string' && TICKER_RE.test(saved) ? saved : 'PETR4';
   });
   const [input, setInput] = useState(symbol);
+  const [suggestions, setSuggestions] = useState([]);
+  const [searching, setSearching] = useState(false);
   const [validation, setValidation] = useState('');
   const [retry, setRetry] = useState(0);
   const [state, setState] = useState({});
+
   useEffect(() => {
     const controller = new AbortController();
-    fetchMarket('stock', symbol, controller.signal).then(quote => {
+    fetchMarket({ type: 'stock', symbol }, controller.signal).then(quote => {
       setState({ quote, symbol, error: '' });
     }).catch(error => {
       if (!controller.signal.aborted) setState(previous => ({ ...previous, symbol, error: error.message }));
     });
     return () => controller.abort();
   }, [symbol, refresh, retry]);
+
+  const term = input.trim();
+  const showDropdown = term.length >= 2 && !TICKER_RE.test(term.toUpperCase());
+
+  useEffect(() => {
+    if (!showDropdown) return;
+    const controller = new AbortController();
+    const t = setTimeout(() => {
+      setSearching(true);
+      fetchMarket({ type: 'search', q: term }, controller.signal)
+        .then(data => setSuggestions(data.results || []))
+        .catch(() => { if (!controller.signal.aborted) setSuggestions([]); })
+        .finally(() => setSearching(false));
+    }, 350);
+    return () => { clearTimeout(t); controller.abort(); };
+  }, [term, showDropdown]);
+
+  const pick = (sym, name) => {
+    setSuggestions([]); setValidation('');
+    setInput(name ? `${sym} · ${name}` : sym);
+    setSymbol(sym); setRetry(n => n + 1);
+    savePreference('agroinfo.stock.v1', sym);
+  };
+
   const quote = state.quote?.symbol === symbol ? state.quote : null;
+
   return <section className="rounded-xl border bg-white p-3 shadow-sm">
     <h2 className="text-sm font-bold text-blue-900 mb-3">Consultar ação ou ETF da B3</h2>
     <form onSubmit={event => {
       event.preventDefault();
-      const value = input.trim().toUpperCase();
-      if (!/^[A-Z]{4}\d{1,2}$/.test(value)) { setValidation('Use um código como PETR4, VALE3 ou BOVA11.'); return; }
-      setValidation(''); setSymbol(value); setInput(value); setRetry(n => n + 1); savePreference('agroinfo.stock.v1', value);
-    }} className="flex flex-wrap gap-2">
-      <label className="flex-1 min-w-0 text-xs">Código da ação
-        <input className="block w-full border rounded-lg p-2 mt-1 uppercase text-sm" value={input} onChange={e => setInput(e.target.value)} placeholder="Ex.: PETR4" maxLength={12} list="stock-examples" />
+      const raw = input.trim();
+      const upper = raw.toUpperCase();
+      if (TICKER_RE.test(upper)) { pick(upper, ''); return; }
+      if (suggestions.length) { pick(suggestions[0].symbol, suggestions[0].name); return; }
+      setValidation('Digite o nome da empresa (ex.: Petrobras) e escolha uma sugestão, ou informe o código (ex.: PETR4).');
+    }} className="flex flex-wrap gap-2 relative">
+      <label className="flex-1 min-w-0 text-xs">Empresa ou código
+        <input
+          className="block w-full border rounded-lg p-2 mt-1 text-sm"
+          value={input}
+          onChange={e => { setInput(e.target.value); setValidation(''); }}
+          placeholder="Ex.: Petrobras ou PETR4"
+          autoComplete="off"
+        />
+        {showDropdown && (searching || suggestions.length > 0) && (
+          <div className="absolute left-0 right-0 mt-1 bg-white border rounded-lg shadow-md z-10 max-h-56 overflow-auto">
+            {searching && <div className="p-2 text-xs text-slate-500">Buscando…</div>}
+            {!searching && suggestions.map(s => (
+              <button key={s.symbol} type="button" onClick={() => pick(s.symbol, s.name)}
+                className="block w-full text-left px-2 py-1.5 text-xs hover:bg-blue-50 border-b last:border-b-0">
+                <span className="font-bold">{s.symbol}</span> · {s.name}
+              </button>
+            ))}
+          </div>
+        )}
       </label>
-      <datalist id="stock-examples">{['PETR4', 'VALE3', 'ITUB4', 'MGLU3', 'BBAS3', 'BOVA11'].map(code => <option key={code} value={code} />)}</datalist>
       <button className="self-end rounded-lg bg-blue-900 text-white p-2 text-sm" type="submit">Consultar</button>
     </form>
     <div aria-live="polite" className="mt-3 text-sm">
@@ -58,7 +106,7 @@ export function StockQuotes({ refresh }) {
         <p className="text-xs text-slate-600">{quote.source} · Cotação de {new Date(quote.date).toLocaleString('pt-BR')}</p>
       </div>}
     </div>
-    <p className="mt-2 text-xs text-slate-500">Cotações podem ter atraso. A disponibilidade de cada ativo depende do acesso à fonte.</p>
+    <p className="mt-2 text-xs text-slate-500">Digite o nome da empresa e escolha uma sugestão da lista, ou informe o código diretamente.</p>
   </section>;
 }
 
@@ -81,13 +129,37 @@ export function CommodityQuotes({ refresh }) {
     return Array.isArray(saved) ? saved.filter(id => COMMODITIES.some(row => row[0] === id)) : ['26', '23'];
   });
   const [search, setSearch] = useState('');
-  const normalize = value => value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+  const [notFound, setNotFound] = useState(false);
+  const normalize = value => value.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+
+  const addFirstMatch = () => {
+    const term = search.trim();
+    if (!term) return;
+    const match = COMMODITIES.find(row => normalize(row[1]).includes(normalize(term)));
+    if (!match) { setNotFound(true); return; }
+    if (!selected.includes(match[0])) {
+      const next = [...selected, match[0]];
+      setSelected(next); savePreference('agroinfo.commodities.v1', next);
+    }
+    setSearch(''); setNotFound(false);
+  };
+
   return <section className="rounded-xl border bg-white p-3 shadow-sm">
-    <h2 className="text-sm font-bold text-green-800">Escolha suas commodities</h2>
-    <p className="text-xs text-slate-600 mt-1">Preços no Brasil e contratos internacionais. Confira a unidade, a praça, o vencimento e a data de fechamento em cada tabela.</p>
-    <label className="block text-xs mt-3">Buscar commodity
-      <input className="block border rounded-lg p-2 mt-1 w-full text-sm" placeholder="Ex.: soja, café, Chicago" value={search} onChange={e => setSearch(e.target.value)} />
-    </label>
+    <h2 className="text-sm font-bold text-green-800">Consultar commodity</h2>
+    <p className="text-xs text-slate-600 mt-1">Digite o nome (ex.: soja, café, boi) e aperte Enter ou clique em Adicionar para ver o valor. Também dá pra escolher direto na lista abaixo.</p>
+    <div className="flex gap-2 mt-3">
+      <label className="flex-1 min-w-0 text-xs">Nome da commodity
+        <input
+          className="block border rounded-lg p-2 mt-1 w-full text-sm"
+          placeholder="Ex.: soja, café, Chicago"
+          value={search}
+          onChange={e => { setSearch(e.target.value); setNotFound(false); }}
+          onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addFirstMatch(); } }}
+        />
+      </label>
+      <button type="button" onClick={addFirstMatch} className="self-end rounded-lg bg-green-800 text-white p-2 text-xs font-bold">Adicionar</button>
+    </div>
+    {notFound && <p role="alert" className="text-red-700 text-xs mt-1">Nenhuma commodity encontrada com esse nome. Veja as opções abaixo.</p>}
     {['Brasil', 'Internacional'].map(market => <fieldset key={market} className="mt-3">
       <legend className="font-semibold text-sm">{market}</legend>
       <div className="flex flex-wrap gap-2 mt-1">{COMMODITIES.filter(row => row[2] === market && normalize(row[1]).includes(normalize(search))).map(([id, name]) =>

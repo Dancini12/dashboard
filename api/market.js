@@ -1,6 +1,35 @@
 /* global process */
 export default async function handler(req, res) {
-  const { type, symbol = '' } = req.query ?? {};
+  const { type, symbol = '', q = '' } = req.query ?? {};
+
+  if (type === 'search') {
+    const term = q.trim();
+    if (!term || term.length > 40) {
+      return res.status(400).json({ error: 'Digite ao menos 2 letras do nome da empresa.' });
+    }
+    try {
+      const response = await fetch(`https://brapi.dev/api/quote/list?search=${encodeURIComponent(term)}&limit=15`, {
+        signal: AbortSignal.timeout(10000),
+      });
+      if (!response.ok) throw new Error('search failed');
+      const data = await response.json();
+      const seen = new Set();
+      const results = (data?.stocks ?? [])
+        .filter(item => item.stock && !item.stock.endsWith('F'))
+        .filter(item => {
+          if (seen.has(item.stock)) return false;
+          seen.add(item.stock);
+          return true;
+        })
+        .slice(0, 6)
+        .map(item => ({ symbol: item.stock, name: item.name }));
+      res.setHeader('Cache-Control', 's-maxage=300, stale-while-revalidate=60');
+      return res.status(200).json({ results });
+    } catch {
+      return res.status(502).json({ error: 'Busca indisponível. Tente novamente.' });
+    }
+  }
+
   if (type !== 'selic' && (type !== 'stock' || !/^[A-Z]{4}[0-9]{1,2}$/.test(symbol))) {
     return res.status(400).json({ error: 'Informe um código válido, como PETR4 ou BOVA11.' });
   }

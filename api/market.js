@@ -53,12 +53,17 @@ export default async function handler(req, res) {
         signal: AbortSignal.timeout(12000),
         headers: { 'User-Agent': BROWSER_UA },
       });
-      if (!response.ok) throw new Error('widget fetch failed');
-      const parsed = parseCommodityWidget(await response.text());
-      if (!parsed) return res.status(502).json({ error: 'Fonte indisponível ou tabela em formato inesperado.' });
+      if (!response.ok) throw new Error(`widget fetch failed: ${response.status}`);
+      const bodyText = await response.text();
+      const parsed = parseCommodityWidget(bodyText);
+      if (!parsed) {
+        console.error('commodity parse failed', id, bodyText.slice(0, 500));
+        return res.status(502).json({ error: 'Fonte indisponível ou tabela em formato inesperado.' });
+      }
       res.setHeader('Cache-Control', 's-maxage=300, stale-while-revalidate=120');
       return res.status(200).json(parsed);
-    } catch {
+    } catch (e) {
+      console.error('commodity fetch error', id, e?.message || e);
       return res.status(502).json({ error: 'Não foi possível obter a cotação. Tente novamente.' });
     }
   }

@@ -1,10 +1,10 @@
+import { StockQuotes, CommodityQuotes } from "./components/MarketQuotes";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Area, AreaChart } from "recharts";
 import { RefreshCw, BookOpen, BarChart3, Clock, Wheat, DollarSign, Activity, ChevronDown, ChevronUp, Timer, ArrowRight, Pause, Play, Newspaper, ExternalLink } from "lucide-react";
 
 const UPDATE_SEC = 60;
 const API_MOEDAS_URL = "https://economia.awesomeapi.com.br/json/last/USD-BRL,EUR-BRL,GBP-BRL,ARS-BRL";
-const API_ACOES_URL = "https://brapi.dev/api/quote/PETR4,VALE3,%5EBVSP";
 const TABS = ["painel", "noticias", "historico", "graficos", "glossario"];
 const TAB_LABELS = { painel: "Painel", noticias: "Notícias", historico: "Histórico", graficos: "Gráficos", glossario: "Glossário" };
 const TAB_ICONS = { painel: Activity, noticias: Newspaper, historico: Clock, graficos: BarChart3, glossario: BookOpen };
@@ -16,37 +16,11 @@ const INIT_MOEDAS = [
   { id: "gbp", nome: "Libra Esterlina", emoji: "💷", valor: 6.698, var: -0.38 },
   { id: "ars", nome: "Peso Argentino", emoji: "💴", valor: 0.004, var: 0.12 },
 ];
-const INIT_ACOES = [
-  { id: "petr4", nome: "PETR4", sub: "Petrobras", emoji: "⛽", valor: 49.34, var: 0.25 },
-  { id: "vale3", nome: "VALE3", sub: "Vale", emoji: "⛏️", valor: 54.80, var: -0.45 },
-];
-const INIT_INDICES = [
-  { id: "ibov", nome: "Ibovespa", emoji: "🇧🇷", valor: 186754, var: 0.62 },
-  { id: "sp500", nome: "S&P 500", emoji: "🇺🇸", valor: 7259, var: 0.81 },
-];
-const INIT_COMM = [
-  { id: "boi", nome: "Boi Gordo", emoji: "🐂", valor: 354.20, un: "R$/@", cat: "pecuaria" },
-  { id: "suino", nome: "Suíno Vivo", emoji: "🐖", valor: 7.12, un: "R$/Kg", cat: "pecuaria" },
-  { id: "milho", nome: "Milho", emoji: "🌽", valor: 67.53, un: "R$/Saca", cat: "graos" },
-  { id: "soja", nome: "Soja", emoji: "🌱", valor: 122.50, un: "R$/Saca", cat: "graos" },
-  { id: "feijao", nome: "Feijão", emoji: "🥔", valor: 355.00, un: "R$/Saca", cat: "graos" },
-  { id: "cana_pr", nome: "Cana (PR)", emoji: "🎋", valor: 130.50, un: "R$/Ton", cat: "outros" },
-  { id: "cana_sp", nome: "Cana (SP)", emoji: "🎋", valor: 160.00, un: "R$/Ton", cat: "outros" },
-  { id: "trigo", nome: "Trigo", emoji: "🌾", valor: 1280.00, un: "R$/Ton", cat: "graos" },
-  { id: "cafe", nome: "Café Arábica", emoji: "☕", valor: 1820.00, un: "R$/Saca", cat: "outros" },
-  { id: "leite_pr", nome: "Leite (PR)", emoji: "🥛", valor: 2.25, un: "R$/Litro", cat: "pecuaria" },
-  { id: "leite_sp", nome: "Leite (SP)", emoji: "🥛", valor: 2.40, un: "R$/Litro", cat: "pecuaria" },
-  { id: "laranja", nome: "Laranja", emoji: "🍊", valor: 33.50, un: "R$/Cx 40,8Kg", cat: "frutas" },
-  { id: "abacate", nome: "Abacate", emoji: "🥑", valor: 32.00, un: "R$/Cx 20Kg", cat: "frutas" },
-  { id: "tomate", nome: "Tomate", emoji: "🍅", valor: 4.25, un: "R$/Kg", cat: "hortifruti" },
-  { id: "pepino", nome: "Pepino", emoji: "🥒", valor: 55.00, un: "R$/Cx 22Kg", cat: "hortifruti" },
-  { id: "ouro", nome: "Ouro", emoji: "🥇", valor: 760.00, un: "R$/Grama", cat: "metal" },
-];
 const INDICADORES = [
   { nome: "IPCA", periodo: "", valor: "+0,70%", desc: "Inflação oficial (IBGE)" },
   { nome: "INPC", periodo: "", valor: "+0,56%", desc: "Cesta básica (IBGE)" },
   { nome: "IGP-M", periodo: "", valor: "-0,73%", desc: "Aluguéis (FGV)" },
-  { nome: "Selic", periodo: "", valor: "14,75% a.a.", desc: "Meta BC" },
+  { nome: "Selic", periodo: "", valor: "Carregando…", desc: "Meta BC" },
   { nome: "CDI", periodo: "", valor: "14,65% a.a.", desc: "Referência renda fixa" },
   { nome: "Poupança", periodo: "", valor: "0,67% a.m.", desc: "0,50% + TR" },
 ];
@@ -69,29 +43,6 @@ const GLOSSARIO = [
   { termo: "Hedge", def: "Proteção contra variação de preço. Produtor trava preço futuro na bolsa.", icon: "🛡️" },
   { termo: "Volatilidade", def: "Grau de oscilação dos preços. Café arábica é muito volátil.", icon: "⚡" },
 ];
-const NEWS_LINKS = [
-  { secao: "agro", titulo: "🌾 NOTÍCIAS DO AGRONEGÓCIO", cor: "#166534", bg: "#f0fdf4", items: [
-    { nome: "Google News — Agronegócio", url: "https://news.google.com/search?q=agronegócio+brasil&hl=pt-BR&gl=BR&ceid=BR:pt-419", icon: "📰" },
-    { nome: "AgroTimes — MoneyTimes", url: "https://www.moneytimes.com.br/agrotimes/", icon: "🌾" },
-    { nome: "Canal Rural", url: "https://www.canalrural.com.br", icon: "📺" },
-    { nome: "Notícias Agrícolas", url: "https://www.noticiasagricolas.com.br", icon: "📊" },
-    { nome: "CEPEA/ESALQ", url: "https://www.cepea.org.br", icon: "🎓" },
-    { nome: "Farmnews", url: "https://www.farmnews.com.br", icon: "📈" },
-  ]},
-  { secao: "mercado", titulo: "💰 MERCADO & ECONOMIA", cor: "#1a5276", bg: "#f0f7ff", items: [
-    { nome: "Google News — Economia", url: "https://news.google.com/search?q=economia+brasil+selic+dólar&hl=pt-BR&gl=BR&ceid=BR:pt-419", icon: "🏛️" },
-    { nome: "MoneyTimes", url: "https://www.moneytimes.com.br/", icon: "💰" },
-    { nome: "Google News — Dólar", url: "https://news.google.com/search?q=dólar+cotação+hoje&hl=pt-BR&gl=BR&ceid=BR:pt-419", icon: "💵" },
-    { nome: "Google News — Petróleo", url: "https://news.google.com/search?q=petróleo+brent+diesel&hl=pt-BR&gl=BR&ceid=BR:pt-419", icon: "🛢️" },
-  ]},
-  { secao: "clima", titulo: "🌤️ CLIMA — SANTA MARIANA", cor: "#1e40af", bg: "#dbeafe", items: [
-    { nome: "IPMET Radar", url: "https://www.ipmetradar.com.br/2prevcid.php", icon: "📡" },
-    { nome: "Climatempo — 15 dias", url: "https://www.climatempo.com.br/previsao-do-tempo/15-dias/cidade/2906/santamariana-pr", icon: "🌡️" },
-    { nome: "Climatempo — Agora", url: "https://www.climatempo.com.br/previsao-do-tempo/agora/cidade/2906/santamariana-pr", icon: "⏱️" },
-    { nome: "CPTEC/INPE", url: "http://tempo.cptec.inpe.br/cidades/tempo/4614", icon: "🛰️" },
-  ]},
-];
-
 const fmt = (v, d = 2) => v.toLocaleString("pt-BR", { minimumFractionDigits: d, maximumFractionDigits: d });
 const fmtInt = (v) => v.toLocaleString("pt-BR");
 const simVar = (val, pct = 0.4) => parseFloat((val + val * (Math.random() * pct * 2 - pct) / 100).toFixed(val < 1 ? 4 : 2));
@@ -125,26 +76,6 @@ function PriceRow({ emoji, nome, sub, valor, prev, varPct, unidade, flash, alt }
   );
 }
 
-function CommCard({ item, prev, flash, idx }) {
-  const diff = prev != null ? item.valor - prev : 0;
-  const up = diff >= 0;
-  const changed = prev != null && Math.abs(diff) > 0.001;
-  const dec = item.valor < 1 ? 4 : 2;
-  return (
-    <div className="flex items-center justify-between py-2 px-3 rounded-lg border transition-all duration-700" style={{ borderColor: flash ? (up ? "#86efac" : "#fca5a5") : "#e5e7eb", background: flash ? (up ? "rgba(34,197,94,0.1)" : "rgba(239,68,68,0.1)") : idx % 2 === 0 ? "#f0fdf4" : "#fff" }}>
-      <div className="flex items-center gap-1.5"><span className="text-base">{item.emoji}</span><span className="text-sm font-semibold">{item.nome}</span></div>
-      <div className="text-right">
-        <div className="flex items-center gap-1.5 justify-end">
-          {changed && <span className="text-xs line-through opacity-25 hidden sm:inline">{fmt(prev, dec)}</span>}
-          <span className="text-sm font-bold" style={{ color: "#166534" }}>R$ {fmt(item.valor, dec)}</span>
-          {changed && <span className="font-bold" style={{ color: up ? "#16a34a" : "#dc2626", fontSize: 10 }}>{up ? "▲" : "▼"}</span>}
-        </div>
-        <div className="text-xs opacity-40">{item.un}</div>
-      </div>
-    </div>
-  );
-}
-
 function CountdownBar({ sec, total, paused, onToggle, onRefresh, count, last, source }) {
   const pct = ((total - sec) / total) * 100;
   const m = Math.floor(sec / 60), s = sec % 60;
@@ -154,18 +85,19 @@ function CountdownBar({ sec, total, paused, onToggle, onRefresh, count, last, so
         <Timer size={13} style={{ color: sec <= 10 ? "#dc2626" : "#166534" }} />
         <div className="flex-1"><div className="h-2 rounded-full overflow-hidden" style={{ background: "#e5e7eb" }}><div className="h-full rounded-full transition-all duration-1000" style={{ width: `${pct}%`, background: sec <= 10 ? "#ef4444" : "#22c55e" }} /></div></div>
         <span className="font-mono font-bold px-2 py-0.5 rounded text-xs" style={{ background: sec <= 10 ? "#fef3c7" : "#f0fdf4", color: sec <= 10 ? "#92400e" : "#166534" }}>{String(m).padStart(2, "0")}:{String(s).padStart(2, "0")}</span>
-        <button onClick={onToggle} className="p-1 rounded-md" style={{ background: "#f1f5f9" }}>{paused ? <Play size={12} /> : <Pause size={12} />}</button>
-        <button onClick={onRefresh} className="p-1 rounded-md" style={{ background: "#f1f5f9" }}><RefreshCw size={12} /></button>
+        <button aria-label={paused ? "Retomar atualização" : "Pausar atualização"} onClick={onToggle} className="p-1 rounded-md" style={{ background: "#f1f5f9" }}>{paused ? <Play size={12} /> : <Pause size={12} />}</button>
+        <button aria-label="Atualizar cotações agora" onClick={onRefresh} className="p-1 rounded-md" style={{ background: "#f1f5f9" }}><RefreshCw size={12} /></button>
       </div>
-      <div className="flex justify-between mt-1 text-xs opacity-40"><span>{paused ? "⏸ Pausado" : source === "real" ? "🟢 Moedas/Ações em tempo real — atualiza a cada 60s" : source === "simulado" ? "🟡 API indisponível — usando simulação" : "⏳ Buscando cotações..."}</span><span>Ciclos: {count}{last ? ` • ${last}` : ""}</span></div>
+      <div className="flex justify-between mt-1 text-xs opacity-40"><span>{paused ? "⏸ Pausado" : source === "real" ? "🟢 Consulta automática a cada 60s" : source === "simulado" ? "🟡 Fonte de moedas indisponível — moedas simuladas" : "⏳ Buscando cotações..."}</span><span>Ciclos: {count}{last ? ` • ${last}` : ""}</span></div>
     </Card>
   );
 }
 
-function PainelTab({ moedas, acoes, indices, comm, pm, pa, pi, pc, flash }) {
-  const [filter, setFilter] = useState("todos");
-  const cats = { todos: "Todos", pecuaria: "Pecuária", graos: "Grãos", outros: "Outros", frutas: "Frutas", hortifruti: "Hortifrúti" };
-  const filtered = filter === "todos" ? comm : comm.filter(c => c.cat === filter);
+function PainelTab({ moedas, pm, flash, selic, refresh }) {
+  const indicadores = INDICADORES.map(ind => ind.nome === 'Selic' ? {
+    ...ind, valor: selic.value != null ? `${fmt(selic.value)}% a.a.` : selic.error ? 'Indisponível' : 'Carregando…',
+    periodo: selic.date, desc: selic.error ? (selic.value != null ? 'Falha na atualização; última taxa recebida' : 'Banco Central indisponível; nova tentativa automática') : 'Meta BC · atualização automática',
+  } : ind);
   return (
     <div className="space-y-4">
       <div className="rounded-xl overflow-hidden" style={{ background: "linear-gradient(135deg,#0c2340 0%,#1a5276 40%,#1e8449 100%)" }}>
@@ -182,11 +114,11 @@ function PainelTab({ moedas, acoes, indices, comm, pm, pa, pi, pc, flash }) {
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         <Card className="p-3"><SecTitle icon={DollarSign} title="Moedas" color="#1a5276" />{moedas.map((m, i) => <PriceRow key={m.id} emoji={m.emoji} nome={m.nome} valor={m.valor} prev={pm[m.id]} varPct={m.var} flash={flash.has(m.id)} alt={i % 2 === 0} />)}<div className="mt-2 text-xs opacity-25 text-right">Fonte: AwesomeAPI (tempo real)</div></Card>
-        <Card className="p-3"><SecTitle icon={Activity} title="Ações & Índices" color="#1a5276" />{acoes.map((a, i) => <PriceRow key={a.id} emoji={a.emoji} nome={a.nome} sub={a.sub} valor={a.valor} prev={pa[a.id]} varPct={a.var} flash={flash.has(a.id)} alt={i % 2 === 0} />)}<div className="border-t my-2" style={{ borderColor: "rgba(0,0,0,0.06)" }} />{indices.map((x, i) => <PriceRow key={x.id} emoji={x.emoji} nome={x.nome} valor={x.valor} prev={pi[x.id]} varPct={x.var} unidade="pts" flash={flash.has(x.id)} alt={i % 2 === 0} />)}<div className="mt-2 text-xs opacity-25 text-right">Fonte: BRAPI/B3 (tempo real)</div></Card>
+        <StockQuotes refresh={refresh} />
       </div>
-      <Card className="p-3"><SecTitle icon={BarChart3} title="Indicadores Econômicos" color="#6b21a8" /><div className="grid grid-cols-2 md:grid-cols-3 gap-2">{INDICADORES.map((ind, i) => (<div key={i} className="rounded-lg p-2 text-center" style={{ background: i % 2 === 0 ? "#faf5ff" : "#f5f3ff" }}><div className="text-xs font-semibold opacity-60">{ind.nome} {ind.periodo && `(${ind.periodo})`}</div><div className="text-base font-bold" style={{ color: "#6b21a8" }}>{ind.valor}</div><div className="text-xs opacity-40">{ind.desc}</div></div>))}</div><div className="mt-2 text-xs opacity-25 text-right">Fonte: BCB / IBGE / FGV</div></Card>
-      <Card className="p-3"><SecTitle icon={Wheat} title="Commodities Agrícolas" color="#166534" /><div className="flex flex-wrap gap-1 mb-3">{Object.entries(cats).map(([k, v]) => (<button key={k} onClick={() => setFilter(k)} className="px-2 py-1 rounded-full text-xs font-semibold" style={{ background: filter === k ? "#166534" : "#f0fdf4", color: filter === k ? "#fff" : "#166534", border: `1px solid ${filter === k ? "#166534" : "#bbf7d0"}` }}>{v}</button>))}</div><div className="grid grid-cols-1 sm:grid-cols-2 gap-2">{filtered.map((c, i) => <CommCard key={c.id} item={c} prev={pc[c.id]} flash={flash.has(c.id)} idx={i} />)}</div><div className="mt-2 text-xs opacity-25 text-right">Fonte: CEPEA/ESALQ-USP • Sicredi</div></Card>
-      <div className="text-xs opacity-25 text-center">📌 Moedas: AwesomeAPI (tempo real) • Ações/Ibovespa: BRAPI (tempo real) • Indicadores: BCB/IBGE/FGV (fixos) • Commodities: CEPEA/ESALQ-USP (simulados)</div>
+      <Card className="p-3"><SecTitle icon={BarChart3} title="Indicadores Econômicos" color="#6b21a8" /><div className="grid grid-cols-2 md:grid-cols-3 gap-2">{indicadores.map((ind, i) => (<div key={i} className="rounded-lg p-2 text-center" style={{ background: i % 2 === 0 ? "#faf5ff" : "#f5f3ff" }}><div className="text-xs font-semibold opacity-60">{ind.nome} {ind.periodo && `(${ind.periodo})`}</div><div className="text-base font-bold" style={{ color: "#6b21a8" }}>{ind.valor}</div><div className="text-xs opacity-40">{ind.desc}</div></div>))}</div><div className="mt-2 text-xs opacity-25 text-right">Fonte: BCB / IBGE / FGV</div></Card>
+      <CommodityQuotes refresh={refresh} />
+      <div className="text-xs opacity-25 text-center">📌 Selic: Banco Central (SGS 432) • Demais indicadores: valores de referência fixos. Moedas podem conter estimativas ou simulação quando a fonte falha.</div>
     </div>
   );
 }
@@ -264,7 +196,7 @@ function NoticiasTab() {
         mercado: mRes.status === "fulfilled" && mRes.value?.status === "ok" ? mRes.value.items : [],
       });
       setLastUpdate(new Date());
-    } catch (_) { setHasError(true); }
+    } catch { setHasError(true); }
     setLoading(false);
     setCd(NEWS_INTERVAL);
   }, []);
@@ -409,46 +341,37 @@ export default function App() {
   const [count, setCount] = useState(0);
   const [last, setLast] = useState(null);
   const [flash, setFlash] = useState(new Set());
+  const [selic, setSelic] = useState({});
   const [dataSource, setDataSource] = useState("aguardando");
 
   const [moedas, setMoedas] = useState(INIT_MOEDAS);
-  const [acoes, setAcoes] = useState(INIT_ACOES);
-  const [indices, setIndices] = useState(INIT_INDICES);
-  const [comm, setComm] = useState(INIT_COMM);
   const [pm, setPm] = useState({});
-  const [pa, setPa] = useState({});
-  const [pi, setPi] = useState({});
-  const [pc, setPc] = useState({});
 
+  const updating = useRef(false);
   const moedasRef = useRef(moedas);
-  const acoesRef = useRef(acoes);
-  const indicesRef = useRef(indices);
-  const commRef = useRef(comm);
   useEffect(() => { moedasRef.current = moedas; }, [moedas]);
-  useEffect(() => { acoesRef.current = acoes; }, [acoes]);
-  useEffect(() => { indicesRef.current = indices; }, [indices]);
-  useEffect(() => { commRef.current = comm; }, [comm]);
 
   const doUpdate = useCallback(async () => {
+    if (updating.current) return;
+    updating.current = true;
     const fl = new Set();
     const sv = (arr) => { const m = {}; arr.forEach(x => m[x.id] = x.valor); return m; };
 
     const curM = moedasRef.current;
-    const curA = acoesRef.current;
-    const curI = indicesRef.current;
-    const curC = commRef.current;
 
     const prevM = sv(curM); setPm(prevM);
-    const prevA = sv(curA); setPa(prevA);
-    const prevI = sv(curI); setPi(prevI);
-    const prevC = sv(curC); setPc(prevC);
 
-    let realM = null, realA = null, realI = null;
+    let realM = null;
     try {
-      const [mRes, aRes] = await Promise.allSettled([
-        fetch(API_MOEDAS_URL).then(r => r.json()),
-        fetch(API_ACOES_URL).then(r => r.json()),
+      const [mRes, sRes] = await Promise.allSettled([
+        fetch(API_MOEDAS_URL, { signal: AbortSignal.timeout(12000) }).then(r => { if (!r.ok) throw new Error("Moedas indisponíveis"); return r.json(); }),
+        fetch('/api/market?type=selic', { signal: AbortSignal.timeout(15000) }).then(async r => {
+          if (!r.ok) throw new Error('Selic indisponível');
+          return r.json();
+        }),
       ]);
+      if (sRes.status === 'fulfilled') setSelic({ ...sRes.value, error: false });
+      else setSelic(previous => ({ ...previous, error: true }));
       if (mRes.status === "fulfilled" && mRes.value) {
         const d = mRes.value;
         realM = {
@@ -459,22 +382,9 @@ export default function App() {
           ars:   d.ARSBRL ? { valor: parseFloat(d.ARSBRL.bid),  var: parseFloat(d.ARSBRL.pctChange)  } : null,
         };
       }
-      if (aRes.status === "fulfilled" && aRes.value?.results) {
-        const byS = {};
-        aRes.value.results.forEach(r => { byS[r.symbol] = r; });
-        if (byS.PETR4 || byS.VALE3) {
-          realA = {
-            petr4: byS.PETR4 ? { valor: byS.PETR4.regularMarketPrice, var: parseFloat(byS.PETR4.regularMarketChangePercent.toFixed(2)) } : null,
-            vale3: byS.VALE3 ? { valor: byS.VALE3.regularMarketPrice, var: parseFloat(byS.VALE3.regularMarketChangePercent.toFixed(2)) } : null,
-          };
-        }
-        if (byS["^BVSP"]) {
-          realI = { ibov: { valor: Math.round(byS["^BVSP"].regularMarketPrice), var: parseFloat(byS["^BVSP"].regularMarketChangePercent.toFixed(2)) } };
-        }
-      }
-    } catch (_) { /* fallback para simulação */ }
+    } catch { /* fallback para simulação */ }
 
-    setDataSource(!!(realM || realA) ? "real" : "simulado");
+    setDataSource(realM ? "real" : "simulado");
 
     setMoedas(curM.map(m => {
       const r = realM?.[m.id];
@@ -482,29 +392,12 @@ export default function App() {
       if (Math.abs(nv - m.valor) > 0.0001) fl.add(m.id);
       return { ...m, valor: nv, var: r ? r.var : parseFloat(((nv - prevM[m.id]) / prevM[m.id] * 100).toFixed(2)) };
     }));
-    setAcoes(curA.map(a => {
-      const r = realA?.[a.id];
-      const nv = r ? r.valor : simVar(a.valor, 0.5);
-      if (Math.abs(nv - a.valor) > 0.001) fl.add(a.id);
-      return { ...a, valor: nv, var: r ? r.var : parseFloat(((nv - prevA[a.id]) / prevA[a.id] * 100).toFixed(2)) };
-    }));
-    setIndices(curI.map(x => {
-      const r = realI?.[x.id];
-      const nv = r ? r.valor : Math.round(simVar(x.valor, 0.3));
-      if (nv !== x.valor) fl.add(x.id);
-      return { ...x, valor: nv, var: r ? r.var : parseFloat(((nv - prevI[x.id]) / prevI[x.id] * 100).toFixed(2)) };
-    }));
-    setComm(curC.map(c => {
-      const nv = simVar(c.valor, 0.4);
-      if (Math.abs(nv - c.valor) > 0.001) fl.add(c.id);
-      return { ...c, valor: nv };
-    }));
-
     setFlash(fl);
     setTimeout(() => setFlash(new Set()), 2500);
     setCount(c => c + 1);
     setLast(new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", second: "2-digit" }));
     setCd(UPDATE_SEC);
+    updating.current = false;
   }, []);
 
   useEffect(() => { doUpdate(); }, [doUpdate]);
@@ -538,7 +431,7 @@ export default function App() {
       </div>
       <div className="max-w-4xl mx-auto px-3 py-4">
         {tab === "painel" && <CountdownBar sec={cd} total={UPDATE_SEC} paused={paused} onToggle={() => setPaused(p => !p)} onRefresh={doUpdate} count={count} last={last} source={dataSource} />}
-        {tab === "painel" && <PainelTab moedas={moedas} acoes={acoes} indices={indices} comm={comm} pm={pm} pa={pa} pi={pi} pc={pc} flash={flash} />}
+        {tab === "painel" && <PainelTab moedas={moedas} pm={pm} flash={flash} selic={selic} refresh={count} />}
         {tab === "noticias" && <NoticiasTab />}
         {tab === "historico" && <HistoricoTab />}
         {tab === "graficos" && <GraficosTab />}

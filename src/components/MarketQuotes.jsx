@@ -123,6 +123,54 @@ const COMMODITIES = [
   ['53', 'Cacau · Nova Iorque', 'Internacional'], ['13', 'Suco de laranja · Nova Iorque', 'Internacional'],
 ];
 
+function CommodityCard({ id, name, market, refresh }) {
+  const [state, setState] = useState({});
+  const fallbackUrl = `https://www.noticiasagricolas.com.br/widgets/cotacoes?id=${id}&fonte=Arial&largura=100%25`;
+
+  useEffect(() => {
+    const controller = new AbortController();
+    fetchMarket({ type: 'commodity', id }, controller.signal)
+      .then(data => setState({ id, data, error: '' }))
+      .catch(error => { if (!controller.signal.aborted) setState({ id, error: error.message }); });
+    return () => controller.abort();
+  }, [id, refresh]);
+
+  const loading = state.id !== id;
+  const data = !loading ? state.data : null;
+  const error = !loading ? state.error : null;
+
+  return <article className="border rounded-lg p-3 min-w-0 bg-green-50">
+    <h3 className="font-semibold text-sm mb-2 text-green-900">{name} <span className="text-xs text-slate-500">· {market}</span></h3>
+    {loading && <p className="text-xs text-slate-500 py-4">Carregando cotação…</p>}
+    {!loading && error && <p role="alert" className="text-amber-800 text-xs py-2">
+      {error} <a className="underline text-blue-800" href={fallbackUrl} target="_blank" rel="noopener noreferrer">Ver na fonte</a>
+    </p>}
+    {!loading && data && <>
+      {data.titulo && <p className="text-xs font-medium text-green-800 mb-2">{data.titulo}</p>}
+      <div className="overflow-x-auto rounded-lg border border-green-200">
+        <table className="w-full text-xs border-collapse">
+          <thead>
+            <tr className="bg-green-800 text-white">
+              {data.headers.map((h, i) => <th key={i} className="py-1.5 px-2 text-center font-semibold whitespace-nowrap">{h}</th>)}
+            </tr>
+          </thead>
+          <tbody>
+            {data.rows.map((row, ri) => (
+              <tr key={ri} className={ri % 2 === 0 ? 'bg-white' : 'bg-green-50'}>
+                {row.map((cell, ci) => <td key={ci} className={`py-1.5 px-2 text-center whitespace-nowrap ${ci === 0 ? 'text-left font-medium text-green-900' : ''}`}>{cell}</td>)}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <div className="flex items-center justify-between gap-2 mt-2 text-xs text-slate-500">
+        <span>{data.fonte && `Fonte: ${data.fonte}`}{data.fechamento && ` · Fech. ${data.fechamento}`}</span>
+        <a className="text-blue-800 underline shrink-0" href={fallbackUrl} target="_blank" rel="noopener noreferrer">Ver na fonte</a>
+      </div>
+    </>}
+  </article>;
+}
+
 export function CommodityQuotes({ refresh }) {
   const [selected, setSelected] = useState(() => {
     const saved = readPreference('agroinfo.commodities.v1', ['26', '23']);
@@ -171,16 +219,9 @@ export function CommodityQuotes({ refresh }) {
         </label>)}</div>
     </fieldset>)}
     {!selected.length && <p className="text-sm mt-4">Selecione uma ou mais commodities para consultar.</p>}
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-4">{COMMODITIES.filter(row => selected.includes(row[0])).map(([id, name, market]) => {
-      const url = `https://www.noticiasagricolas.com.br/widgets/cotacoes?id=${id}&fonte=Arial&largura=100%25`;
-      return <article key={id} className="border rounded-lg p-2 min-w-0">
-        <h3 className="font-semibold text-sm mb-2">{name} <span className="text-xs text-slate-500">· {market}</span></h3>
-        <div className="w-full overflow-x-auto rounded-lg">
-          <iframe key={`${id}-${refresh}`} src={url} title={`Cotação de ${name}`} className="border-0 h-80 bg-white" style={{ width: '100%', minWidth: 480 }} loading="lazy" />
-        </div>
-        <a className="text-xs text-blue-800 underline" href={url} target="_blank" rel="noopener noreferrer">Ver cotação na fonte / abrir se a tabela não carregar</a>
-      </article>;
-    })}</div>
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-4">{COMMODITIES.filter(row => selected.includes(row[0])).map(([id, name, market]) => (
+      <CommodityCard key={id} id={id} name={name} market={market} refresh={refresh} />
+    ))}</div>
     <p className="text-xs text-slate-500 mt-2">Fonte: Notícias Agrícolas e provedores indicados nas tabelas. Publicação conforme cada mercado; a consulta periódica não implica preço em tempo real.</p>
   </section>;
 }

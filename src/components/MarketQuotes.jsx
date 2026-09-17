@@ -131,6 +131,70 @@ const COMMODITY_HISTORY_KEY = {
   '29': 'cafe', '31': 'cafe', '211': 'trigo', '155': 'leite', '288': 'feijao',
 };
 
+function CommodityTable({ date, columns }) {
+  return (
+    <div className="overflow-x-auto rounded-lg border" style={{ borderColor: '#bbf7d0' }}>
+      <table className="w-full text-xs" style={{ minWidth: 320 }}>
+        <thead>
+          <tr style={{ background: '#166534' }}>
+            <th className="py-1.5 px-2 text-left font-bold text-white">Data</th>
+            {columns.map((c, i) => <th key={i} className="py-1.5 px-2 text-right font-bold text-white whitespace-nowrap">{c.label}</th>)}
+          </tr>
+        </thead>
+        <tbody>
+          <tr style={{ background: '#f0fdf4' }}>
+            <td className="py-1.5 px-2 font-semibold whitespace-nowrap">{date}</td>
+            {columns.map((c, i) => {
+              const isVar = /var/i.test(c.label);
+              const negative = isVar && c.value.trim().startsWith('-');
+              const positive = isVar && !negative && /\d/.test(c.value);
+              return (
+                <td key={i} className="py-1.5 px-2 text-right font-mono whitespace-nowrap" style={{ color: negative ? '#dc2626' : positive ? '#16a34a' : '#1a3a5c', fontWeight: isVar ? 700 : 600 }}>
+                  {c.value}
+                </td>
+              );
+            })}
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+function CommodityCard({ id, name, market, refresh, historyKey, onViewChart }) {
+  const [state, setState] = useState({ status: 'loading', data: null });
+  const iframeUrl = `https://www.noticiasagricolas.com.br/widgets/cotacoes?id=${id}&fonte=Arial&largura=420`;
+
+  useEffect(() => {
+    const controller = new AbortController();
+    fetchMarket({ type: 'commodity', id }, controller.signal)
+      .then(data => setState({ status: 'ok', data }))
+      .catch(() => { if (!controller.signal.aborted) setState({ status: 'fallback', data: null }); });
+    return () => controller.abort();
+  }, [id, refresh]);
+
+  return <article className="border rounded-lg p-2 min-w-0">
+    <div className="flex items-center justify-between gap-2 mb-2">
+      <h3 className="font-semibold text-sm">{name} <span className="text-xs text-slate-500">· {market}</span></h3>
+      {onViewChart && historyKey && (
+        <button type="button" onClick={() => onViewChart({ type: 'commodity', id, key: historyKey, name })}
+          className="text-xs font-bold text-green-800 underline shrink-0">Ver gráfico</button>
+      )}
+    </div>
+    {state.status === 'loading' && <div className="h-16 rounded-lg animate-pulse" style={{ background: '#f0fdf4' }} />}
+    {state.status === 'ok' && <>
+      <CommodityTable date={state.data.date} columns={state.data.columns} />
+      <p className="text-xs text-slate-500 mt-1">Fonte: {state.data.source}</p>
+    </>}
+    {state.status === 'fallback' && <>
+      <div className="w-full overflow-x-auto rounded-lg">
+        <iframe key={`${id}-${refresh}`} src={iframeUrl} title={`Cotação de ${name}`} className="border-0 h-36 bg-white" style={{ width: 440 }} loading="lazy" />
+      </div>
+      <a className="text-xs text-blue-800 underline" href={iframeUrl} target="_blank" rel="noopener noreferrer">Ver cotação na fonte / abrir se a tabela não carregar</a>
+    </>}
+  </article>;
+}
+
 export function CommodityQuotes({ refresh, onViewChart }) {
   const [selected, setSelected] = useState(() => {
     const saved = readPreference('agroinfo.commodities.v1', ['26', '23']);
@@ -179,23 +243,9 @@ export function CommodityQuotes({ refresh, onViewChart }) {
         </label>)}</div>
     </fieldset>)}
     {!selected.length && <p className="text-sm mt-4">Selecione uma ou mais commodities para consultar.</p>}
-    <div className="flex flex-col gap-3 mt-4">{COMMODITIES.filter(row => selected.includes(row[0])).map(([id, name, market]) => {
-      const url = `https://www.noticiasagricolas.com.br/widgets/cotacoes?id=${id}&fonte=Arial&largura=420`;
-      const historyKey = COMMODITY_HISTORY_KEY[id];
-      return <article key={id} className="border rounded-lg p-2 min-w-0">
-        <div className="flex items-center justify-between gap-2 mb-2">
-          <h3 className="font-semibold text-sm">{name} <span className="text-xs text-slate-500">· {market}</span></h3>
-          {onViewChart && historyKey && (
-            <button type="button" onClick={() => onViewChart({ type: 'commodity', id, key: historyKey, name })}
-              className="text-xs font-bold text-green-800 underline shrink-0">Ver gráfico</button>
-          )}
-        </div>
-        <div className="w-full overflow-x-auto rounded-lg">
-          <iframe key={`${id}-${refresh}`} src={url} title={`Cotação de ${name}`} className="border-0 h-36 bg-white" style={{ width: 440 }} loading="lazy" />
-        </div>
-        <a className="text-xs text-blue-800 underline" href={url} target="_blank" rel="noopener noreferrer">Ver cotação na fonte / abrir se a tabela não carregar</a>
-      </article>;
-    })}</div>
+    <div className="flex flex-col gap-3 mt-4">{COMMODITIES.filter(row => selected.includes(row[0])).map(([id, name, market]) =>
+      <CommodityCard key={id} id={id} name={name} market={market} refresh={refresh} historyKey={COMMODITY_HISTORY_KEY[id]} onViewChart={onViewChart} />
+    )}</div>
     <p className="text-xs text-slate-500 mt-2">Fonte: Notícias Agrícolas e provedores indicados nas tabelas. Publicação conforme cada mercado; a consulta periódica não implica preço em tempo real.</p>
   </section>;
 }

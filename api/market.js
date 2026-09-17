@@ -1,6 +1,68 @@
 /* global process */
+
+// Indicadores diários do CEPEA/Esalq (fonte primária dos preços do Notícias Agrícolas),
+// mapeados pelo mesmo id usado na lista de commodities do front-end.
+const CEPEA_SOURCES = {
+  '26':  { url: 'https://www.cepea.esalq.usp.br/br/indicador/soja.aspx', match: 'PARANÁ' },
+  '121': { url: 'https://www.cepea.esalq.usp.br/br/indicador/soja.aspx', match: 'PARANAGUÁ' },
+  '91':  { url: 'https://www.cepea.esalq.usp.br/br/indicador/milho.aspx', match: 'MILHO ESALQ' },
+  '12':  { url: 'https://www.cepea.esalq.usp.br/br/indicador/boi-gordo.aspx', match: 'BOI GORDO' },
+  '29':  { url: 'https://www.cepea.esalq.usp.br/br/indicador/cafe.aspx', match: 'ARÁBICA' },
+  '31':  { url: 'https://www.cepea.esalq.usp.br/br/indicador/cafe.aspx', match: 'ROBUSTA' },
+  '211': { url: 'https://www.cepea.esalq.usp.br/br/indicador/trigo.aspx', match: 'PARANÁ' },
+  '210': { url: 'https://www.cepea.esalq.usp.br/br/indicador/suino.aspx', match: 'SUÍNO VIVO' },
+  '155': { url: 'https://www.cepea.esalq.usp.br/br/indicador/leite.aspx', match: 'LEITE' },
+  '84':  { url: 'https://www.cepea.esalq.usp.br/br/indicador/algodao.aspx', match: 'ALGODÃO EM PLUMA' },
+  '288': { url: 'https://www.cepea.esalq.usp.br/br/indicador/feijao.aspx', match: 'FEIJÃO-CARIOCA' },
+  '201': { url: 'https://www.cepea.esalq.usp.br/br/indicador/citros.aspx', match: 'LARANJA INDÚSTRIA' },
+};
+
+const normalizeText = (v) => v.normalize('NFD').replace(/[̀-ͯ]/g, '').toUpperCase();
+
+async function fetchCepeaIndicator(url, keyword) {
+  const response = await fetch(url, {
+    headers: { 'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36' },
+    signal: AbortSignal.timeout(15000),
+  });
+  if (!response.ok) throw new Error(`HTTP ${response.status}`);
+  const buf = await response.arrayBuffer();
+  const html = new TextDecoder('utf-8').decode(buf);
+
+  const tableRe = /<table id="imagenet-indicador\d+"[^>]*>([\s\S]*?)<\/table>/g;
+  const target = normalizeText(keyword);
+  const targetRe = new RegExp(`\\b${target.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`);
+  let m, table = null;
+  while ((m = tableRe.exec(html))) {
+    const contextRaw = html.slice(Math.max(0, m.index - 500), m.index).replace(/<[^>]+>/g, ' ').replace(/&amp;/g, '&').replace(/\s+/g, ' ').trim();
+    if (targetRe.test(normalizeText(contextRaw))) { table = m[1]; break; }
+  }
+  if (!table) throw new Error('indicador não encontrado na página');
+
+  const stripTag = (s) => s.replace(/<[^>]+>/g, '').replace(/&nbsp;/g, ' ').trim();
+  const theadM = table.match(/<thead>([\s\S]*?)<\/thead>/);
+  const headers = theadM ? [...theadM[1].matchAll(/<th[^>]*>([\s\S]*?)<\/th>/g)].map(h => stripTag(h[1])) : [];
+  const tbodyM = table.match(/<tbody>([\s\S]*?)<\/tbody>/);
+  const rowM = tbodyM?.[1].match(/<tr>([\s\S]*?)<\/tr>/);
+  const cells = rowM ? [...rowM[1].matchAll(/<td[^>]*>([\s\S]*?)<\/td>/g)].map(c => stripTag(c[1])) : [];
+  if (!cells.length) throw new Error('sem dados na tabela');
+
+  return { date: cells[0], columns: headers.slice(1).map((label, i) => ({ label, value: cells[i + 1] })) };
+}
+
 export default async function handler(req, res) {
-  const { type, symbol = '', q = '' } = req.query ?? {};
+  const { type, symbol = '', q = '', id = '' } = req.query ?? {};
+
+  if (type === 'commodity') {
+    const source = CEPEA_SOURCES[id];
+    if (!source) return res.status(404).json({ error: 'Sem indicador CEPEA para este item.' });
+    try {
+      const data = await fetchCepeaIndicator(source.url, source.match);
+      res.setHeader('Cache-Control', 's-maxage=300, stale-while-revalidate=600');
+      return res.status(200).json({ status: 'ok', source: 'CEPEA/Esalq', ...data });
+    } catch (err) {
+      return res.status(502).json({ error: 'CEPEA indisponível no momento.', detail: err.message });
+    }
+  }
 
   if (type === 'search') {
     const term = q.trim();

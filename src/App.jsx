@@ -248,7 +248,6 @@ function PainelTab({ moedas, pm, flash, selic, refresh, onViewChart }) {
     <div className="space-y-4">
       <div className="rounded-xl overflow-hidden" style={{ background: "linear-gradient(135deg,#0c2340 0%,#1a5276 40%,#1e8449 100%)" }}>
         <div className="px-4 py-4">
-          <div className="flex items-center gap-1.5 mb-0.5"><Wheat size={14} color="#fbbf24" /><span style={{ fontSize: 10, color: "#fbbf24", fontWeight: 700, letterSpacing: 1, textTransform: "uppercase" }}>Informativo Diário</span></div>
           <h1 className="text-base font-bold text-white">Mercado Agrícola</h1>
           <div className="text-xs mt-0.5" style={{ color: "rgba(255,255,255,0.55)" }}>Santa Mariana, PR • Docente: <strong style={{ color: "rgba(255,255,255,0.8)" }}>Marcel Dancini Rodrigues</strong> • {new Date().toLocaleDateString("pt-BR")}</div>
         </div>
@@ -696,7 +695,10 @@ export default function App() {
 
   return (
     <div className="min-h-screen" style={{ background: "linear-gradient(180deg,#f8fafc 0%,#ecfdf5 50%,#f0f9ff 100%)", fontFamily: "system-ui, sans-serif" }}>
-      <div className="max-w-4xl mx-auto px-3 pt-3 pb-2 flex items-center gap-3">
+      <div className="max-w-4xl mx-auto px-3 pt-3">
+        <div className="flex items-center gap-1.5"><Wheat size={14} color="#b45309" /><span style={{ fontSize: 10, color: "#b45309", fontWeight: 700, letterSpacing: 1, textTransform: "uppercase" }}>Informativo Diário</span></div>
+      </div>
+      <div className="max-w-4xl mx-auto px-3 pt-1 pb-2 flex items-center gap-3">
         <div className="rounded-full border-2 flex items-center justify-center shrink-0" style={{ width: 56, height: 56, background: "radial-gradient(circle, #2E7D32 60%, #1B5E20 100%)", borderColor: "#166534" }}>
           <div className="text-center leading-none"><div style={{ fontSize: 6.5, color: "#fff", fontWeight: 700 }}>C.E.E.P.A.</div><div style={{ fontSize: 8, color: "#fbbf24", fontWeight: 900, marginTop: 1 }}>FERNANDO</div><div style={{ fontSize: 8, color: "#fbbf24", fontWeight: 900 }}>COSTA</div></div>
         </div>

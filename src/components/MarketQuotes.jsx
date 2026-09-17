@@ -14,9 +14,9 @@ function savePreference(key, value) {
   try { localStorage.setItem(key, JSON.stringify(value)); } catch { /* armazenamento opcional */ }
 }
 
-const TICKER_RE = /^[A-Z]{4}\d{1,2}$/;
+export const TICKER_RE = /^[A-Z]{4}\d{1,2}$/;
 
-export function StockQuotes({ refresh }) {
+export function StockQuotes({ refresh, onViewChart }) {
   const [symbol, setSymbol] = useState(() => {
     const saved = readPreference('agroinfo.stock.v1', 'PETR4');
     return typeof saved === 'string' && TICKER_RE.test(saved) ? saved : 'PETR4';
@@ -104,6 +104,8 @@ export function StockQuotes({ refresh }) {
         <p className="text-xl font-bold">{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: quote.currency }).format(quote.value)}</p>
         {Number.isFinite(quote.change) && <p>Variação: {quote.change.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}%</p>}
         <p className="text-xs text-slate-600">{quote.source} · Cotação de {new Date(quote.date).toLocaleString('pt-BR')}</p>
+        {onViewChart && <button type="button" onClick={() => onViewChart({ type: 'stock', symbol: quote.symbol, name: quote.name })}
+          className="mt-2 text-xs font-bold text-blue-900 underline">Ver gráfico desde 2020</button>}
       </div>}
     </div>
     <p className="mt-2 text-xs text-slate-500">Digite o nome da empresa e escolha uma sugestão da lista, ou informe o código diretamente.</p>
@@ -123,7 +125,13 @@ const COMMODITIES = [
   ['53', 'Cacau · Nova Iorque', 'Internacional'], ['13', 'Suco de laranja · Nova Iorque', 'Internacional'],
 ];
 
-export function CommodityQuotes({ refresh }) {
+// Liga cada commodity da lista de cotação à série histórica anual (2020-2026) exibida em Gráficos.
+const COMMODITY_HISTORY_KEY = {
+  '26': 'soja', '121': 'soja', '91': 'milho', '12': 'boi',
+  '29': 'cafe', '31': 'cafe', '211': 'trigo', '155': 'leite', '288': 'feijao',
+};
+
+export function CommodityQuotes({ refresh, onViewChart }) {
   const [selected, setSelected] = useState(() => {
     const saved = readPreference('agroinfo.commodities.v1', ['26', '23']);
     return Array.isArray(saved) ? saved.filter(id => COMMODITIES.some(row => row[0] === id)) : ['26', '23'];
@@ -171,10 +179,17 @@ export function CommodityQuotes({ refresh }) {
         </label>)}</div>
     </fieldset>)}
     {!selected.length && <p className="text-sm mt-4">Selecione uma ou mais commodities para consultar.</p>}
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-4">{COMMODITIES.filter(row => selected.includes(row[0])).map(([id, name, market]) => {
+    <div className="flex flex-col gap-3 mt-4">{COMMODITIES.filter(row => selected.includes(row[0])).map(([id, name, market]) => {
       const url = `https://www.noticiasagricolas.com.br/widgets/cotacoes?id=${id}&fonte=Arial&largura=100%25`;
+      const historyKey = COMMODITY_HISTORY_KEY[id];
       return <article key={id} className="border rounded-lg p-2 min-w-0">
-        <h3 className="font-semibold text-sm mb-2">{name} <span className="text-xs text-slate-500">· {market}</span></h3>
+        <div className="flex items-center justify-between gap-2 mb-2">
+          <h3 className="font-semibold text-sm">{name} <span className="text-xs text-slate-500">· {market}</span></h3>
+          {onViewChart && historyKey && (
+            <button type="button" onClick={() => onViewChart({ type: 'commodity', id, key: historyKey, name })}
+              className="text-xs font-bold text-green-800 underline shrink-0">Ver gráfico</button>
+          )}
+        </div>
         <div className="w-full overflow-x-auto rounded-lg">
           <iframe key={`${id}-${refresh}`} src={url} title={`Cotação de ${name}`} className="border-0 h-80 bg-white" style={{ width: '100%', minWidth: 480 }} loading="lazy" />
         </div>

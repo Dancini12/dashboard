@@ -1,6 +1,6 @@
-import { StockQuotes, CommodityQuotes } from "./components/MarketQuotes";
+import { StockQuotes, CommodityQuotes, TICKER_RE } from "./components/MarketQuotes";
 import { useState, useEffect, useRef, useCallback } from "react";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Area, AreaChart } from "recharts";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { RefreshCw, BookOpen, BarChart3, Clock, Wheat, DollarSign, Activity, ChevronDown, ChevronUp, Timer, ArrowRight, Pause, Play, Newspaper, ExternalLink } from "lucide-react";
 
 const UPDATE_SEC = 60;
@@ -93,7 +93,7 @@ function CountdownBar({ sec, total, paused, onToggle, onRefresh, count, last, so
   );
 }
 
-function PainelTab({ moedas, pm, flash, selic, refresh }) {
+function PainelTab({ moedas, pm, flash, selic, refresh, onViewChart }) {
   const indicadores = INDICADORES.map(ind => ind.nome === 'Selic' ? {
     ...ind, valor: selic.value != null ? `${fmt(selic.value)}% a.a.` : selic.error ? 'Indisponível' : 'Carregando…',
     periodo: selic.date, desc: selic.error ? (selic.value != null ? 'Falha na atualização; última taxa recebida' : 'Banco Central indisponível; nova tentativa automática') : 'Meta BC · atualização automática',
@@ -114,9 +114,9 @@ function PainelTab({ moedas, pm, flash, selic, refresh }) {
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         <Card className="p-3"><SecTitle icon={DollarSign} title="Moedas" color="#1a5276" />{moedas.map((m, i) => <PriceRow key={m.id} emoji={m.emoji} nome={m.nome} valor={m.valor} prev={pm[m.id]} varPct={m.var} flash={flash.has(m.id)} alt={i % 2 === 0} />)}<div className="mt-2 text-xs opacity-25 text-right">Fonte: AwesomeAPI (tempo real)</div></Card>
-        <StockQuotes refresh={refresh} />
+        <StockQuotes refresh={refresh} onViewChart={onViewChart} />
       </div>
-      <CommodityQuotes refresh={refresh} />
+      <CommodityQuotes refresh={refresh} onViewChart={onViewChart} />
       <Card className="p-3"><SecTitle icon={BarChart3} title="Indicadores Econômicos" color="#6b21a8" /><div className="grid grid-cols-2 md:grid-cols-3 gap-2">{indicadores.map((ind, i) => (<div key={i} className="rounded-lg p-2 text-center" style={{ background: i % 2 === 0 ? "#faf5ff" : "#f5f3ff" }}><div className="text-xs font-semibold opacity-60">{ind.nome} {ind.periodo && `(${ind.periodo})`}</div><div className="text-base font-bold" style={{ color: "#6b21a8" }}>{ind.valor}</div><div className="text-xs opacity-40">{ind.desc}</div></div>))}</div><div className="mt-2 text-xs opacity-25 text-right">Fonte: BCB / IBGE / FGV</div></Card>
       <div className="text-xs opacity-25 text-center">📌 Selic: Banco Central (SGS 432) • Demais indicadores: valores de referência fixos. Moedas podem conter estimativas ou simulação quando a fonte falha.</div>
     </div>
@@ -305,21 +305,153 @@ function HistoricoTab() {
 
 const CC = { boi: "#1a5276", soja: "#27ae60", milho: "#f39c12", cafe: "#6f4e37", trigo: "#c0392b", feijao: "#8e44ad", cana: "#16a085", leite: "#2980b9" };
 const CL = { boi: "Boi", soja: "Soja", milho: "Milho", cafe: "Café", trigo: "Trigo", feijao: "Feijão", cana: "Cana", leite: "Leite" };
+const normalize = (v) => v.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
 
-function GraficosTab() {
-  const [sel, setSel] = useState(["boi", "soja", "milho"]);
+function GraficosCommoditiesPanel({ target }) {
+  const [sel, setSel] = useState(() => (target?.type === "commodity" && target.key ? [target.key] : ["boi", "soja", "milho"]));
+  const [search, setSearch] = useState("");
+  const opts = Object.keys(CL).filter(k => normalize(CL[k]).includes(normalize(search)));
+  return (
+    <Card className="p-3">
+      <SecTitle icon={BarChart3} title="Commodities · Evolução 2020–2026" color="#1a5276" />
+      <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Digite a commodity (ex.: soja, boi, café)"
+        className="block w-full border rounded-lg p-2 mb-3 text-sm" />
+      <div className="flex flex-wrap gap-1 mb-3">{opts.map(k => <button key={k} onClick={() => setSel(p => p.includes(k) ? p.filter(x => x !== k) : [...p, k])} className="px-2 py-1 rounded-full text-xs font-semibold" style={{ background: sel.includes(k) ? CC[k] : "#f1f5f9", color: sel.includes(k) ? "#fff" : "#64748b" }}>{CL[k]}</button>)}
+        {!opts.length && <span className="text-xs opacity-40">Nenhuma commodity encontrada com esse nome.</span>}</div>
+      {sel.length > 0 ? (
+        <div style={{ height: 300 }}><ResponsiveContainer><LineChart data={HISTORICO} margin={{ top: 5, right: 10, bottom: 5, left: 0 }}><CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" /><XAxis dataKey="ano" tick={{ fontSize: 10 }} /><YAxis tick={{ fontSize: 9 }} /><Tooltip formatter={v => `R$ ${fmt(v)}`} contentStyle={{ borderRadius: 8, fontSize: 11 }} /><Legend wrapperStyle={{ fontSize: 10 }} />{sel.map(k => <Line key={k} type="monotone" dataKey={k} name={CL[k]} stroke={CC[k]} strokeWidth={2.5} dot={{ r: 3 }} />)}</LineChart></ResponsiveContainer></div>
+      ) : <p className="text-sm opacity-50 py-8 text-center">Selecione ao menos uma commodity para ver o gráfico.</p>}
+      <p className="text-xs opacity-25 mt-2 text-right">Fonte: CEPEA/ESALQ-USP, Farmnews · série anual</p>
+      <p className="text-xs opacity-40 mt-1">Para outras commodities da lista de cotação (algodão, suíno, laranja, contratos internacionais), ainda não há série histórica diária disponível — consulte o valor atual no Painel.</p>
+    </Card>
+  );
+}
+
+function StockHistoryChart({ symbol }) {
+  const [state, setState] = useState({ loading: true, error: "", points: [], currency: "BRL", name: symbol });
+  useEffect(() => {
+    if (!symbol) return;
+    const controller = new AbortController();
+    fetch(`/api/market?type=history&symbol=${encodeURIComponent(symbol)}`, { signal: controller.signal })
+      .then(async r => { const data = await r.json(); if (!r.ok) throw new Error(data.error || "Histórico indisponível."); return data; })
+      .then(data => setState({ loading: false, error: "", points: data.points || [], currency: data.currency || "BRL", name: data.name || symbol }))
+      .catch(error => { if (!controller.signal.aborted) setState(s => ({ ...s, loading: false, error: error.message })); });
+    return () => controller.abort();
+  }, [symbol]);
+
+  if (state.loading) return <p className="text-sm opacity-50 py-8 text-center">Carregando histórico de {symbol}…</p>;
+  if (state.error) return <p role="alert" className="text-amber-800 text-sm py-8 text-center">{state.error}</p>;
+  if (!state.points.length) return <p className="text-sm opacity-50 py-8 text-center">Sem dados históricos disponíveis para {symbol} desde 2020.</p>;
+  return (
+    <>
+      <div style={{ height: 300 }}>
+        <ResponsiveContainer>
+          <LineChart data={state.points} margin={{ top: 5, right: 10, bottom: 5, left: 0 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+            <XAxis dataKey="date" tick={{ fontSize: 9 }} minTickGap={40} />
+            <YAxis tick={{ fontSize: 9 }} domain={["auto", "auto"]} />
+            <Tooltip formatter={v => new Intl.NumberFormat("pt-BR", { style: "currency", currency: state.currency }).format(v)} labelFormatter={d => new Date(d).toLocaleDateString("pt-BR")} contentStyle={{ borderRadius: 8, fontSize: 11 }} />
+            <Line type="monotone" dataKey="close" name={state.name} stroke="#1a5276" strokeWidth={2} dot={false} />
+          </LineChart>
+        </ResponsiveContainer>
+      </div>
+      <p className="text-xs opacity-25 mt-2 text-right">Fonte: BRAPI · fechamento mensal desde 2020</p>
+    </>
+  );
+}
+
+function GraficosAcoesPanel({ target }) {
+  const [symbol, setSymbol] = useState(() => (target?.type === "stock" && target.symbol ? target.symbol : "PETR4"));
+  const [input, setInput] = useState(symbol);
+  const [suggestions, setSuggestions] = useState([]);
+  const [searching, setSearching] = useState(false);
+  const [validation, setValidation] = useState("");
+
+  const term = input.trim();
+  const showDropdown = term.length >= 2 && !TICKER_RE.test(term.toUpperCase());
+
+  useEffect(() => {
+    if (!showDropdown) return;
+    const controller = new AbortController();
+    const t = setTimeout(() => {
+      setSearching(true);
+      fetch(`/api/market?type=search&q=${encodeURIComponent(term)}`, { signal: controller.signal })
+        .then(r => r.json()).then(data => setSuggestions(data.results || []))
+        .catch(() => { if (!controller.signal.aborted) setSuggestions([]); })
+        .finally(() => setSearching(false));
+    }, 350);
+    return () => { clearTimeout(t); controller.abort(); };
+  }, [term, showDropdown]);
+
+  const pick = (sym, name) => { setSuggestions([]); setValidation(""); setInput(name ? `${sym} · ${name}` : sym); setSymbol(sym); };
+
+  return (
+    <Card className="p-3">
+      <SecTitle icon={BarChart3} title="Ações / ETFs · Histórico desde 2020" color="#1a5276" />
+      <form onSubmit={e => {
+        e.preventDefault();
+        const upper = term.toUpperCase();
+        if (TICKER_RE.test(upper)) { pick(upper, ""); return; }
+        if (suggestions.length) { pick(suggestions[0].symbol, suggestions[0].name); return; }
+        setValidation("Digite o nome da empresa (ex.: Petrobras) e escolha uma sugestão, ou informe o código (ex.: PETR4).");
+      }} className="flex flex-wrap gap-2 relative mb-3">
+        <label className="flex-1 min-w-0 text-xs">Empresa ou código
+          <input className="block w-full border rounded-lg p-2 mt-1 text-sm" value={input}
+            onChange={e => { setInput(e.target.value); setValidation(""); }} placeholder="Ex.: Petrobras ou PETR4" autoComplete="off" />
+          {showDropdown && (searching || suggestions.length > 0) && (
+            <div className="absolute left-0 right-0 mt-1 bg-white border rounded-lg shadow-md z-10 max-h-56 overflow-auto">
+              {searching && <div className="p-2 text-xs text-slate-500">Buscando…</div>}
+              {!searching && suggestions.map(s => (
+                <button key={s.symbol} type="button" onClick={() => pick(s.symbol, s.name)} className="block w-full text-left px-2 py-1.5 text-xs hover:bg-blue-50 border-b last:border-b-0">
+                  <span className="font-bold">{s.symbol}</span> · {s.name}
+                </button>
+              ))}
+            </div>
+          )}
+        </label>
+        <button className="self-end rounded-lg bg-blue-900 text-white p-2 text-sm" type="submit">Ver gráfico</button>
+      </form>
+      {validation && <p role="alert" className="text-red-700 text-sm mb-2">{validation}</p>}
+      <StockHistoryChart key={symbol} symbol={symbol} />
+    </Card>
+  );
+}
+
+const COMO_LER = [
+  { icon: "↔️", titulo: "Eixo horizontal (X)", texto: "O tempo: anos para commodities, meses para ações desde 2020. Da esquerda (mais antigo) para a direita (mais recente)." },
+  { icon: "↕️", titulo: "Eixo vertical (Y)", texto: "O preço: R$ por saca/arroba nas commodities, R$ por ação nos papéis da bolsa. Quanto mais alto o ponto, maior o preço." },
+  { icon: "📈", titulo: "Linha subindo", texto: "Indica alta de preço (valorização) no período — bom para quem vende, mais caro para quem compra." },
+  { icon: "📉", titulo: "Linha descendo", texto: "Indica queda de preço (desvalorização) no período — mais barato para quem compra." },
+  { icon: "🖱️", titulo: "Passe o mouse na linha", texto: "Aparece uma caixinha (tooltip) com a data exata e o valor daquele ponto." },
+  { icon: "⚖️", titulo: "Comparando linhas", texto: "Ao selecionar mais de um item, compare a inclinação das linhas para ver qual valorizou ou desvalorizou mais no mesmo período." },
+];
+
+function ComoLerGraficoCard() {
+  return (
+    <Card className="p-3">
+      <SecTitle icon={BookOpen} title="Como interpretar o gráfico" color="#b45309" />
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+        {COMO_LER.map((item, i) => (
+          <div key={i} className="rounded-lg p-2" style={{ background: i % 2 === 0 ? "#fffbeb" : "#fefce8", border: "1px solid #fde68a" }}>
+            <div className="text-sm font-semibold" style={{ color: "#78350f" }}>{item.icon} {item.titulo}</div>
+            <div className="text-xs mt-0.5" style={{ color: "#92400e" }}>{item.texto}</div>
+          </div>
+        ))}
+      </div>
+    </Card>
+  );
+}
+
+function GraficosTab({ target }) {
+  const [mode, setMode] = useState(() => (target?.type === "stock" ? "acoes" : "commodities"));
   return (
     <div className="space-y-4">
-      <Card className="p-3">
-        <SecTitle icon={BarChart3} title="Evolução 2020–2026" color="#1a5276" />
-        <div className="flex flex-wrap gap-1 mb-3">{Object.entries(CL).map(([k, v]) => <button key={k} onClick={() => setSel(p => p.includes(k) ? p.filter(x => x !== k) : [...p, k])} className="px-2 py-1 rounded-full text-xs font-semibold" style={{ background: sel.includes(k) ? CC[k] : "#f1f5f9", color: sel.includes(k) ? "#fff" : "#64748b" }}>{v}</button>)}</div>
-        <div style={{ height: 300 }}><ResponsiveContainer><LineChart data={HISTORICO} margin={{ top: 5, right: 10, bottom: 5, left: 0 }}><CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" /><XAxis dataKey="ano" tick={{ fontSize: 10 }} /><YAxis tick={{ fontSize: 9 }} /><Tooltip formatter={v => `R$ ${fmt(v)}`} contentStyle={{ borderRadius: 8, fontSize: 11 }} /><Legend wrapperStyle={{ fontSize: 10 }} />{sel.map(k => <Line key={k} type="monotone" dataKey={k} name={CL[k]} stroke={CC[k]} strokeWidth={2.5} dot={{ r: 3 }} />)}</LineChart></ResponsiveContainer></div>
-        <p className="text-xs opacity-25 mt-2 text-right">Fonte: CEPEA/ESALQ-USP, Farmnews</p>
-      </Card>
-      <Card className="p-3">
-        <SecTitle icon={Activity} title="Café Arábica" color="#6f4e37" />
-        <div style={{ height: 220 }}><ResponsiveContainer><AreaChart data={HISTORICO} margin={{ top: 5, right: 10, bottom: 5, left: 0 }}><defs><linearGradient id="cg" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#6f4e37" stopOpacity={0.3} /><stop offset="95%" stopColor="#6f4e37" stopOpacity={0} /></linearGradient></defs><CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" /><XAxis dataKey="ano" tick={{ fontSize: 10 }} /><YAxis tick={{ fontSize: 9 }} /><Tooltip formatter={v => `R$ ${fmt(v)}/saca`} contentStyle={{ borderRadius: 8, fontSize: 11 }} /><Area type="monotone" dataKey="cafe" name="Café" stroke="#6f4e37" strokeWidth={3} fill="url(#cg)" dot={{ r: 4, fill: "#6f4e37" }} /></AreaChart></ResponsiveContainer></div>
-      </Card>
+      <div className="flex gap-2">
+        <button onClick={() => setMode("commodities")} className="px-3 py-1.5 rounded-full text-xs font-bold" style={{ background: mode === "commodities" ? "#166534" : "#f1f5f9", color: mode === "commodities" ? "#fff" : "#64748b" }}>🌾 Commodities</button>
+        <button onClick={() => setMode("acoes")} className="px-3 py-1.5 rounded-full text-xs font-bold" style={{ background: mode === "acoes" ? "#1a5276" : "#f1f5f9", color: mode === "acoes" ? "#fff" : "#64748b" }}>📈 Ações / ETFs</button>
+      </div>
+      {mode === "commodities" ? <GraficosCommoditiesPanel key={target?.type === "commodity" ? target.key : "default"} target={target} /> : <GraficosAcoesPanel key={target?.type === "stock" ? target.symbol : "default"} target={target} />}
+      <ComoLerGraficoCard />
     </div>
   );
 }
@@ -346,6 +478,8 @@ export default function App() {
 
   const [moedas, setMoedas] = useState(INIT_MOEDAS);
   const [pm, setPm] = useState({});
+  const [chartTarget, setChartTarget] = useState(null);
+  const viewChart = useCallback((target) => { setChartTarget(target); setTab("graficos"); }, []);
 
   const updating = useRef(false);
   const moedasRef = useRef(moedas);
@@ -431,10 +565,10 @@ export default function App() {
       </div>
       <div className="max-w-4xl mx-auto px-3 py-4">
         {tab === "painel" && <CountdownBar sec={cd} total={UPDATE_SEC} paused={paused} onToggle={() => setPaused(p => !p)} onRefresh={doUpdate} count={count} last={last} source={dataSource} />}
-        {tab === "painel" && <PainelTab moedas={moedas} pm={pm} flash={flash} selic={selic} refresh={count} />}
+        {tab === "painel" && <PainelTab moedas={moedas} pm={pm} flash={flash} selic={selic} refresh={count} onViewChart={viewChart} />}
         {tab === "noticias" && <NoticiasTab />}
         {tab === "historico" && <HistoricoTab />}
-        {tab === "graficos" && <GraficosTab />}
+        {tab === "graficos" && <GraficosTab target={chartTarget} />}
         {tab === "glossario" && <GlossarioTab />}
       </div>
       <div className="text-center py-3 text-xs opacity-20">🎓 C.E.E.P.A. Fernando Costa — Santa Mariana, PR • Docente: Marcel Dancini Rodrigues</div>

@@ -180,20 +180,21 @@ export function CommodityQuotes({ refresh, onViewChart }) {
     </fieldset>)}
     {!selected.length && <p className="text-sm mt-4">Selecione uma ou mais commodities para consultar.</p>}
     <div className="flex flex-col gap-3 mt-4">{COMMODITIES.filter(row => selected.includes(row[0])).map(([id, name, market]) => {
-      const url = `https://www.noticiasagricolas.com.br/widgets/cotacoes?id=${id}&fonte=Arial&largura=420`;
+      const siteFont = 'system-ui,-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif';
+      const url = `https://www.noticiasagricolas.com.br/widgets/cotacoes?id=${id}&fonte=${encodeURIComponent(siteFont)}&largura=420`;
       const historyKey = COMMODITY_HISTORY_KEY[id];
-      return <article key={id} className="border rounded-lg p-2 min-w-0">
-        <div className="flex items-center justify-between gap-2 mb-2">
+      return <article key={id} className="rounded-xl border shadow-sm bg-white p-3 min-w-0" style={{ borderColor: 'rgba(0,0,0,0.1)' }}>
+        <div className="flex items-center justify-between gap-2 mb-2 pb-2" style={{ borderBottom: '1px solid #e5e7eb' }}>
           <h3 className="font-semibold text-sm">{name} <span className="text-xs text-slate-500">· {market}</span></h3>
           {onViewChart && historyKey && (
             <button type="button" onClick={() => onViewChart({ type: 'commodity', id, key: historyKey, name })}
               className="text-xs font-bold text-green-800 underline shrink-0">Ver gráfico</button>
           )}
         </div>
-        <div className="w-full overflow-x-auto rounded-lg">
-          <iframe key={`${id}-${refresh}`} src={url} title={`Cotação de ${name}`} className="border-0 h-36 bg-white" style={{ width: 440 }} loading="lazy" />
+        <div className="w-full overflow-x-auto overflow-y-auto rounded-lg border" style={{ maxHeight: 260, borderColor: '#e5e7eb' }}>
+          <iframe key={`${id}-${refresh}`} src={url} title={`Cotação de ${name}`} className="border-0 bg-white block" style={{ width: 440, height: 320 }} loading="lazy" />
         </div>
-        <a className="text-xs text-blue-800 underline" href={url} target="_blank" rel="noopener noreferrer">Ver cotação na fonte / abrir se a tabela não carregar</a>
+        <a className="text-xs text-blue-800 underline mt-2 inline-block" href={url} target="_blank" rel="noopener noreferrer">Ver cotação na fonte / abrir se a tabela não carregar</a>
       </article>;
     })}</div>
     <p className="text-xs text-slate-500 mt-2">Fonte: Notícias Agrícolas e provedores indicados nas tabelas. Publicação conforme cada mercado; a consulta periódica não implica preço em tempo real.</p>

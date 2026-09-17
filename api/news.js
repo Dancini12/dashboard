@@ -44,6 +44,8 @@ export default async function handler(req, res) {
       if (title) items.push({ title, author, link, pubDate, thumbnail });
     }
 
+    items.sort((a, b) => new Date(b.pubDate) - new Date(a.pubDate));
+
     res.setHeader("Cache-Control", "s-maxage=120, stale-while-revalidate=300");
     res.setHeader("Access-Control-Allow-Origin", "*");
     res.status(200).json({ status: "ok", items: items.slice(0, 20) });

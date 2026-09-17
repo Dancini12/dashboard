@@ -180,7 +180,7 @@ export function CommodityQuotes({ refresh, onViewChart }) {
     </fieldset>)}
     {!selected.length && <p className="text-sm mt-4">Selecione uma ou mais commodities para consultar.</p>}
     <div className="flex flex-col gap-3 mt-4">{COMMODITIES.filter(row => selected.includes(row[0])).map(([id, name, market]) => {
-      const url = `https://www.noticiasagricolas.com.br/widgets/cotacoes?id=${id}&fonte=Arial&largura=100%25`;
+      const url = `https://www.noticiasagricolas.com.br/widgets/cotacoes?id=${id}&fonte=Arial&largura=420`;
       const historyKey = COMMODITY_HISTORY_KEY[id];
       return <article key={id} className="border rounded-lg p-2 min-w-0">
         <div className="flex items-center justify-between gap-2 mb-2">
@@ -191,7 +191,7 @@ export function CommodityQuotes({ refresh, onViewChart }) {
           )}
         </div>
         <div className="w-full overflow-x-auto rounded-lg">
-          <iframe key={`${id}-${refresh}`} src={url} title={`Cotação de ${name}`} className="border-0 h-80 bg-white" style={{ width: '100%', minWidth: 480 }} loading="lazy" />
+          <iframe key={`${id}-${refresh}`} src={url} title={`Cotação de ${name}`} className="border-0 h-36 bg-white" style={{ width: 440 }} loading="lazy" />
         </div>
         <a className="text-xs text-blue-800 underline" href={url} target="_blank" rel="noopener noreferrer">Ver cotação na fonte / abrir se a tabela não carregar</a>
       </article>;

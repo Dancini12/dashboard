@@ -1,7 +1,7 @@
 import { StockQuotes, CommodityQuotes, TICKER_RE } from "./components/MarketQuotes";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
-import { RefreshCw, BookOpen, BarChart3, Clock, Wheat, DollarSign, Activity, ChevronDown, ChevronUp, Timer, ArrowRight, Pause, Play, Newspaper, ExternalLink } from "lucide-react";
+import { RefreshCw, BookOpen, BarChart3, Clock, Wheat, DollarSign, Activity, ChevronDown, ChevronUp, Timer, ArrowRight, Pause, Play, Newspaper, ExternalLink, Search, MapPin } from "lucide-react";
 
 const UPDATE_SEC = 60;
 const API_MOEDAS_URL = "https://economia.awesomeapi.com.br/json/last/USD-BRL,EUR-BRL,GBP-BRL,ARS-BRL";
@@ -43,6 +43,32 @@ const GLOSSARIO = [
   { termo: "Hedge", def: "Proteção contra variação de preço. Produtor trava preço futuro na bolsa.", icon: "🛡️" },
   { termo: "Volatilidade", def: "Grau de oscilação dos preços. Café arábica é muito volátil.", icon: "⚡" },
 ];
+const WMO = {
+  0:  { label: "Céu limpo",            emoji: "☀️"  },
+  1:  { label: "Principalmente limpo", emoji: "🌤️"  },
+  2:  { label: "Parcialmente nublado", emoji: "⛅"  },
+  3:  { label: "Nublado",              emoji: "☁️"  },
+  45: { label: "Névoa",                emoji: "🌫️"  },
+  48: { label: "Névoa com geada",      emoji: "🌫️"  },
+  51: { label: "Garoa leve",           emoji: "🌦️"  },
+  53: { label: "Garoa moderada",       emoji: "🌦️"  },
+  55: { label: "Garoa intensa",        emoji: "🌦️"  },
+  61: { label: "Chuva leve",           emoji: "🌧️"  },
+  63: { label: "Chuva moderada",       emoji: "🌧️"  },
+  65: { label: "Chuva forte",          emoji: "🌧️"  },
+  71: { label: "Neve leve",            emoji: "🌨️"  },
+  73: { label: "Neve moderada",        emoji: "🌨️"  },
+  75: { label: "Neve forte",           emoji: "🌨️"  },
+  80: { label: "Pancadas leves",       emoji: "🌦️"  },
+  81: { label: "Pancadas moderadas",   emoji: "🌧️"  },
+  82: { label: "Pancadas violentas",   emoji: "⛈️"  },
+  95: { label: "Trovoada",             emoji: "⛈️"  },
+  96: { label: "Trovoada c/ granizo",  emoji: "⛈️"  },
+  99: { label: "Trovoada forte",       emoji: "⛈️"  },
+};
+const getWmo = (code) => WMO[code] || { label: "Variável", emoji: "🌡️" };
+const WEEK = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
+
 const fmt = (v, d = 2) => v.toLocaleString("pt-BR", { minimumFractionDigits: d, maximumFractionDigits: d });
 const fmtInt = (v) => v.toLocaleString("pt-BR");
 const simVar = (val, pct = 0.4) => parseFloat((val + val * (Math.random() * pct * 2 - pct) / 100).toFixed(val < 1 ? 4 : 2));
@@ -93,6 +119,126 @@ function CountdownBar({ sec, total, paused, onToggle, onRefresh, count, last, so
   );
 }
 
+function WeatherWidget() {
+  const [input, setInput] = useState("Santa Mariana");
+  const [weather, setWeather] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  const fetchWeather = async (loc) => {
+    if (!loc.trim()) return;
+    setLoading(true);
+    setError(null);
+    try {
+      const geoRes = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(loc)}&count=1&language=pt&format=json`);
+      const geoData = await geoRes.json();
+      if (!geoData.results?.length) throw new Error("Localidade não encontrada");
+      const { latitude, longitude, name, admin1 } = geoData.results[0];
+      const wRes = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,weather_code,wind_speed_10m,relative_humidity_2m&daily=temperature_2m_max,temperature_2m_min,weather_code,precipitation_probability_max&timezone=auto&forecast_days=5&wind_speed_unit=kmh`);
+      const wData = await wRes.json();
+      setWeather({ name: `${name}${admin1 ? `, ${admin1}` : ""}`, current: wData.current, daily: wData.daily });
+    } catch (e) {
+      setError(e.message || "Erro ao buscar previsão");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    const controller = new AbortController();
+    (async () => {
+      try {
+        const geoRes = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent("Santa Mariana")}&count=1&language=pt&format=json`, { signal: controller.signal });
+        const geoData = await geoRes.json();
+        if (!geoData.results?.length) throw new Error("Localidade não encontrada");
+        const { latitude, longitude, name, admin1 } = geoData.results[0];
+        const wRes = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,weather_code,wind_speed_10m,relative_humidity_2m&daily=temperature_2m_max,temperature_2m_min,weather_code,precipitation_probability_max&timezone=auto&forecast_days=5&wind_speed_unit=kmh`, { signal: controller.signal });
+        const wData = await wRes.json();
+        setWeather({ name: `${name}${admin1 ? `, ${admin1}` : ""}`, current: wData.current, daily: wData.daily });
+      } catch (e) {
+        if (!controller.signal.aborted) setError(e.message || "Erro ao buscar previsão");
+      } finally {
+        if (!controller.signal.aborted) setLoading(false);
+      }
+    })();
+    return () => controller.abort();
+  }, []);
+
+  return (
+    <Card className="p-3 mb-4" style={{ borderLeft: "4px solid #1e40af", background: "linear-gradient(135deg,#dbeafe 0%,#eff6ff 100%)" }}>
+      <div className="flex items-center gap-2 mb-2.5">
+        <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0" style={{ background: "#1e40af" }}>
+          <span style={{ fontSize: 15 }}>🌤️</span>
+        </div>
+        <h2 className="text-sm font-bold" style={{ color: "#1e40af" }}>Previsão do Tempo</h2>
+      </div>
+
+      <div className="flex gap-1.5 mb-3">
+        <div className="flex-1 relative">
+          <MapPin size={12} style={{ position: "absolute", left: 8, top: "50%", transform: "translateY(-50%)", color: "#93c5fd" }} />
+          <input
+            value={input}
+            onChange={e => setInput(e.target.value)}
+            onKeyDown={e => e.key === "Enter" && fetchWeather(input)}
+            placeholder="Digite a localidade..."
+            className="w-full rounded-lg border text-sm"
+            style={{ paddingLeft: 26, paddingRight: 10, paddingTop: 6, paddingBottom: 6, borderColor: "#93c5fd", outline: "none", background: "rgba(255,255,255,0.8)", fontSize: 13 }}
+          />
+        </div>
+        <button
+          onClick={() => fetchWeather(input)}
+          disabled={loading}
+          className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold"
+          style={{ background: "#1e40af", color: "#fff", opacity: loading ? 0.7 : 1 }}
+        >
+          <Search size={12} />{loading ? "..." : "Buscar"}
+        </button>
+      </div>
+
+      {error && <div className="text-xs px-2 py-1 rounded-lg mb-2" style={{ background: "#fee2e2", color: "#991b1b" }}>{error}</div>}
+
+      {loading && !weather && (
+        <div className="text-center py-4 text-sm opacity-40">Buscando previsão do tempo...</div>
+      )}
+
+      {weather && (
+        <>
+          <div className="flex items-center gap-3 mb-3 flex-wrap">
+            <div style={{ fontSize: 44, lineHeight: 1 }}>{getWmo(weather.current.weather_code).emoji}</div>
+            <div>
+              <div className="text-3xl font-black" style={{ color: "#1e3a8a", lineHeight: 1 }}>{Math.round(weather.current.temperature_2m)}°C</div>
+              <div className="text-xs font-semibold mt-0.5" style={{ color: "#3b82f6" }}>{getWmo(weather.current.weather_code).label}</div>
+              <div className="text-xs mt-0.5 opacity-50">{weather.name}</div>
+            </div>
+            <div className="ml-auto text-xs space-y-1 text-right shrink-0">
+              <div className="font-semibold" style={{ color: "#1e40af" }}>💨 {Math.round(weather.current.wind_speed_10m)} km/h</div>
+              <div className="font-semibold" style={{ color: "#1e40af" }}>💧 {weather.current.relative_humidity_2m}%</div>
+            </div>
+          </div>
+
+          <div className="grid gap-1" style={{ gridTemplateColumns: "repeat(5,1fr)" }}>
+            {weather.daily.time.slice(0, 5).map((date, i) => {
+              const d = new Date(date + "T12:00:00");
+              const rain = weather.daily.precipitation_probability_max[i];
+              return (
+                <div key={i} className="flex flex-col items-center rounded-xl py-2 px-1" style={{ background: i === 0 ? "rgba(30,64,175,0.12)" : "rgba(255,255,255,0.55)" }}>
+                  <div className="text-xs font-bold mb-1" style={{ color: i === 0 ? "#1e3a8a" : "#64748b" }}>{i === 0 ? "Hoje" : WEEK[d.getDay()]}</div>
+                  <div style={{ fontSize: 22, lineHeight: 1 }}>{getWmo(weather.daily.weather_code[i]).emoji}</div>
+                  <div className="text-xs font-black mt-1" style={{ color: "#1e3a8a" }}>{Math.round(weather.daily.temperature_2m_max[i])}°</div>
+                  <div className="text-xs opacity-40">{Math.round(weather.daily.temperature_2m_min[i])}°</div>
+                  {rain > 20 && <div className="text-xs font-semibold mt-0.5" style={{ color: "#2563eb" }}>☂ {rain}%</div>}
+                </div>
+              );
+            })}
+          </div>
+
+          <div className="mt-2 text-xs opacity-25 text-right">Fonte: Open-Meteo.com (dados gratuitos, sem API key)</div>
+        </>
+      )}
+    </Card>
+  );
+}
+
 function PainelTab({ moedas, pm, flash, selic, refresh, onViewChart }) {
   const indicadores = INDICADORES.map(ind => ind.nome === 'Selic' ? {
     ...ind, valor: selic.value != null ? `${fmt(selic.value)}% a.a.` : selic.error ? 'Indisponível' : 'Carregando…',
@@ -100,6 +246,7 @@ function PainelTab({ moedas, pm, flash, selic, refresh, onViewChart }) {
   } : ind);
   return (
     <div className="space-y-4">
+      <WeatherWidget />
       <div className="rounded-xl overflow-hidden" style={{ background: "linear-gradient(135deg,#0c2340 0%,#1a5276 40%,#1e8449 100%)" }}>
         <div className="px-4 py-4 flex items-center gap-3">
           <div className="rounded-full border-2 border-white flex items-center justify-center shrink-0" style={{ width: 60, height: 60, background: "radial-gradient(circle, #2E7D32 60%, #1B5E20 100%)" }}>

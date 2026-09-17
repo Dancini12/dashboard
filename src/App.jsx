@@ -249,7 +249,6 @@ function PainelTab({ moedas, pm, flash, selic, refresh, onViewChart }) {
       <div className="rounded-xl overflow-hidden" style={{ background: "linear-gradient(135deg,#0c2340 0%,#1a5276 40%,#1e8449 100%)" }}>
         <div className="px-4 py-4">
           <h1 className="text-base font-bold text-white">Mercado Agrícola</h1>
-          <div className="text-xs mt-0.5" style={{ color: "rgba(255,255,255,0.55)" }}>Santa Mariana, PR • Docente: <strong style={{ color: "rgba(255,255,255,0.8)" }}>Marcel Dancini Rodrigues</strong> • {new Date().toLocaleDateString("pt-BR")}</div>
         </div>
       </div>
       <WeatherWidget />
@@ -704,7 +703,7 @@ export default function App() {
         </div>
         <div>
           <div className="text-sm font-bold" style={{ color: "#166534" }}>C.E.E.P.A. Fernando Costa</div>
-          <div className="text-xs opacity-50">Santa Mariana, PR • Docente: Marcel Dancini Rodrigues</div>
+          <div className="text-xs opacity-50">Santa Mariana, PR • Docente: <strong className="opacity-80">Marcel Dancini Rodrigues</strong> • {new Date().toLocaleDateString("pt-BR")}</div>
         </div>
       </div>
       <div className="sticky top-0 z-50 border-b" style={{ background: "rgba(255,255,255,0.92)", backdropFilter: "blur(12px)", borderColor: "rgba(0,0,0,0.06)" }}>

@@ -165,7 +165,7 @@ function WeatherWidget() {
   }, []);
 
   return (
-    <Card className="p-3 mb-4" style={{ borderLeft: "4px solid #1e40af", background: "linear-gradient(135deg,#dbeafe 0%,#eff6ff 100%)" }}>
+    <Card className="p-3" style={{ borderLeft: "4px solid #1e40af", background: "linear-gradient(135deg,#dbeafe 0%,#eff6ff 100%)" }}>
       <div className="flex items-center gap-2 mb-2.5">
         <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0" style={{ background: "#1e40af" }}>
           <span style={{ fontSize: 15 }}>🌤️</span>
@@ -246,7 +246,6 @@ function PainelTab({ moedas, pm, flash, selic, refresh, onViewChart }) {
   } : ind);
   return (
     <div className="space-y-4">
-      <WeatherWidget />
       <div className="rounded-xl overflow-hidden" style={{ background: "linear-gradient(135deg,#0c2340 0%,#1a5276 40%,#1e8449 100%)" }}>
         <div className="px-4 py-4 flex items-center gap-3">
           <div className="rounded-full border-2 border-white flex items-center justify-center shrink-0" style={{ width: 60, height: 60, background: "radial-gradient(circle, #2E7D32 60%, #1B5E20 100%)" }}>
@@ -259,6 +258,7 @@ function PainelTab({ moedas, pm, flash, selic, refresh, onViewChart }) {
           </div>
         </div>
       </div>
+      <WeatherWidget />
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         <Card className="p-3"><SecTitle icon={DollarSign} title="Moedas" color="#1a5276" />{moedas.map((m, i) => <PriceRow key={m.id} emoji={m.emoji} nome={m.nome} valor={m.valor} prev={pm[m.id]} varPct={m.var} flash={flash.has(m.id)} alt={i % 2 === 0} />)}<div className="mt-2 text-xs opacity-25 text-right">Fonte: AwesomeAPI (tempo real)</div></Card>
         <StockQuotes refresh={refresh} onViewChart={onViewChart} />

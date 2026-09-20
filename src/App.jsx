@@ -1,3 +1,4 @@
+import VisitorCounter from "./components/VisitorCounter";
 import { StockQuotes, CommodityQuotes, TICKER_RE } from "./components/MarketQuotes";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
@@ -724,6 +725,7 @@ export default function App() {
         {tab === "glossario" && <GlossarioTab />}
       </div>
       <div className="text-center py-3 text-xs opacity-20">🎓 C.E.E.P.A. Fernando Costa — Santa Mariana, PR • Docente: Marcel Dancini Rodrigues</div>
+      <VisitorCounter />
     </div>
   );
 }

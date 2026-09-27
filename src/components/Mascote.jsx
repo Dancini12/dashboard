@@ -6,10 +6,7 @@ import olhosMeio from "./mascote/olhos-meio.webp";
 import olhosFechados from "./mascote/olhos-fechados.webp";
 import rosto from "./mascote/rosto.webp";
 import sentado from "./mascote/acoes/sentado.webp";
-import agua from "./mascote/acoes/agua.webp";
-import maca from "./mascote/acoes/maca.webp";
 import cafe from "./mascote/acoes/cafe.webp";
-import violao from "./mascote/acoes/violao.webp";
 import cochilo from "./mascote/acoes/cochilo.webp";
 import "./Mascote.css";
 
@@ -18,31 +15,27 @@ const PISCADA = [[1, 45], [2, 90], [1, 45], [0, 0]];
 const LS_POS = "agroinfo_mascote_pos";
 const limitar = (v, min, max) => Math.min(max, Math.max(min, v));
 
-// Poses de ação. w = largura em % do quadro do mascote (mesma escala do castor em pé);
-// ar = proporção da imagem; esq = recuo à esquerda (poses em pé, alinhadas à pose base);
-// lado = pose mais larga que o quadro, alinhada ao lado de dentro da tela (violão e
-// cochilo um pouco reduzidos para caber na margem lateral); ms = duração.
-const ACOES = {
-  sentar: { rotulo: "Sentar", emoji: "🌾", img: sentado, w: 114.17, ar: "411 / 572", lado: true, ms: 9000 },
-  agua: { rotulo: "Beber água", emoji: "💧", img: agua, w: 100, ar: "360 / 614", esq: 0.23, ms: 6000 },
-  fruta: { rotulo: "Comer uma fruta", emoji: "🍎", img: maca, w: 91.67, ar: "330 / 613", esq: 0.23, ms: 7000 },
-  cafe: { rotulo: "Tomar um café", emoji: "☕", img: cafe, w: 89.72, ar: "323 / 608", esq: 1.97, ms: 8000, efeito: "vapor" },
-  violao: { rotulo: "Tocar violão", emoji: "🎸", img: violao, w: 115, ar: "461 / 599", lado: true, ms: 11000, efeito: "notas" },
-  cochilo: { rotulo: "Tirar um cochilo", emoji: "😴", img: cochilo, w: 118, ar: "618 / 244", lado: true, ms: 14000, efeito: "zzz" },
+// Cenas. w = largura em % do quadro do mascote (mesma escala do castor em pé);
+// ar = proporção da imagem; esq = recuo à esquerda (pose em pé, alinhada à base);
+// lado = pose mais larga que o quadro, alinhada ao lado de dentro da tela (cochilo
+// um pouco reduzido para caber na margem lateral); ms = duração da cena sorteada.
+const CENAS = {
+  sentar: { img: sentado, w: 114.17, ar: "411 / 572", lado: true, ms: 9000 },
+  cafe: { img: cafe, w: 89.72, ar: "323 / 608", esq: 1.97, ms: 8000, efeito: "vapor" },
+  cochilo: { img: cochilo, w: 118, ar: "618 / 244", lado: true, efeito: "zzz" }, // até o visitante voltar
 };
-const EFEITOS = { vapor: ["", "", ""], notas: ["♪", "♫", "♪"], zzz: ["z", "z", "Z"] };
+const SORTEAVEIS = ["sentar", "cafe"];
+const EFEITOS = { vapor: ["", "", ""], zzz: ["z", "z", "Z"] };
+const OCIOSO_MS = 30000; // sem mexer no site por mais que isso: cochila
+const ATIVIDADE = ["pointermove", "pointerdown", "keydown", "wheel", "touchstart", "scroll"];
 
 const espera = (min, max) => min + Math.random() * (max - min);
-const sortear = (evitar) => {
-  const nomes = Object.keys(ACOES).filter(n => n !== evitar);
-  return nomes[Math.floor(Math.random() * nomes.length)];
-};
+const escolher = (lista) => lista[Math.floor(Math.random() * lista.length)];
 
-// Lado da tela em que o mascote está: poses largas e o menu abrem para dentro.
-function lados(el) {
+// Poses largas se estendem para o lado de dentro da tela.
+function paraDentro(el) {
   const r = el?.getBoundingClientRect();
-  const { clientWidth: vw, clientHeight: vh } = document.documentElement;
-  return r ? { direita: r.left + r.width / 2 > vw / 2, embaixo: r.top + r.height / 2 > vh / 2 } : { direita: true, embaixo: false };
+  return r ? r.left + r.width / 2 > document.documentElement.clientWidth / 2 : true;
 }
 
 function lerPosicao() {
@@ -54,26 +47,28 @@ function lerPosicao() {
 }
 
 // Castor no canto superior direito; pode ser arrastado para qualquer lugar da tela.
-// Clicar nele abre o menu de ações; parado, ele também faz uma ação sozinho de vez
-// em quando. Balançar corpo e cabeça é CSS; o piscar é aqui, em intervalos
-// aleatórios (às vezes uma piscada dupla).
+// Alterna sozinho, ao acaso, entre ficar em pé, sentar e tomar café; clicar nele
+// sorteia outra cena. Se o visitante passar 30 s sem mexer no site, ele cochila e
+// acorda no próximo movimento. Balançar corpo e cabeça é CSS; o piscar é aqui, em
+// intervalos aleatórios (às vezes uma piscada dupla).
 export default function Mascote({ onFechar }) {
   const [olhos, setOlhos] = useState(0);
   const [pos, setPos] = useState(lerPosicao); // null = canto padrão
   const [inclina, setInclina] = useState(null); // graus enquanto arrasta; null = solto
   const [pousando, setPousando] = useState(false);
-  const [acao, setAcao] = useState(null); // { nome, direita } ou null (em pé)
-  const [menu, setMenu] = useState(null); // { direita, embaixo } ou null (fechado)
+  const [cena, setCena] = useState(null); // { nome, direita } ou null (em pé)
   const caixa = useRef(null);
   const arrasto = useRef(null);
-  const ultima = useRef(null);
+  const dormindo = useRef(false);
+  const acordouEm = useRef(0);
 
-  const fazer = (nome) => {
-    ultima.current = nome;
-    setAcao({ nome, direita: lados(caixa.current).direita });
-    setMenu(null);
+  const trocar = () => {
+    if (Date.now() - acordouEm.current < 600) return; // o toque que acordou não conta como troca
+    const atual = cena?.nome ?? null;
+    if (atual === "cochilo") return setCena(null);
+    const nome = escolher([null, ...SORTEAVEIS].filter(n => n !== atual));
+    setCena(nome && { nome, direita: paraDentro(caixa.current) });
   };
-  const alternarMenu = () => setMenu(m => (m ? null : lados(caixa.current)));
 
   const aoPressionar = (e) => {
     if (e.button !== 0) return;
@@ -86,7 +81,7 @@ export default function Mascote({ onFechar }) {
     const a = arrasto.current;
     if (!a || a.id !== e.pointerId) return;
     if (!a.moveu && Math.hypot(e.clientX - a.sx, e.clientY - a.sy) < 5) return;
-    if (!a.moveu) { setAcao(null); setMenu(null); } // pego no colo: larga o que fazia
+    if (!a.moveu) setCena(null); // pego no colo: larga o que fazia
     a.moveu = true;
     const r = caixa.current.getBoundingClientRect();
     const { clientWidth: vw, clientHeight: vh } = document.documentElement;
@@ -108,42 +103,50 @@ export default function Mascote({ onFechar }) {
     arrasto.current = null;
     clearTimeout(a.parado);
     setInclina(null);
-    if (!a.moveu) return alternarMenu(); // clique simples
+    if (!a.moveu) return trocar(); // clique simples
     try { localStorage.setItem(LS_POS, JSON.stringify(a.pos)); } catch { /* ignora */ }
     setPousando(true);
   };
 
-  // Termina a ação depois da duração; parado e sem menu, sorteia a próxima.
+  // Cena sorteada termina depois da duração; em pé, sorteia a próxima.
   useEffect(() => {
-    if (acao) {
-      const t = setTimeout(() => setAcao(null), ACOES[acao.nome].ms);
+    dormindo.current = cena?.nome === "cochilo";
+    if (dormindo.current) return; // dorme até o visitante voltar
+    if (cena) {
+      const t = setTimeout(() => setCena(null), CENAS[cena.nome].ms);
       return () => clearTimeout(t);
     }
-    if (menu) return;
-    const t = setTimeout(() => {
-      const nome = sortear(ultima.current);
-      ultima.current = nome;
-      setAcao({ nome, direita: lados(caixa.current).direita });
-    }, espera(25000, 50000));
+    const t = setTimeout(() => setCena({ nome: escolher(SORTEAVEIS), direita: paraDentro(caixa.current) }), espera(10000, 20000));
     return () => clearTimeout(t);
-  }, [acao, menu]);
+  }, [cena]);
 
-  // Menu fecha ao clicar fora ou com Esc.
+  // Inatividade: sem mouse, toque, teclado ou rolagem por 30 s, cochila; qualquer
+  // atividade acorda.
   useEffect(() => {
-    if (!menu) return;
-    const fora = (e) => { if (!caixa.current?.contains(e.target)) setMenu(null); };
-    const esc = (e) => { if (e.key === "Escape") setMenu(null); };
-    document.addEventListener("pointerdown", fora);
-    document.addEventListener("keydown", esc);
-    return () => {
-      document.removeEventListener("pointerdown", fora);
-      document.removeEventListener("keydown", esc);
+    let ultimaAtividade = Date.now();
+    const ativo = () => {
+      ultimaAtividade = Date.now();
+      if (!dormindo.current) return;
+      dormindo.current = false;
+      acordouEm.current = ultimaAtividade;
+      setCena(null);
     };
-  }, [menu]);
+    const opcoes = { passive: true, capture: true };
+    ATIVIDADE.forEach(ev => window.addEventListener(ev, ativo, opcoes));
+    const t = setInterval(() => {
+      if (dormindo.current || arrasto.current || Date.now() - ultimaAtividade < OCIOSO_MS) return;
+      dormindo.current = true;
+      setCena({ nome: "cochilo", direita: paraDentro(caixa.current) });
+    }, 1000);
+    return () => {
+      clearInterval(t);
+      ATIVIDADE.forEach(ev => window.removeEventListener(ev, ativo, opcoes));
+    };
+  }, []);
 
-  // Pré-carrega as poses para a troca ser instantânea.
+  // Pré-carrega as cenas para a troca ser instantânea.
   useEffect(() => {
-    const t = setTimeout(() => Object.values(ACOES).forEach(a => { new Image().src = a.img; }), 2500);
+    const t = setTimeout(() => Object.values(CENAS).forEach(c => { new Image().src = c.img; }), 2500);
     return () => clearTimeout(t);
   }, []);
 
@@ -173,17 +176,16 @@ export default function Mascote({ onFechar }) {
     return () => clearTimeout(timer);
   }, []);
 
-  const A = acao && ACOES[acao.nome];
+  const C = cena && CENAS[cena.nome];
 
   return (
     <div ref={caixa}
-      className={`mascote${pos ? " posicionado" : ""}${inclina !== null ? " arrastando" : ""}${pousando ? " pousando" : ""}${A ? " em-acao" : ""}`}
+      className={`mascote${pos ? " posicionado" : ""}${inclina !== null ? " arrastando" : ""}${pousando ? " pousando" : ""}${C ? " em-acao" : ""}`}
       style={pos ? { "--fx": pos.fx, "--fy": pos.fy } : undefined}>
-      <div className="mascote-camada mascote-figura" role="button" tabIndex={0}
-        aria-label="Mascote: escolher o que ele faz" aria-haspopup="true" aria-expanded={!!menu}
+      <div className="mascote-camada mascote-figura" role="button" tabIndex={0} aria-label="Mascote: trocar de cena"
         style={inclina !== null ? { transform: `rotate(${inclina}deg) scale(1.06)` } : undefined}
         onPointerDown={aoPressionar} onPointerMove={aoMover} onPointerUp={aoSoltar} onPointerCancel={aoSoltar}
-        onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); alternarMenu(); } }}>
+        onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); trocar(); } }}>
         <div className="mascote-sombra" aria-hidden="true" />
         <div className="mascote-camada mascote-corpo" aria-hidden="true">
           <div className="mascote-camada mascote-respira">
@@ -195,25 +197,14 @@ export default function Mascote({ onFechar }) {
             </div>
           </div>
         </div>
-        {A && (
-          <div key={acao.nome} className={`mascote-acao mascote-acao-${acao.nome}`} aria-hidden="true"
-            style={{ width: `${A.w}%`, aspectRatio: A.ar, ...(A.lado ? { [acao.direita ? "right" : "left"]: 0 } : { left: `${A.esq}%` }) }}>
-            <img src={A.img} alt="" draggable={false} />
-            {A.efeito && <span className={`mascote-efeito mascote-${A.efeito}`}>{EFEITOS[A.efeito].map((c, i) => <i key={i}>{c}</i>)}</span>}
+        {C && (
+          <div key={cena.nome} className={`mascote-acao mascote-acao-${cena.nome}`} aria-hidden="true"
+            style={{ width: `${C.w}%`, aspectRatio: C.ar, ...(C.lado ? { [cena.direita ? "right" : "left"]: 0 } : { left: `${C.esq}%` }) }}>
+            <img src={C.img} alt="" draggable={false} />
+            {C.efeito && <span className={`mascote-efeito mascote-${C.efeito}`}>{EFEITOS[C.efeito].map((c, i) => <i key={i}>{c}</i>)}</span>}
           </div>
         )}
       </div>
-      {menu && (
-        <div className={`mascote-menu ${menu.direita ? "esquerda" : "direita"}${menu.embaixo ? " embaixo" : ""}`} role="group" aria-label="O que o castor faz?">
-          <div className="mascote-menu-titulo">O que eu faço?</div>
-          {A && <button type="button" onClick={() => { setAcao(null); setMenu(null); }}><span aria-hidden="true">🤠</span>Ficar de pé</button>}
-          {Object.entries(ACOES).map(([nome, a]) => (
-            <button key={nome} type="button" className={acao?.nome === nome ? "ativa" : undefined} onClick={() => fazer(nome)}>
-              <span aria-hidden="true">{a.emoji}</span>{a.rotulo}
-            </button>
-          ))}
-        </div>
-      )}
       <button type="button" className="mascote-fechar" onClick={onFechar} aria-label="Fechar mascote" title="Fechar mascote">
         <X size={14} strokeWidth={2.5} />
       </button>

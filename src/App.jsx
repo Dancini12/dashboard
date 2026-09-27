@@ -1,4 +1,6 @@
 import VisitorCounter from "./components/VisitorCounter";
+import Mascote, { BotaoMascote } from "./components/Mascote";
+import useMascote from "./components/useMascote";
 import { StockQuotes, CommodityQuotes, TICKER_RE } from "./components/MarketQuotes";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
@@ -611,6 +613,7 @@ export default function App() {
   const [flash, setFlash] = useState(new Set());
   const [selic, setSelic] = useState({});
   const [dataSource, setDataSource] = useState("aguardando");
+  const [mascote, setMascote] = useMascote();
 
   const [moedas, setMoedas] = useState(INIT_MOEDAS);
   const [pm, setPm] = useState({});
@@ -711,7 +714,10 @@ export default function App() {
         <div className="max-w-4xl mx-auto px-3">
           <div className="flex items-center justify-between py-2">
             <div className="flex items-center gap-2"><div className="rounded-full flex items-center justify-center" style={{ width: 26, height: 26, background: "#2E7D32" }}><span style={{ fontSize: 7, color: "#fff", fontWeight: 900 }}>CEEP</span></div><span className="text-sm font-bold" style={{ color: "#166534" }}>AgroInfo</span></div>
-            <div className="flex items-center gap-2 text-xs opacity-40">{count > 0 && <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: "#22c55e" }} />Ao vivo</span>}<span>{clock.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}</span></div>
+            <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 text-xs opacity-40">{count > 0 && <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: "#22c55e" }} />Ao vivo</span>}<span>{clock.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}</span></div>
+              <BotaoMascote visivel={mascote} onClick={() => setMascote(!mascote)} />
+            </div>
           </div>
           <div className="flex sm:justify-center gap-0.5 -mb-px overflow-x-auto">{TABS.map(t => { const I = TAB_ICONS[t]; return (<button key={t} onClick={() => setTab(t)} className="flex items-center gap-1 px-2.5 py-2 text-xs font-semibold rounded-t-lg whitespace-nowrap" style={{ background: tab === t ? "#fff" : "transparent", color: tab === t ? "#166534" : "#94a3b8", borderBottom: tab === t ? "2px solid #166534" : "2px solid transparent" }}><I size={12} />{TAB_LABELS[t]}</button>); })}</div>
         </div>
@@ -725,6 +731,7 @@ export default function App() {
         {tab === "glossario" && <GlossarioTab />}
       </div>
       <div className="text-center py-3 text-xs opacity-20">🎓 C.E.E.P.A. Fernando Costa — Santa Mariana, PR • Docente: Marcel Dancini Rodrigues</div>
+      {mascote && <Mascote onFechar={() => setMascote(false)} />}
       <VisitorCounter />
     </div>
   );

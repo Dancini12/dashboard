@@ -1,0 +1,348 @@
+/* Castor do canto superior direito. Camadas empilhadas no mesmo quadro:
+   corpo (balança a partir dos pés e "respira"), cabeça (inclina em torno do
+   pescoço) e olhos (quadros do piscar, trocados pelo componente). */
+.mascote {
+  position: fixed;
+  top: 12px;
+  right: 12px;
+  z-index: 60; /* acima da barra fixa do topo (z-50) */
+  /* ocupa a margem ao lado do conteúdo (896px), sem invadi-lo */
+  --mascote-w: clamp(96px, calc((100vw - 896px) / 2 - 32px), 150px);
+  width: var(--mascote-w);
+  aspect-ratio: 360 / 625;
+  pointer-events: none;
+  user-select: none;
+  animation: mascote-entrada 0.45s cubic-bezier(0.2, 0.9, 0.3, 1.2);
+}
+
+/* Depois de arrastado: posição guardada como fração do espaço livre na tela,
+   para continuar visível se a janela mudar de tamanho. */
+.mascote.posicionado {
+  right: auto;
+  left: calc((100% - var(--mascote-w)) * var(--fx));
+  top: calc((100% - var(--mascote-w) * 625 / 360) * var(--fy));
+}
+
+.mascote-figura {
+  pointer-events: auto;
+  cursor: grab;
+  touch-action: none; /* no celular, arrastar não rola a página */
+  transform-origin: 50% 12%; /* "segurado" pelo alto, balança pendurado */
+  transition: transform 0.18s ease-out;
+}
+
+.mascote.arrastando .mascote-figura {
+  cursor: grabbing;
+}
+
+.mascote-figura:focus-visible {
+  outline: 2px solid #166534;
+  outline-offset: 4px;
+  border-radius: 12px;
+}
+
+/* ---------- ações: troca a pose base por uma imagem animada ---------- */
+.mascote.em-acao .mascote-corpo {
+  visibility: hidden;
+}
+
+.mascote-acao {
+  position: absolute;
+  bottom: 1.8%;
+  animation: mascote-acao-entra 0.3s ease-out;
+}
+
+.mascote-acao > img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  transform-origin: 50% 100%;
+}
+
+.mascote-acao-sentar > img { animation: mascote-respira 3s ease-in-out infinite; }
+.mascote-acao-agua > img { animation: mascote-gole 1.4s ease-in-out infinite; }
+.mascote-acao-fruta > img { animation: mascote-mastiga 0.45s ease-in-out infinite; }
+.mascote-acao-cafe > img { animation: mascote-gole 2.6s ease-in-out infinite; }
+.mascote-acao-violao > img { animation: mascote-ritmo 0.9s ease-in-out infinite; }
+.mascote-acao-cochilo > img { animation: mascote-ronco 3.6s ease-in-out infinite; }
+
+.mascote-efeito {
+  position: absolute;
+  font-style: normal;
+  font-weight: 800;
+  line-height: 1;
+  font-size: clamp(11px, calc(var(--mascote-w) * 0.13), 20px);
+}
+
+.mascote-efeito > i {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  font-style: normal;
+  opacity: 0;
+}
+
+.mascote-efeito > i:nth-child(2) { animation-delay: 0.8s !important; }
+.mascote-efeito > i:nth-child(3) { animation-delay: 1.6s !important; }
+
+.mascote-zzz { left: 30%; top: 8%; color: #1e3a8a; }
+.mascote-zzz > i { animation: mascote-zzz 2.4s ease-out infinite; }
+
+.mascote-notas { left: 18%; top: 38%; color: #166534; }
+.mascote-notas > i { animation: mascote-nota 2.4s ease-out infinite; }
+.mascote-notas > i:nth-child(2) { color: #b45309; }
+
+.mascote-vapor { left: 60%; top: 26%; }
+.mascote-vapor > i {
+  width: 0.35em;
+  height: 0.9em;
+  border-radius: 50%;
+  background: rgba(148, 163, 184, 0.75);
+  filter: blur(1.5px);
+  animation: mascote-vapor 2.4s ease-out infinite;
+}
+.mascote-vapor > i:nth-child(2) { left: -0.35em; }
+.mascote-vapor > i:nth-child(3) { left: 0.35em; }
+
+/* ---------- menu de ações ---------- */
+.mascote-menu {
+  position: absolute;
+  top: 12%;
+  z-index: 1;
+  min-width: 158px;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: 6px;
+  border-radius: 12px;
+  border: 1px solid rgba(22, 101, 52, 0.2);
+  background: #fff;
+  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.18);
+  color: #166534;
+  font: 600 12px/1.2 system-ui, sans-serif;
+  pointer-events: auto;
+  user-select: none;
+  animation: mascote-menu-entra 0.15s ease-out;
+}
+
+.mascote-menu.esquerda { right: calc(100% + 8px); }
+.mascote-menu.direita { left: calc(100% + 8px); }
+.mascote-menu.embaixo { top: auto; bottom: 8%; }
+
+.mascote-menu-titulo {
+  padding: 4px 8px 6px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.mascote-menu button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 10px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.mascote-menu button:hover,
+.mascote-menu button:focus-visible {
+  background: #ecfdf5;
+  outline: none;
+}
+
+.mascote-menu button.ativa {
+  background: #dcfce7;
+}
+
+.mascote.arrastando .mascote-sombra {
+  opacity: 0.3;
+}
+
+.mascote.pousando .mascote-figura {
+  transform-origin: 50% 100%;
+  animation: mascote-pouso 0.45s ease-out;
+}
+
+.mascote-fechar {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  width: 26px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  border: 1px solid rgba(22, 101, 52, 0.25);
+  background: #fff;
+  color: #166534;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  cursor: pointer;
+  pointer-events: auto;
+  opacity: 0.8;
+  transition: opacity 0.15s, transform 0.15s;
+}
+
+.mascote-fechar:hover,
+.mascote-fechar:focus-visible {
+  opacity: 1;
+  transform: scale(1.1);
+}
+
+.mascote-fechar:focus-visible {
+  outline: 2px solid #166534;
+  outline-offset: 2px;
+}
+
+.mascote-camada,
+.mascote-camada > img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.mascote-sombra {
+  position: absolute;
+  left: 14%;
+  right: 3%;
+  bottom: -1.5%;
+  height: 5%;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(15, 23, 42, 0.3), transparent);
+  animation: mascote-sombra 3.4s ease-in-out infinite;
+}
+
+.mascote-corpo {
+  transform-origin: 55% 98%;
+  animation: mascote-balanco 3.4s ease-in-out infinite;
+}
+
+.mascote-respira {
+  transform-origin: 55% 98%;
+  animation: mascote-respira 2.6s ease-in-out infinite;
+}
+
+.mascote-cabeca {
+  transform-origin: 56.7% 35.8%; /* pescoço */
+  animation: mascote-cabeca 2.9s ease-in-out infinite;
+}
+
+.mascote .mascote-olhos {
+  position: absolute;
+  inset: auto;
+  left: 41.898%;
+  top: 15.733%;
+  width: 28.588%;
+  height: 8.067%;
+  opacity: 0;
+}
+
+.mascote .mascote-olhos.ativo {
+  opacity: 1;
+}
+
+@keyframes mascote-entrada {
+  from { opacity: 0; transform: translateY(-24px) scale(0.85); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes mascote-pouso {
+  0% { transform: translateY(-6%) scale(1.04); }
+  45% { transform: translateY(0) scale(1.05, 0.93); }
+  75% { transform: scale(0.98, 1.03); }
+  100% { transform: none; }
+}
+
+@keyframes mascote-acao-entra {
+  from { opacity: 0; transform: scale(0.92); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes mascote-menu-entra {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes mascote-gole {
+  0%, 100% { transform: none; }
+  50% { transform: rotate(-2deg) translateY(-0.6%); }
+}
+
+@keyframes mascote-mastiga {
+  0%, 100% { transform: none; }
+  50% { transform: translateY(-0.7%) scale(1.006, 0.994); }
+}
+
+@keyframes mascote-ritmo {
+  0%, 100% { transform: rotate(-1.6deg); }
+  50% { transform: rotate(1.6deg) translateY(-0.8%); }
+}
+
+@keyframes mascote-ronco {
+  0%, 100% { transform: scaleY(1); }
+  50% { transform: scaleY(1.04); }
+}
+
+@keyframes mascote-zzz {
+  0% { opacity: 0; transform: translate(0, 0) scale(0.6); }
+  20% { opacity: 1; }
+  100% { opacity: 0; transform: translate(1.6em, -2.4em) scale(1.3); }
+}
+
+@keyframes mascote-nota {
+  0% { opacity: 0; transform: translate(0, 0) rotate(-10deg); }
+  20% { opacity: 1; }
+  100% { opacity: 0; transform: translate(-1.2em, -3em) rotate(12deg); }
+}
+
+@keyframes mascote-vapor {
+  0% { opacity: 0; transform: translateY(0) scaleX(1); }
+  25% { opacity: 0.9; }
+  100% { opacity: 0; transform: translateY(-2.2em) scaleX(1.8); }
+}
+
+@keyframes mascote-balanco {
+  0%, 100% { transform: rotate(-1.6deg); }
+  50% { transform: rotate(1.6deg); }
+}
+
+@keyframes mascote-sombra {
+  0%, 100% { transform: translateX(-2%) scaleX(0.97); }
+  50% { transform: translateX(2%) scaleX(1.03); }
+}
+
+@keyframes mascote-respira {
+  0%, 100% { transform: scale(1, 1); }
+  50% { transform: scale(1.008, 1.018); }
+}
+
+@keyframes mascote-cabeca {
+  0%, 100% { transform: rotate(2.5deg); }
+  25% { transform: rotate(0deg) translateY(-0.8%); }
+  50% { transform: rotate(-2.5deg); }
+  75% { transform: rotate(0deg) translateY(-0.8%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mascote,
+  .mascote.pousando .mascote-figura,
+  .mascote-acao,
+  .mascote-acao > img,
+  .mascote-menu,
+  .mascote-sombra,
+  .mascote-corpo,
+  .mascote-respira,
+  .mascote-cabeca {
+    animation: none;
+  }
+}

@@ -26,11 +26,15 @@ Aluno ── pergunta ──> Castor (site) ── pergunta + cotações do pain
 
 | Dado | Origem |
 |---|---|
-| Tabelas das commodities abertas em "Consultar commodity" + soja (PR e Chicago), milho, boi gordo, café arábica e trigo | Notícias Agrícolas (as mesmas tabelas do painel, lidas pela API do site) |
 | Dólar, euro, libra e peso (só quando a cotação é real, não estimada) | AwesomeAPI |
 | Meta Selic | Banco Central |
 | IPCA, INPC, IGP-M, CDI e poupança | valores de referência fixos do painel |
 | Tabela Histórico 2020–2026 | tabela do painel |
+
+**Preços do dia das commodities não vão para o assistente.** No painel eles aparecem em
+tabelas do Notícias Agrícolas, e tanto o Notícias Agrícolas quanto o CEPEA bloqueiam a
+leitura automática (proteção Cloudflare). O painel avisa isso ao assistente, que explica o
+conceito e pede ao aluno que confira o preço e a variação na seção "Consultar commodity".
 
 ## Passo a passo
 
@@ -145,10 +149,9 @@ Dentro do mascote:
   onFechar={alternarConversa} onPensando={setPensando} />
 ```
 
-No momento da pergunta, o `AssistenteAgro` junta as tabelas das commodities
-(`/api/market?type=commodity&id=…`, com cache de 5 minutos) e envia
-`{ pergunta, dadosDashboard, historico }` com `Content-Type: text/plain;charset=utf-8`,
-o que evita o preflight de CORS que o Apps Script não atende.
+No momento da pergunta, o `AssistenteAgro` envia `{ pergunta, dadosDashboard, historico }`
+com `Content-Type: text/plain;charset=utf-8`, o que evita o preflight de CORS que o Apps
+Script não atende. Se o Gemini estiver sobrecarregado (503), o site tenta de novo uma vez.
 
 ## Atualizar o código do Apps Script depois
 

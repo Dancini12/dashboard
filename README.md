@@ -32,4 +32,4 @@ Fontes: https://dadosabertos.bcb.gov.br/dataset/432-taxa-de-juros---meta-selic-d
 - Clicar no castor (ou em "Tire sua dúvida") abre um balão onde o aluno pergunta sobre as cotações. A resposta vem do Gemini (nível gratuito) por meio de um Web App do Google Apps Script.
 - Código do Apps Script e passo a passo de implantação: `apps-script/Assistente.gs` e `apps-script/LEIA-ME.md`.
 - A URL do Web App fica em `ASSISTENTE_URL` (`src/App.jsx`); a variável `VITE_ASSISTENTE_URL`, se definida, tem prioridade.
-- `/api/market?type=commodity&id=…` devolve em JSON a mesma tabela de cotação exibida no painel, enviada junto com a pergunta.
+- Preços do dia das commodities não vão para o assistente: o Notícias Agrícolas e o CEPEA bloqueiam leitura automática; o castor orienta o aluno a conferir a tabela do painel.

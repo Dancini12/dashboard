@@ -2,42 +2,17 @@ import { useEffect, useRef, useState } from "react";
 import { Send, X } from "lucide-react";
 import "./AssistenteAgro.css";
 
-const SUGESTOES = ["Por que a soja caiu hoje?", "O que é o indicador CEPEA?", "O que significa a variação percentual?"];
+const SUGESTOES = ["Como o dólar influencia o preço da soja?", "O que é o indicador CEPEA?", "O que significa a variação percentual?"];
 const AVISO = "Não digite dados pessoais. As conversas podem ser usadas pelo Google para melhorar seus produtos.";
 const MAX_PERGUNTA = 500;
 const MAX_HISTORICO = 6;
-// Sempre enviadas, além das commodities abertas no painel: soja (PR e Chicago), milho, boi, café e trigo.
-const COMMODITIES_BASE = ["26", "23", "91", "12", "29", "211"];
-const MAX_COMMODITIES = 10;
-const CACHE_MS = 5 * 60 * 1000;
 // Mesma mensagem do Assistente.gs para Gemini sobrecarregado (503): vale uma nova tentativa.
 const MSG_INDISPONIVEL = "O assistente está indisponível agora. Tente de novo em instantes.";
-
-let cacheCotacoes = { chave: "", em: 0, tabelas: [] };
-
-// Commodities marcadas no painel (mesma preferência salva por CommodityQuotes).
-function commoditiesNaTela() {
-  try {
-    const ids = JSON.parse(localStorage.getItem("agroinfo.commodities.v1")) ?? ["26", "23"];
-    return Array.isArray(ids) ? ids.filter(id => /^\d{1,4}$/.test(id)) : [];
-  } catch {
-    return ["26", "23"];
-  }
-}
-
-// Tabelas de cotação das commodities (as mesmas do painel), lidas pela API do site.
-async function cotacoesCommodities() {
-  const ids = [...new Set([...commoditiesNaTela(), ...COMMODITIES_BASE])].slice(0, MAX_COMMODITIES);
-  const chave = ids.join(",");
-  if (cacheCotacoes.chave === chave && Date.now() - cacheCotacoes.em < CACHE_MS) return cacheCotacoes.tabelas;
-  const tabelas = (await Promise.all(ids.map(id =>
-    fetch(`/api/market?type=commodity&id=${id}`, { signal: AbortSignal.timeout(12000) })
-      .then(r => (r.ok ? r.json() : null))
-      .catch(() => null),
-  ))).filter(Boolean).map(({ titulo, fonte, colunas, linhas, rodape }) => ({ titulo, fonte, colunas, linhas, rodape }));
-  cacheCotacoes = { chave, em: Date.now(), tabelas };
-  return tabelas;
-}
+// As tabelas de commodities do painel vêm do Notícias Agrícolas, que bloqueia leitura automática
+// (Cloudflare); o assistente não recebe esses números e orienta o aluno a conferir a tabela.
+const AVISO_COMMODITIES = "Os preços do dia das commodities (soja, milho, boi, café etc.) não chegam ao assistente: "
+  + "eles aparecem no painel, na seção \"Consultar commodity\", em tabelas do Notícias Agrícolas. "
+  + "Se o aluno perguntar sobre o preço ou a variação de hoje, explique o conceito e peça que ele confira o número nessa tabela.";
 
 // Negrito (**texto**) e listas simples da resposta, sem HTML vindo de fora.
 function negrito(linha) {
@@ -91,10 +66,9 @@ export default function AssistenteAgro({ url, dadosDashboard, aberto, onFechar, 
     setPensando(true);
     onPensando?.(true);
     try {
-      const commodities = await cotacoesCommodities();
       const corpo = JSON.stringify({
         pergunta,
-        dadosDashboard: { consultadoEm: new Date().toLocaleString("pt-BR"), ...dadosDashboard, commodities },
+        dadosDashboard: { consultadoEm: new Date().toLocaleString("pt-BR"), ...dadosDashboard, cotacoesDeCommodities: AVISO_COMMODITIES },
         historico,
       });
       const perguntar = () => fetch(url, {

@@ -40,6 +40,7 @@ function TextoFormatado({ texto }) {
 
 const SAUDACAO = "Oi! Eu sou o Castor do AgroInfo. Pergunte sobre as cotações do painel que eu explico.";
 const MS_POR_LETRA = 28;
+const DIGITACAO_MAXIMA_MS = 18000; // respostas longas aceleram para terminar em uns 20 s
 
 // A conversa não usa emojis: tira pictogramas, bandeiras, tons de pele e os
 // caracteres que os combinam, sem juntar as linhas do texto.
@@ -52,15 +53,26 @@ const semEmoji = (texto) => texto
   .trim();
 
 // Tempo até a próxima letra, como alguém digitando: pausas depois de fim de frase,
-// vírgula e parágrafo (só se vier espaço, para não parar no meio de "154,38"),
-// com uma variação no ritmo para não soar robótico.
-function atraso(texto, i) {
+// vírgula e parágrafo (só se vier espaço, para não parar no meio de "154,38").
+function pausaBase(texto, i) {
   const anterior = texto[i - 1];
   const proxima = texto[i];
-  let base = MS_POR_LETRA;
-  if (anterior === "\n") base = 450;
-  else if (!proxima || /\s/.test(proxima)) base = /[.!?…]/.test(anterior) ? 380 : /[,;:]/.test(anterior) ? 150 : MS_POR_LETRA;
-  return base * (0.7 + Math.random() * 0.6);
+  if (anterior === "\n") return 450;
+  if (!proxima || /\s/.test(proxima)) return /[.!?…]/.test(anterior) ? 380 : /[,;:]/.test(anterior) ? 150 : MS_POR_LETRA;
+  return MS_POR_LETRA;
+}
+
+// Com uma variação no ritmo, para não soar robótico.
+const atraso = (texto, i) => pausaBase(texto, i) * (0.7 + Math.random() * 0.6);
+
+// Fator de velocidade: 1 no ritmo normal; menor quando o texto levaria mais que o limite.
+function fatorDeVelocidade(texto) {
+  let total = 0;
+  for (let i = 0; i < texto.length;) {
+    i = proximaPosicao(texto, i);
+    total += pausaBase(texto, i);
+  }
+  return Math.min(1, DIGITACAO_MAXIMA_MS / Math.max(1, total));
 }
 
 // Avança uma letra, pulando de uma vez os marcadores de negrito.
@@ -82,13 +94,14 @@ function Digitado({ texto, animar, pausado, onFim, onAvanco }) {
 
   useEffect(() => {
     if (!animar || pausado) return;
+    const fator = fatorDeVelocidade(texto);
     let timer;
     const passo = () => {
       if (posicao.current >= texto.length) return avisos.current.onFim?.();
       posicao.current = proximaPosicao(texto, posicao.current);
       setMostrados(posicao.current);
       avisos.current.onAvanco?.();
-      timer = setTimeout(passo, atraso(texto, posicao.current));
+      timer = setTimeout(passo, atraso(texto, posicao.current) * fator);
     };
     timer = setTimeout(passo, 250);
     return () => clearTimeout(timer);

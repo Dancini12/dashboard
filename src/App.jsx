@@ -7,6 +7,8 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsi
 import { RefreshCw, BookOpen, BarChart3, Clock, Wheat, DollarSign, Activity, ChevronDown, ChevronUp, Timer, ArrowRight, Pause, Play, Newspaper, ExternalLink, Search, MapPin } from "lucide-react";
 
 const UPDATE_SEC = 60;
+const DOCENTE = "Marcel Dancini Rodrigues";
+const ALUNOS_PARTICIPANTES = ["Pietra Sanguini"]; // para incluir mais alunos, acrescente os nomes aqui
 // URL do App da Web do assistente (Apps Script, termina em /exec). Passo a passo em apps-script/LEIA-ME.md.
 const ASSISTENTE_URL = import.meta.env.VITE_ASSISTENTE_URL
   || "https://script.google.com/macros/s/AKfycbyDYcrR3XX5bqo0rKCp1c1ZgDHf4GCHsJv7jesNPo5PEtJT6qYMLCyUV6OGmB1ur-jrBA/exec";
@@ -698,18 +700,16 @@ export default function App() {
     <div className="min-h-screen" style={{ background: "linear-gradient(180deg,#f8fafc 0%,#ecfdf5 50%,#f0f9ff 100%)", fontFamily: "system-ui, sans-serif" }}>
       <div className="max-w-4xl mx-auto px-3 pt-3 pb-2">
         <div className="rounded-xl overflow-hidden" style={{ background: "linear-gradient(135deg,#0c2340 0%,#1a5276 40%,#1e8449 100%)" }}>
-          <div className="px-4 py-4">
-            <div className="flex items-center gap-1.5 mb-0.5"><Wheat size={14} color="#fbbf24" /><span style={{ fontSize: 10, color: "#fbbf24", fontWeight: 700, letterSpacing: 1, textTransform: "uppercase" }}>Informativo Diário</span></div>
+          <div className="px-4 py-4 flex flex-col items-center text-center">
+            <div className="flex items-center justify-center gap-1.5 mb-0.5"><Wheat size={14} color="#fbbf24" /><span style={{ fontSize: 10, color: "#fbbf24", fontWeight: 700, letterSpacing: 1, textTransform: "uppercase" }}>Informativo Diário</span></div>
             <h1 className="text-base font-bold text-white">Mercado Agrícola</h1>
-            <div className="flex items-center gap-3 mt-3">
-              <div className="rounded-full border-2 border-white flex items-center justify-center shrink-0" style={{ width: 56, height: 56, background: "radial-gradient(circle, #2E7D32 60%, #1B5E20 100%)" }}>
-                <div className="text-center leading-none"><div style={{ fontSize: 6.5, color: "#fff", fontWeight: 700 }}>C.E.E.P.A.</div><div style={{ fontSize: 8, color: "#fbbf24", fontWeight: 900, marginTop: 1 }}>FERNANDO</div><div style={{ fontSize: 8, color: "#fbbf24", fontWeight: 900 }}>COSTA</div></div>
-              </div>
-              <div>
-                <div className="text-sm font-bold text-white">C.E.E.P.A. Fernando Costa</div>
-                <div className="text-xs" style={{ color: "rgba(255,255,255,0.55)" }}>Santa Mariana, PR • Docente: <strong style={{ color: "rgba(255,255,255,0.8)" }}>Marcel Dancini Rodrigues</strong> • {new Date().toLocaleDateString("pt-BR")}</div>
-              </div>
+            <div className="rounded-full border-2 border-white flex items-center justify-center shrink-0 mt-3" style={{ width: 56, height: 56, background: "radial-gradient(circle, #2E7D32 60%, #1B5E20 100%)" }}>
+              <div className="text-center leading-none"><div style={{ fontSize: 6.5, color: "#fff", fontWeight: 700 }}>C.E.E.P.A.</div><div style={{ fontSize: 8, color: "#fbbf24", fontWeight: 900, marginTop: 1 }}>FERNANDO</div><div style={{ fontSize: 8, color: "#fbbf24", fontWeight: 900 }}>COSTA</div></div>
             </div>
+            <div className="text-sm font-bold text-white mt-2">C.E.E.P.A. Fernando Costa</div>
+            <div className="text-xs" style={{ color: "rgba(255,255,255,0.55)" }}>Santa Mariana, PR • {new Date().toLocaleDateString("pt-BR")}</div>
+            <div className="text-xs mt-1" style={{ color: "rgba(255,255,255,0.55)" }}>Docente: <strong style={{ color: "rgba(255,255,255,0.8)" }}>{DOCENTE}</strong></div>
+            <div className="text-xs" style={{ color: "rgba(255,255,255,0.55)" }}>{ALUNOS_PARTICIPANTES.length > 1 ? "Estudantes participantes" : "Estudante participante"}: <strong style={{ color: "rgba(255,255,255,0.8)" }}>{ALUNOS_PARTICIPANTES.join(", ")}</strong></div>
           </div>
         </div>
       </div>
@@ -733,7 +733,7 @@ export default function App() {
         {tab === "graficos" && <GraficosTab target={chartTarget} />}
         {tab === "glossario" && <GlossarioTab />}
       </div>
-      <div className="text-center py-3 text-xs opacity-20">🎓 C.E.E.P.A. Fernando Costa — Santa Mariana, PR • Docente: Marcel Dancini Rodrigues</div>
+      <div className="text-center py-3 text-xs opacity-20">🎓 C.E.E.P.A. Fernando Costa — Santa Mariana, PR • Docente: {DOCENTE} • {ALUNOS_PARTICIPANTES.length > 1 ? "Estudantes participantes" : "Estudante participante"}: {ALUNOS_PARTICIPANTES.join(", ")}</div>
       {mascote && <Mascote onFechar={() => setMascote(false)} assistenteUrl={ASSISTENTE_URL} dadosPainel={{
         moedas: dataSource === "real"
           ? moedas.map(m => ({ nome: m.nome, valorReais: m.valor, variacaoPct: m.var, fonte: "AwesomeAPI" }))

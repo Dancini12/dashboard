@@ -38,8 +38,18 @@ function TextoFormatado({ texto }) {
   });
 }
 
-const SAUDACAO = "Oi! Eu sou o Castor do AgroInfo. Pergunte sobre as cotações do painel que eu explico. 🤠";
+const SAUDACAO = "Oi! Eu sou o Castor do AgroInfo. Pergunte sobre as cotações do painel que eu explico.";
 const MS_POR_LETRA = 28;
+
+// A conversa não usa emojis: tira pictogramas, bandeiras, tons de pele e os
+// caracteres que os combinam, sem juntar as linhas do texto.
+const EMOJI = /\p{Extended_Pictographic}|[\u{1F1E6}-\u{1F1FF}]|[\u{1F3FB}-\u{1F3FF}]|\u200D|\uFE0F|\u20E3/gu;
+const semEmoji = (texto) => texto
+  .replace(EMOJI, "")
+  .replace(/[ \t]{2,}/g, " ")
+  .replace(/ +([.,!?;:])/g, "$1")
+  .replace(/^[ \t]+|[ \t]+$/gm, "")
+  .trim();
 
 // Tempo até a próxima letra, como alguém digitando: pausas depois de fim de frase,
 // vírgula e parágrafo (só se vier espaço, para não parar no meio de "154,38"),
@@ -139,7 +149,7 @@ export default function AssistenteAgro({ url, dadosDashboard, aberto, onFechar, 
   const terminouDeDigitar = (id) => setMensagens(m => m.map(x => (x.id === id && x.digitar ? { ...x, digitar: false } : x)));
 
   const enviar = async (entrada) => {
-    const pergunta = entrada.trim().slice(0, MAX_PERGUNTA);
+    const pergunta = semEmoji(entrada).slice(0, MAX_PERGUNTA);
     if (!pergunta || pensando || !url) return;
     const historico = mensagens.slice(-MAX_HISTORICO).map(({ autor, texto }) => ({ autor, texto }));
     // nova pergunta: a resposta anterior aparece inteira
@@ -168,7 +178,7 @@ export default function AssistenteAgro({ url, dadosDashboard, aberto, onFechar, 
         dados = await perguntar();
       }
       if (dados.resposta) {
-        setMensagens(m => [...m, { id: ++ultimoId.current, autor: "assistente", texto: dados.resposta, origem: dados.origem, digitar: !reduzMovimento }]);
+        setMensagens(m => [...m, { id: ++ultimoId.current, autor: "assistente", texto: semEmoji(dados.resposta), origem: dados.origem, digitar: !reduzMovimento }]);
       } else setErro(dados.erro || "Não consegui responder agora. Tente de novo.");
     } catch {
       setErro("Não consegui falar com o assistente. Verifique a internet e tente de novo.");
@@ -197,7 +207,7 @@ export default function AssistenteAgro({ url, dadosDashboard, aberto, onFechar, 
           ? <div key={m.id} className="assistente-msg assistente-aluno"><p>{m.texto}</p></div>
           : <div key={m.id} className="assistente-msg assistente-castor">
               <Digitado texto={m.texto} animar={!!m.digitar} pausado={!aberto} onFim={() => terminouDeDigitar(m.id)} onAvanco={acompanhar} />
-              {m.origem === "memoria" && !m.digitar && <p className="assistente-origem" title="Resposta que o Castor já tinha aprendido, sem consultar a IA">💾 Da memória do Castor</p>}
+              {m.origem === "memoria" && !m.digitar && <p className="assistente-origem" title="Resposta que o Castor já tinha aprendido, sem consultar a IA">Da memória do Castor</p>}
             </div>)}
         {!mensagens.length && saudou && url && (
           <div className="assistente-sugestoes">

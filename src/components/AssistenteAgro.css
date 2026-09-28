@@ -1,65 +1,91 @@
-/* Balão de diálogo do mascote (AssistenteAgro). Fica ao lado do castor, do lado de
-   dentro da tela; no celular vira um painel na parte de baixo. */
+/* Balão de diálogo do mascote (AssistenteAgro), no estilo de quadrinho: contorno
+   preto grosso, cantos arredondados, sombra cinza chapada e a ponta apontando para
+   o castor. Fica ao lado dele, do lado de dentro da tela; no celular vira um painel
+   na parte de baixo. */
 .assistente {
+  --traco: #111;
+  --sombra-balao: #c4c4c4;
   position: absolute;
   top: 0;
   z-index: 2;
-  width: min(340px, calc(100vw - var(--mascote-w, 150px) - 56px));
+  width: min(340px, calc(100vw - var(--mascote-w, 128px) - 64px));
   max-height: min(480px, calc(100vh - 24px));
   display: flex;
   flex-direction: column;
-  border-radius: 16px;
-  border: 1px solid rgba(22, 101, 52, 0.22);
+  border: 4px solid var(--traco);
+  border-radius: 30px;
   background: #fff;
-  box-shadow: 0 12px 32px rgba(15, 23, 42, 0.2);
+  box-shadow: 7px 8px 0 var(--sombra-balao);
   color: #1f2937;
-  font: 13px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  font: 14px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   pointer-events: auto;
   user-select: text;
   cursor: auto;
-  animation: assistente-entra 0.18s ease-out;
+  animation: assistente-entra 0.22s ease-out;
 }
 
 .assistente[hidden] {
   display: none;
 }
 
-.assistente.lado-esquerda { right: calc(100% + 14px); }
-.assistente.lado-direita { left: calc(100% + 14px); }
+.assistente.lado-esquerda { right: calc(100% + 26px); }
+.assistente.lado-direita { left: calc(100% + 26px); }
 .assistente.embaixo { top: auto; bottom: 0; }
 
-/* ponta do balão, na altura da cabeça do castor */
-.assistente::before {
-  content: "";
+/* ponta do balão: a base cobre a borda (fica por cima) e o traço só nos dois lados */
+.assistente-rabicho {
   position: absolute;
-  top: 44px;
-  width: 14px;
-  height: 14px;
-  background: #fff;
-  border: 1px solid rgba(22, 101, 52, 0.22);
-  transform: rotate(45deg);
+  top: 34px;
+  left: calc(100% - 6px);
+  width: 44px;
+  height: 48px;
+  overflow: visible;
 }
 
-.assistente.lado-esquerda::before { right: -8px; border-left: 0; border-bottom: 0; }
-.assistente.lado-direita::before { left: -8px; border-right: 0; border-top: 0; }
-.assistente.embaixo::before { top: auto; bottom: calc(var(--mascote-w, 150px) * 625 / 360 - 60px); }
+.assistente.lado-direita .assistente-rabicho {
+  left: auto;
+  right: calc(100% - 6px);
+  transform: scaleX(-1);
+}
+
+.assistente.embaixo .assistente-rabicho {
+  top: auto;
+  bottom: calc(var(--mascote-w, 128px) * 625 / 360 * 0.76 - 40px);
+}
+
+.rabicho-sombra {
+  fill: var(--sombra-balao);
+  transform: translate(6px, 7px);
+}
+
+/* espelhada, a sombra continua caindo para a direita, como a do balão */
+.assistente.lado-direita .rabicho-sombra {
+  transform: translate(-6px, 7px);
+}
+
+.rabicho-traco {
+  fill: #fff;
+  stroke: var(--traco);
+  stroke-width: 4;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
 
 .assistente-topo {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 8px 8px 8px 14px;
-  border-radius: 15px 15px 0 0;
-  background: #166534;
-  color: #fff;
-  font-weight: 700;
+  padding: 12px 12px 2px 20px;
+  color: var(--traco);
+  font-size: 15px;
+  font-weight: 800;
 }
 
 .assistente-topo button {
   display: flex;
   padding: 4px;
   border: 0;
-  border-radius: 8px;
+  border-radius: 999px;
   background: transparent;
   color: inherit;
   cursor: pointer;
@@ -67,7 +93,7 @@
 
 .assistente-topo button:hover,
 .assistente-topo button:focus-visible {
-  background: rgba(255, 255, 255, 0.18);
+  background: #f1f5f9;
   outline: none;
 }
 
@@ -78,69 +104,107 @@
   overscroll-behavior: contain;
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  padding: 12px;
+  gap: 10px;
+  padding: 8px 20px 12px;
 }
 
 .assistente-msg {
-  max-width: 88%;
-  padding: 8px 11px;
-  border-radius: 14px;
+  max-width: 100%;
 }
 
 .assistente-msg :where(p, ul, ol) { margin: 0; }
-.assistente-msg > * + * { margin-top: 6px; }
+.assistente-msg > * + *,
+.assistente-msg [aria-hidden] > * + * { margin-top: 6px; }
 .assistente-msg ul,
 .assistente-msg ol { padding-left: 18px; }
 .assistente-msg ul { list-style: disc; }
 .assistente-msg ol { list-style: decimal; }
 
+/* fala do castor: texto corrido, como num quadrinho */
 .assistente-castor {
-  align-self: flex-start;
-  border: 1px solid #dcfce7;
-  border-bottom-left-radius: 4px;
-  background: #f0fdf4;
+  align-self: stretch;
 }
 
+/* fala do aluno: balãozinho verde contornado, à direita */
 .assistente-aluno {
   align-self: flex-end;
-  border-bottom-right-radius: 4px;
-  background: #166534;
-  color: #fff;
+  max-width: 85%;
+  padding: 6px 12px;
+  border: 2px solid var(--traco);
+  border-radius: 16px 16px 4px 16px;
+  background: #dcfce7;
+  color: #14532d;
+  font-weight: 600;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
 
+/* cursor piscando no fim do texto enquanto o castor "digita" */
+.digitando {
+  cursor: pointer;
+}
+
+.digitando > :last-child::after,
+.digitando > :is(ul, ol):last-child > li:last-child::after {
+  content: "";
+  display: inline-block;
+  width: 2px;
+  height: 1.05em;
+  margin-left: 2px;
+  vertical-align: text-bottom;
+  background: var(--traco);
+  animation: assistente-cursor 0.9s steps(1) infinite;
+}
+
+.digitando > :is(ul, ol):last-child::after {
+  content: none;
+}
+
+.assistente-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
 .assistente-msg .assistente-origem {
   color: #15803d;
-  font-size: 10.5px;
-  font-weight: 600;
+  font-size: 11px;
+  font-weight: 700;
 }
 
 .assistente-sugestoes {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 6px;
+  gap: 7px;
 }
 
 .assistente-sugestoes button {
-  padding: 6px 11px;
-  border: 1px solid rgba(22, 101, 52, 0.35);
+  padding: 6px 12px;
+  border: 2px solid var(--traco);
   border-radius: 999px;
   background: #fff;
-  color: #166534;
+  box-shadow: 2px 3px 0 var(--sombra-balao);
+  color: var(--traco);
   font: inherit;
-  font-size: 12px;
-  font-weight: 600;
+  font-size: 12.5px;
+  font-weight: 700;
   text-align: left;
   cursor: pointer;
 }
 
 .assistente-sugestoes button:hover,
 .assistente-sugestoes button:focus-visible {
-  background: #ecfdf5;
+  background: #dcfce7;
   outline: none;
+}
+
+.assistente-pensando {
+  color: #64748b;
+  font-style: italic;
 }
 
 .assistente-pensando i {
@@ -153,18 +217,19 @@
 .assistente-erro {
   margin: 0;
   padding: 8px 10px;
-  border-radius: 10px;
+  border: 2px solid #b91c1c;
+  border-radius: 12px;
   background: #fef2f2;
   color: #b91c1c;
-  font-size: 12px;
+  font-size: 12.5px;
 }
 
 .assistente-form {
   display: flex;
   align-items: flex-end;
   gap: 8px;
-  padding: 8px 10px;
-  border-top: 1px solid #e5e7eb;
+  padding: 10px 16px 8px;
+  border-top: 2px dashed #d4d4d4;
 }
 
 .assistente-form textarea {
@@ -172,15 +237,14 @@
   min-width: 0;
   max-height: 96px;
   padding: 8px 10px;
-  border: 1px solid #d1d5db;
-  border-radius: 10px;
+  border: 2px solid var(--traco);
+  border-radius: 14px;
   font: inherit;
   resize: none;
 }
 
 .assistente-form textarea:focus {
-  border-color: #166534;
-  outline: 2px solid rgba(22, 101, 52, 0.25);
+  outline: 3px solid rgba(22, 101, 52, 0.25);
 }
 
 .assistente-form button {
@@ -188,10 +252,10 @@
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  width: 36px;
-  height: 36px;
-  border: 0;
-  border-radius: 10px;
+  width: 40px;
+  height: 40px;
+  border: 2px solid var(--traco);
+  border-radius: 14px;
   background: #166534;
   color: #fff;
   cursor: pointer;
@@ -204,7 +268,7 @@
 
 .assistente-aviso {
   margin: 0;
-  padding: 0 12px 10px;
+  padding: 0 18px 14px;
   color: #64748b;
   font-size: 10.5px;
   line-height: 1.35;
@@ -217,20 +281,21 @@
   .assistente.embaixo {
     position: fixed;
     top: auto;
-    right: 8px;
-    bottom: 8px;
+    right: 10px;
+    bottom: 12px;
     left: 8px;
     width: auto;
     max-height: 72vh;
+    border-radius: 24px;
   }
 
-  .assistente::before {
+  .assistente-rabicho {
     display: none;
   }
 }
 
 @keyframes assistente-entra {
-  from { opacity: 0; transform: translateY(-6px); }
+  from { opacity: 0; transform: scale(0.94); }
   to { opacity: 1; transform: none; }
 }
 
@@ -239,9 +304,14 @@
   50% { opacity: 1; }
 }
 
+@keyframes assistente-cursor {
+  50% { opacity: 0; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .assistente,
-  .assistente-pensando i {
+  .assistente-pensando i,
+  .digitando > :last-child::after {
     animation: none;
   }
 }

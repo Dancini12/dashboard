@@ -64,6 +64,7 @@ export default function Mascote({ onFechar, assistenteUrl, dadosPainel }) {
   const [conversa, setConversa] = useState(false); // balão de diálogo aberto
   const [balao, setBalao] = useState({ direita: true, embaixo: false });
   const [pensando, setPensando] = useState(false);
+  const [falando, setFalando] = useState(false);
   const caixa = useRef(null);
   const arrasto = useRef(null);
   const dormindo = useRef(false);
@@ -191,7 +192,7 @@ export default function Mascote({ onFechar, assistenteUrl, dadosPainel }) {
 
   return (
     <div ref={caixa}
-      className={`mascote${pos ? " posicionado" : ""}${inclina !== null ? " arrastando" : ""}${pousando ? " pousando" : ""}${C ? " em-acao" : ""}${pensando ? " pensando" : ""}`}
+      className={`mascote${pos ? " posicionado" : ""}${inclina !== null ? " arrastando" : ""}${pousando ? " pousando" : ""}${C ? " em-acao" : ""}${pensando ? " pensando" : ""}${falando ? " falando" : ""}`}
       style={pos ? { "--fx": pos.fx, "--fy": pos.fy } : undefined}>
       <div className="mascote-camada mascote-figura" role="button" tabIndex={0} aria-label={assistenteUrl ? "Mascote: tirar uma dúvida" : "Mascote"} aria-expanded={assistenteUrl ? conversa : undefined}
         style={inclina !== null ? { transform: `rotate(${inclina}deg) scale(1.06)` } : undefined}
@@ -223,7 +224,7 @@ export default function Mascote({ onFechar, assistenteUrl, dadosPainel }) {
       )}
       {assistenteUrl && (
         <AssistenteAgro url={assistenteUrl} dadosDashboard={dadosPainel} aberto={conversa}
-          onFechar={alternarConversa} onPensando={setPensando}
+          onFechar={alternarConversa} onPensando={setPensando} onFalando={setFalando}
           className={`${balao.direita ? "lado-esquerda" : "lado-direita"}${balao.embaixo ? " embaixo" : ""}`} />
       )}
       <button type="button" className="mascote-fechar" onClick={onFechar} aria-label="Fechar mascote" title="Fechar mascote">

@@ -30,6 +30,7 @@ Fontes: https://dadosabertos.bcb.gov.br/dataset/432-taxa-de-juros---meta-selic-d
 ## Assistente de dúvidas (Castor responde)
 
 - Clicar no castor (ou em "Tire sua dúvida") abre um balão onde o aluno pergunta sobre as cotações. A resposta vem do Gemini (nível gratuito) por meio de um Web App do Google Apps Script.
+- Memória do Castor: perguntas e respostas ficam na planilha do AgroInfo; perguntas repetidas são respondidas pela memória, sem gastar o Gemini (automáticas valem no dia; aprovadas pelo professor valem sempre). Detalhes em `apps-script/LEIA-ME.md`.
 - Código do Apps Script e passo a passo de implantação: `apps-script/Assistente.gs` e `apps-script/LEIA-ME.md`.
 - A URL do Web App fica em `ASSISTENTE_URL` (`src/App.jsx`); a variável `VITE_ASSISTENTE_URL`, se definida, tem prioridade.
 - Preços do dia das commodities não vão para o assistente: o Notícias Agrícolas e o CEPEA bloqueiam leitura automática; o castor orienta o aluno a conferir a tabela do painel.

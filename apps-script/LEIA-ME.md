@@ -22,6 +22,53 @@ Aluno ── pergunta ──> Castor (site) ── pergunta + cotações do pain
 - **Sem busca na internet:** o assistente só usa os dados enviados pelo painel.
   Notícias do dia ele não sabe; nesse caso indica o Notícias Agrícolas ou o CEPEA.
 
+## Memória do Castor: ele aprende com as perguntas
+
+O Castor guarda na planilha o que os alunos perguntam e as respostas. Quando alguém repete
+uma pergunta, ou faz uma muito parecida, ele responde pela memória, sem gastar o Gemini.
+No balão, essas respostas aparecem com a marca **💾 Da memória do Castor**.
+
+As duas abas são criadas sozinhas na primeira pergunta:
+
+| Aba | O que tem |
+|---|---|
+| **Perguntas dos alunos** | Toda pergunta feita, com data e a origem da resposta: `memória`, `Gemini` ou `erro`. É o retrato do que os alunos pesquisam. |
+| **Memória do Castor** | Uma linha por pergunta diferente: Pergunta, Resposta, Data, Situação e quantas vezes a memória foi usada. |
+
+Como o Castor decide:
+
+- Só a **primeira pergunta de cada conversa** usa e alimenta a memória. As seguintes
+  ("e o milho?") dependem do que foi dito antes e vão sempre ao Gemini.
+- Ele compara as palavras que importam, ignorando acentos, pontuação e palavras como
+  "o", "que", "de". Reaproveita quando a pergunta é igual ou tem pelo menos 75% das
+  palavras em comum.
+- A coluna **Situação** diz por quanto tempo uma resposta vale:
+  - `automática` (padrão): vale **só no mesmo dia**, porque a resposta pode citar números
+    do dia, como o dólar. No dia seguinte, a primeira pessoa que perguntar recebe uma
+    resposta nova do Gemini, que substitui a antiga.
+  - `aprovada`: vale **sempre**. Use nas respostas de conceito (CEPEA, safra e entressafra,
+    Chicago…). Antes de aprovar, apague da resposta números que envelhecem.
+  - `não usar`: a memória ignora essa pergunta e ela vai sempre ao Gemini.
+
+O que você pode fazer na aba **Memória do Castor**:
+
+- **Aprovar** boas respostas, trocando a Situação para `aprovada`.
+- **Corrigir** o texto de uma resposta. O Castor passa a usar a sua versão.
+- **Ensinar outro jeito de perguntar:** copie a linha e reescreva a coluna Pergunta
+  (por exemplo, "O que quer dizer CEPEA?"), mantendo a mesma resposta.
+- **Bloquear** uma resposta ruim com `não usar`.
+- Não apague a primeira linha (cabeçalho) nem mude a ordem das colunas.
+
+Para acompanhar o aprendizado, esta fórmula em qualquer célula mostra a parcela das
+perguntas respondidas pela memória:
+
+```
+=CONT.SE('Perguntas dos alunos'!C:C;"memória")/(CONT.VALORES('Perguntas dos alunos'!C:C)-1)
+```
+
+**Privacidade:** as perguntas ficam na planilha da escola, e o balão avisa os alunos
+("As perguntas ficam guardadas para o Castor aprender").
+
 ## Dados que o painel envia junto com cada pergunta
 
 | Dado | Origem |
@@ -75,6 +122,10 @@ conceito e pede ao aluno que confira o preço e a variação na seção "Consult
    script é seu e não passou por verificação do Google; é esperado.
 4. No **Registro de execução** deve aparecer `Funcionou! Resposta do Gemini:` e a explicação.
    Se aparecer `Falhou: ...`, veja "Se algo der errado" no fim desta página.
+5. Selecione **testarMemoria** e clique em **Executar**. Ele faz a mesma pergunta duas vezes;
+   deve aparecer `Memória funcionando!`, e as abas "Memória do Castor" e "Perguntas dos
+   alunos" surgem na planilha. Na primeira vez o Google pede autorização para o script
+   acessar a planilha.
 
 ### 5. Implantar como App da Web (item b)
 
@@ -157,7 +208,9 @@ Script não atende. Se o Gemini estiver sobrecarregado (503), o site tenta de no
 
 Depois de mudar o `Assistente.gs`, a URL só passa a usar o código novo com uma nova versão:
 **Implantar → Gerenciar implantações** → lápis (**Editar**) → **Versão: Nova versão** →
-**Implantar**. Assim a URL continua a mesma.
+**Implantar**. Assim a URL continua a mesma. Se o código novo usar algo que ainda não foi
+autorizado (como a planilha, na versão com memória), rode antes `testarMemoria` pelo editor
+para dar a autorização.
 
 Para trocar de modelo (por exemplo, se o Google aposentar o modelo atual), mude a
 constante `MODELO` no início do arquivo e publique uma nova versão. O `gemini-2.5-flash`

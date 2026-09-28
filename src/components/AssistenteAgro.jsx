@@ -3,7 +3,8 @@ import { Send, X } from "lucide-react";
 import "./AssistenteAgro.css";
 
 const SUGESTOES = ["Como o dólar influencia o preço da soja?", "O que é o indicador CEPEA?", "O que significa a variação percentual?"];
-const AVISO = "Não digite dados pessoais. As conversas podem ser usadas pelo Google para melhorar seus produtos.";
+const AVISO = "Não digite dados pessoais. As conversas podem ser usadas pelo Google para melhorar seus produtos. "
+  + "As perguntas ficam guardadas para o Castor aprender.";
 const MAX_PERGUNTA = 500;
 const MAX_HISTORICO = 6;
 // Mesma mensagem do Assistente.gs para Gemini sobrecarregado (503): vale uma nova tentativa.
@@ -41,7 +42,7 @@ function TextoFormatado({ texto }) {
 // explica com base nas cotações do painel. Fica montado enquanto o mascote existe,
 // para a conversa continuar quando o balão é fechado e aberto de novo.
 export default function AssistenteAgro({ url, dadosDashboard, aberto, onFechar, onPensando, className = "" }) {
-  const [mensagens, setMensagens] = useState([]); // { autor: "aluno" | "assistente", texto }
+  const [mensagens, setMensagens] = useState([]); // { autor: "aluno" | "assistente", texto, origem? }
   const [texto, setTexto] = useState("");
   const [pensando, setPensando] = useState(false);
   const [erro, setErro] = useState("");
@@ -59,7 +60,7 @@ export default function AssistenteAgro({ url, dadosDashboard, aberto, onFechar, 
   const enviar = async (entrada) => {
     const pergunta = entrada.trim().slice(0, MAX_PERGUNTA);
     if (!pergunta || pensando || !url) return;
-    const historico = mensagens.slice(-MAX_HISTORICO);
+    const historico = mensagens.slice(-MAX_HISTORICO).map(({ autor, texto }) => ({ autor, texto }));
     setMensagens(m => [...m, { autor: "aluno", texto: pergunta }]);
     setTexto("");
     setErro("");
@@ -83,7 +84,7 @@ export default function AssistenteAgro({ url, dadosDashboard, aberto, onFechar, 
         await new Promise(r => setTimeout(r, 2500));
         dados = await perguntar();
       }
-      if (dados.resposta) setMensagens(m => [...m, { autor: "assistente", texto: dados.resposta }]);
+      if (dados.resposta) setMensagens(m => [...m, { autor: "assistente", texto: dados.resposta, origem: dados.origem }]);
       else setErro(dados.erro || "Não consegui responder agora. Tente de novo.");
     } catch {
       setErro("Não consegui falar com o assistente. Verifique a internet e tente de novo.");
@@ -105,7 +106,10 @@ export default function AssistenteAgro({ url, dadosDashboard, aberto, onFechar, 
         </div>
         {mensagens.map((m, i) => m.autor === "aluno"
           ? <div key={i} className="assistente-msg assistente-aluno"><p>{m.texto}</p></div>
-          : <div key={i} className="assistente-msg assistente-castor"><TextoFormatado texto={m.texto} /></div>)}
+          : <div key={i} className="assistente-msg assistente-castor">
+              <TextoFormatado texto={m.texto} />
+              {m.origem === "memoria" && <p className="assistente-origem" title="Resposta que o Castor já tinha aprendido, sem consultar a IA">💾 Da memória do Castor</p>}
+            </div>)}
         {!mensagens.length && url && (
           <div className="assistente-sugestoes">
             {SUGESTOES.map(s => <button key={s} type="button" onClick={() => enviar(s)} disabled={pensando}>{s}</button>)}

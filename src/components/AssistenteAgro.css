@@ -1,0 +1,241 @@
+/* Balão de diálogo do mascote (AssistenteAgro). Fica ao lado do castor, do lado de
+   dentro da tela; no celular vira um painel na parte de baixo. */
+.assistente {
+  position: absolute;
+  top: 0;
+  z-index: 2;
+  width: min(340px, calc(100vw - var(--mascote-w, 150px) - 56px));
+  max-height: min(480px, calc(100vh - 24px));
+  display: flex;
+  flex-direction: column;
+  border-radius: 16px;
+  border: 1px solid rgba(22, 101, 52, 0.22);
+  background: #fff;
+  box-shadow: 0 12px 32px rgba(15, 23, 42, 0.2);
+  color: #1f2937;
+  font: 13px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  pointer-events: auto;
+  user-select: text;
+  cursor: auto;
+  animation: assistente-entra 0.18s ease-out;
+}
+
+.assistente[hidden] {
+  display: none;
+}
+
+.assistente.lado-esquerda { right: calc(100% + 14px); }
+.assistente.lado-direita { left: calc(100% + 14px); }
+.assistente.embaixo { top: auto; bottom: 0; }
+
+/* ponta do balão, na altura da cabeça do castor */
+.assistente::before {
+  content: "";
+  position: absolute;
+  top: 44px;
+  width: 14px;
+  height: 14px;
+  background: #fff;
+  border: 1px solid rgba(22, 101, 52, 0.22);
+  transform: rotate(45deg);
+}
+
+.assistente.lado-esquerda::before { right: -8px; border-left: 0; border-bottom: 0; }
+.assistente.lado-direita::before { left: -8px; border-right: 0; border-top: 0; }
+.assistente.embaixo::before { top: auto; bottom: calc(var(--mascote-w, 150px) * 625 / 360 - 60px); }
+
+.assistente-topo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 8px 8px 14px;
+  border-radius: 15px 15px 0 0;
+  background: #166534;
+  color: #fff;
+  font-weight: 700;
+}
+
+.assistente-topo button {
+  display: flex;
+  padding: 4px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+
+.assistente-topo button:hover,
+.assistente-topo button:focus-visible {
+  background: rgba(255, 255, 255, 0.18);
+  outline: none;
+}
+
+.assistente-lista {
+  flex: 1;
+  min-height: 120px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+}
+
+.assistente-msg {
+  max-width: 88%;
+  padding: 8px 11px;
+  border-radius: 14px;
+}
+
+.assistente-msg :where(p, ul, ol) { margin: 0; }
+.assistente-msg > * + * { margin-top: 6px; }
+.assistente-msg ul,
+.assistente-msg ol { padding-left: 18px; }
+.assistente-msg ul { list-style: disc; }
+.assistente-msg ol { list-style: decimal; }
+
+.assistente-castor {
+  align-self: flex-start;
+  border: 1px solid #dcfce7;
+  border-bottom-left-radius: 4px;
+  background: #f0fdf4;
+}
+
+.assistente-aluno {
+  align-self: flex-end;
+  border-bottom-right-radius: 4px;
+  background: #166534;
+  color: #fff;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.assistente-sugestoes {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.assistente-sugestoes button {
+  padding: 6px 11px;
+  border: 1px solid rgba(22, 101, 52, 0.35);
+  border-radius: 999px;
+  background: #fff;
+  color: #166534;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+}
+
+.assistente-sugestoes button:hover,
+.assistente-sugestoes button:focus-visible {
+  background: #ecfdf5;
+  outline: none;
+}
+
+.assistente-pensando i {
+  font-style: normal;
+  animation: assistente-ponto 1.2s infinite;
+}
+.assistente-pensando i:nth-child(2) { animation-delay: 0.2s; }
+.assistente-pensando i:nth-child(3) { animation-delay: 0.4s; }
+
+.assistente-erro {
+  margin: 0;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: #fef2f2;
+  color: #b91c1c;
+  font-size: 12px;
+}
+
+.assistente-form {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  padding: 8px 10px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.assistente-form textarea {
+  flex: 1;
+  min-width: 0;
+  max-height: 96px;
+  padding: 8px 10px;
+  border: 1px solid #d1d5db;
+  border-radius: 10px;
+  font: inherit;
+  resize: none;
+}
+
+.assistente-form textarea:focus {
+  border-color: #166534;
+  outline: 2px solid rgba(22, 101, 52, 0.25);
+}
+
+.assistente-form button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border: 0;
+  border-radius: 10px;
+  background: #166534;
+  color: #fff;
+  cursor: pointer;
+}
+
+.assistente-form button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.assistente-aviso {
+  margin: 0;
+  padding: 0 12px 10px;
+  color: #64748b;
+  font-size: 10.5px;
+  line-height: 1.35;
+}
+
+@media (max-width: 640px) {
+  .assistente,
+  .assistente.lado-esquerda,
+  .assistente.lado-direita,
+  .assistente.embaixo {
+    position: fixed;
+    top: auto;
+    right: 8px;
+    bottom: 8px;
+    left: 8px;
+    width: auto;
+    max-height: 72vh;
+  }
+
+  .assistente::before {
+    display: none;
+  }
+}
+
+@keyframes assistente-entra {
+  from { opacity: 0; transform: translateY(-6px); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes assistente-ponto {
+  0%, 100% { opacity: 0.2; }
+  50% { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .assistente,
+  .assistente-pensando i {
+    animation: none;
+  }
+}

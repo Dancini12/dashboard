@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import { X } from "lucide-react";
+import { MessageCircle, X } from "lucide-react";
+import AssistenteAgro from "./AssistenteAgro";
 import corpo from "./mascote/corpo.webp";
 import cabeca from "./mascote/cabeca.webp";
 import olhosMeio from "./mascote/olhos-meio.webp";
@@ -32,11 +33,13 @@ const ATIVIDADE = ["pointermove", "pointerdown", "keydown", "wheel", "touchstart
 const espera = (min, max) => min + Math.random() * (max - min);
 const escolher = (lista) => lista[Math.floor(Math.random() * lista.length)];
 
-// Poses largas se estendem para o lado de dentro da tela.
-function paraDentro(el) {
+// Poses largas e o balão de diálogo se estendem para o lado de dentro da tela.
+function lados(el) {
   const r = el?.getBoundingClientRect();
-  return r ? r.left + r.width / 2 > document.documentElement.clientWidth / 2 : true;
+  const { clientWidth: vw, clientHeight: vh } = document.documentElement;
+  return r ? { direita: r.left + r.width / 2 > vw / 2, embaixo: r.top + r.height / 2 > vh / 2 } : { direita: true, embaixo: false };
 }
+const paraDentro = (el) => lados(el).direita;
 
 function lerPosicao() {
   try {
@@ -47,27 +50,35 @@ function lerPosicao() {
 }
 
 // Castor no canto superior direito; pode ser arrastado para qualquer lugar da tela.
-// Alterna sozinho, ao acaso, entre ficar em pé, sentar e tomar café; clicar nele
-// sorteia outra cena. Se o visitante passar 30 s sem mexer no site, ele cochila e
-// acorda no próximo movimento. Balançar corpo e cabeça é CSS; o piscar é aqui, em
-// intervalos aleatórios (às vezes uma piscada dupla).
-export default function Mascote({ onFechar }) {
+// Alterna sozinho, ao acaso, entre ficar em pé, sentar e tomar café. Se o visitante
+// passar 30 s sem mexer no site, ele cochila e acorda no próximo movimento. Clicar
+// nele (ou em "Tire sua dúvida") abre o balão de diálogo do assistente. Balançar
+// corpo e cabeça é CSS; o piscar é aqui, em intervalos aleatórios (às vezes uma
+// piscada dupla).
+export default function Mascote({ onFechar, assistenteUrl, dadosPainel }) {
   const [olhos, setOlhos] = useState(0);
   const [pos, setPos] = useState(lerPosicao); // null = canto padrão
   const [inclina, setInclina] = useState(null); // graus enquanto arrasta; null = solto
   const [pousando, setPousando] = useState(false);
   const [cena, setCena] = useState(null); // { nome, direita } ou null (em pé)
+  const [conversa, setConversa] = useState(false); // balão de diálogo aberto
+  const [balao, setBalao] = useState({ direita: true, embaixo: false });
+  const [pensando, setPensando] = useState(false);
   const caixa = useRef(null);
   const arrasto = useRef(null);
   const dormindo = useRef(false);
-  const acordouEm = useRef(0);
+  const conversando = useRef(false);
 
-  const trocar = () => {
-    if (Date.now() - acordouEm.current < 600) return; // o toque que acordou não conta como troca
-    const atual = cena?.nome ?? null;
-    if (atual === "cochilo") return setCena(null);
-    const nome = escolher([null, ...SORTEAVEIS].filter(n => n !== atual));
-    setCena(nome && { nome, direita: paraDentro(caixa.current) });
+  // Com o balão aberto ele fica de pé, sem trocar de cena nem cochilar.
+  const alternarConversa = () => {
+    if (!assistenteUrl) return; // assistente ainda não configurado
+    const abrir = !conversando.current;
+    conversando.current = abrir;
+    if (abrir) {
+      setCena(null);
+      setBalao(lados(caixa.current));
+    }
+    setConversa(abrir);
   };
 
   const aoPressionar = (e) => {
@@ -103,22 +114,23 @@ export default function Mascote({ onFechar }) {
     arrasto.current = null;
     clearTimeout(a.parado);
     setInclina(null);
-    if (!a.moveu) return trocar(); // clique simples
+    if (!a.moveu) return alternarConversa(); // clique simples
     try { localStorage.setItem(LS_POS, JSON.stringify(a.pos)); } catch { /* ignora */ }
+    if (conversando.current) setBalao(lados(caixa.current));
     setPousando(true);
   };
 
   // Cena sorteada termina depois da duração; em pé, sorteia a próxima.
   useEffect(() => {
     dormindo.current = cena?.nome === "cochilo";
-    if (dormindo.current) return; // dorme até o visitante voltar
+    if (dormindo.current || conversa) return; // dorme até o visitante voltar; conversando, fica de pé
     if (cena) {
       const t = setTimeout(() => setCena(null), CENAS[cena.nome].ms);
       return () => clearTimeout(t);
     }
     const t = setTimeout(() => setCena({ nome: escolher(SORTEAVEIS), direita: paraDentro(caixa.current) }), espera(10000, 20000));
     return () => clearTimeout(t);
-  }, [cena]);
+  }, [cena, conversa]);
 
   // Inatividade: sem mouse, toque, teclado ou rolagem por 30 s, cochila; qualquer
   // atividade acorda.
@@ -128,13 +140,12 @@ export default function Mascote({ onFechar }) {
       ultimaAtividade = Date.now();
       if (!dormindo.current) return;
       dormindo.current = false;
-      acordouEm.current = ultimaAtividade;
       setCena(null);
     };
     const opcoes = { passive: true, capture: true };
     ATIVIDADE.forEach(ev => window.addEventListener(ev, ativo, opcoes));
     const t = setInterval(() => {
-      if (dormindo.current || arrasto.current || Date.now() - ultimaAtividade < OCIOSO_MS) return;
+      if (dormindo.current || conversando.current || arrasto.current || Date.now() - ultimaAtividade < OCIOSO_MS) return;
       dormindo.current = true;
       setCena({ nome: "cochilo", direita: paraDentro(caixa.current) });
     }, 1000);
@@ -180,12 +191,12 @@ export default function Mascote({ onFechar }) {
 
   return (
     <div ref={caixa}
-      className={`mascote${pos ? " posicionado" : ""}${inclina !== null ? " arrastando" : ""}${pousando ? " pousando" : ""}${C ? " em-acao" : ""}`}
+      className={`mascote${pos ? " posicionado" : ""}${inclina !== null ? " arrastando" : ""}${pousando ? " pousando" : ""}${C ? " em-acao" : ""}${pensando ? " pensando" : ""}`}
       style={pos ? { "--fx": pos.fx, "--fy": pos.fy } : undefined}>
-      <div className="mascote-camada mascote-figura" role="button" tabIndex={0} aria-label="Mascote: trocar de cena"
+      <div className="mascote-camada mascote-figura" role="button" tabIndex={0} aria-label={assistenteUrl ? "Mascote: tirar uma dúvida" : "Mascote"} aria-expanded={assistenteUrl ? conversa : undefined}
         style={inclina !== null ? { transform: `rotate(${inclina}deg) scale(1.06)` } : undefined}
         onPointerDown={aoPressionar} onPointerMove={aoMover} onPointerUp={aoSoltar} onPointerCancel={aoSoltar}
-        onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); trocar(); } }}>
+        onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); alternarConversa(); } }}>
         <div className="mascote-sombra" aria-hidden="true" />
         <div className="mascote-camada mascote-corpo" aria-hidden="true">
           <div className="mascote-camada mascote-respira">
@@ -205,6 +216,16 @@ export default function Mascote({ onFechar }) {
           </div>
         )}
       </div>
+      {assistenteUrl && !conversa && (
+        <button type="button" className="mascote-duvida" onClick={alternarConversa}>
+          <MessageCircle size={13} strokeWidth={2.5} aria-hidden="true" />Tire sua dúvida
+        </button>
+      )}
+      {assistenteUrl && (
+        <AssistenteAgro url={assistenteUrl} dadosDashboard={dadosPainel} aberto={conversa}
+          onFechar={alternarConversa} onPensando={setPensando}
+          className={`${balao.direita ? "lado-esquerda" : "lado-direita"}${balao.embaixo ? " embaixo" : ""}`} />
+      )}
       <button type="button" className="mascote-fechar" onClick={onFechar} aria-label="Fechar mascote" title="Fechar mascote">
         <X size={14} strokeWidth={2.5} />
       </button>

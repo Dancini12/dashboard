@@ -7,6 +7,9 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsi
 import { RefreshCw, BookOpen, BarChart3, Clock, Wheat, DollarSign, Activity, ChevronDown, ChevronUp, Timer, ArrowRight, Pause, Play, Newspaper, ExternalLink, Search, MapPin } from "lucide-react";
 
 const UPDATE_SEC = 60;
+// URL do App da Web do assistente (Apps Script, termina em /exec). Passo a passo em apps-script/LEIA-ME.md.
+const ASSISTENTE_URL = import.meta.env.VITE_ASSISTENTE_URL
+  || "https://script.google.com/macros/s/AKfycbyDYcrR3XX5bqo0rKCp1c1ZgDHf4GCHsJv7jesNPo5PEtJT6qYMLCyUV6OGmB1ur-jrBA/exec";
 const API_MOEDAS_URL = "https://economia.awesomeapi.com.br/json/last/USD-BRL,EUR-BRL,GBP-BRL,ARS-BRL";
 const TABS = ["painel", "noticias", "historico", "graficos", "glossario"];
 const TAB_LABELS = { painel: "Painel", noticias: "Notícias", historico: "Histórico", graficos: "Gráficos", glossario: "Glossário" };
@@ -731,7 +734,14 @@ export default function App() {
         {tab === "glossario" && <GlossarioTab />}
       </div>
       <div className="text-center py-3 text-xs opacity-20">🎓 C.E.E.P.A. Fernando Costa — Santa Mariana, PR • Docente: Marcel Dancini Rodrigues</div>
-      {mascote && <Mascote onFechar={() => setMascote(false)} />}
+      {mascote && <Mascote onFechar={() => setMascote(false)} assistenteUrl={ASSISTENTE_URL} dadosPainel={{
+        moedas: dataSource === "real"
+          ? moedas.map(m => ({ nome: m.nome, valorReais: m.valor, variacaoPct: m.var, fonte: "AwesomeAPI" }))
+          : "indisponíveis no momento",
+        selic: selic.value != null ? { metaPctAoAno: selic.value, data: selic.date, fonte: selic.source } : "indisponível",
+        indicadoresDeReferencia: INDICADORES.filter(i => i.nome !== "Selic").map(i => ({ nome: i.nome, valor: i.valor, descricao: i.desc })),
+        historicoAnual: { descricao: "Tabela Histórico 2020–2026 do painel (CEPEA/ESALQ, Farmnews; R$ nominais)", linhas: HISTORICO },
+      }} />}
       <VisitorCounter />
     </div>
   );

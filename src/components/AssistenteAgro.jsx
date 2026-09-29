@@ -7,8 +7,9 @@ const AVISO = "Não digite dados pessoais. As conversas podem ser usadas pelo Go
   + "As perguntas ficam guardadas para o Castor aprender.";
 const MAX_PERGUNTA = 500;
 const MAX_HISTORICO = 6;
-// Mesma mensagem do Assistente.gs para Gemini sobrecarregado (503): vale uma nova tentativa.
+// Mesma mensagem do Assistente.gs para Gemini sobrecarregado (500/503): vale tentar de novo.
 const MSG_INDISPONIVEL = "O assistente está indisponível agora. Tente de novo em instantes.";
+const ESPERAS_NOVA_TENTATIVA = [3000, 6000]; // até 2 novas tentativas, esperando mais a cada vez
 // As tabelas de commodities do painel vêm do Notícias Agrícolas, que bloqueia leitura automática
 // (Cloudflare); o assistente não recebe esses números e orienta o aluno a conferir a tabela.
 const AVISO_COMMODITIES = "Os preços do dia das commodities (soja, milho, boi, café etc.) não chegam ao assistente: "
@@ -136,6 +137,7 @@ export default function AssistenteAgro({ url, dadosDashboard, aberto, onFechar, 
   const [saudou, setSaudou] = useState(reduzMovimento);
   const [texto, setTexto] = useState("");
   const [pensando, setPensando] = useState(false);
+  const [tentandoDeNovo, setTentandoDeNovo] = useState(false);
   const [erro, setErro] = useState("");
   const lista = useRef(null);
   const campo = useRef(null);
@@ -186,8 +188,10 @@ export default function AssistenteAgro({ url, dadosDashboard, aberto, onFechar, 
         signal: AbortSignal.timeout(40000),
       }).then(r => r.json());
       let dados = await perguntar();
-      if (dados.erro === MSG_INDISPONIVEL) { // pico de demanda no Gemini: tenta de novo uma vez
-        await new Promise(r => setTimeout(r, 2500));
+      for (const espera of ESPERAS_NOVA_TENTATIVA) { // pico de demanda no Gemini: tenta de novo
+        if (dados.erro !== MSG_INDISPONIVEL) break;
+        setTentandoDeNovo(true);
+        await new Promise(r => setTimeout(r, espera));
         dados = await perguntar();
       }
       if (dados.resposta) {
@@ -197,6 +201,7 @@ export default function AssistenteAgro({ url, dadosDashboard, aberto, onFechar, 
       setErro("Não consegui falar com o assistente. Verifique a internet e tente de novo.");
     } finally {
       setPensando(false);
+      setTentandoDeNovo(false);
       onPensando?.(false);
     }
   };
@@ -227,7 +232,7 @@ export default function AssistenteAgro({ url, dadosDashboard, aberto, onFechar, 
             {SUGESTOES.map(s => <button key={s} type="button" onClick={() => enviar(s)} disabled={pensando}>{s}</button>)}
           </div>
         )}
-        {pensando && <div className="assistente-msg assistente-castor assistente-pensando"><p>Pensando<i>.</i><i>.</i><i>.</i></p></div>}
+        {pensando && <div className="assistente-msg assistente-castor assistente-pensando"><p>{tentandoDeNovo ? "O Gemini está ocupado, tentando de novo" : "Pensando"}<i>.</i><i>.</i><i>.</i></p></div>}
         {erro && <p className="assistente-erro" role="alert">{erro}</p>}
         {!url && <p className="assistente-erro">O assistente ainda não foi configurado neste site.</p>}
       </div>

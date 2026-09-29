@@ -10,10 +10,15 @@
  * gastar o Gemini: respostas automáticas valem no mesmo dia (podem citar números
  * do dia); as que o professor marcar como "aprovada" valem sempre.
  *
+ * Online agora: o quadro de visitantes do painel manda um sinal de presença a
+ * cada 45 s ({ acao: 'presenca', sessao }); a contagem fica no cache do script,
+ * sem gravar nada na planilha.
+ *
  * - A chave fica em Propriedades do Script com o nome GEMINI_API_KEY.
  * - Sem a ferramenta google_search: a resposta se baseia só nos dados enviados.
  * - Entrada (POST, corpo JSON em text/plain): { pergunta, dadosDashboard, historico }
  * - Saída: { resposta, origem: 'memoria' | 'gemini' } ou { erro }
+ * - Presença: { acao: 'presenca', sessao, saindo? } → { online }
  *
  * Passo a passo de implantação: apps-script/LEIA-ME.md no repositório do AgroInfo.
  */
@@ -38,6 +43,11 @@ const ABA_PERGUNTAS = 'Perguntas dos alunos';
 const SITUACOES_MEMORIA = ['automática', 'aprovada', 'não usar'];
 const SIMILARIDADE_MINIMA = 0.75; // parcela de palavras em comum para reaproveitar
 const FUSO_CASTOR = 'America/Sao_Paulo';
+
+// Online agora (contagem no cache do script)
+const PRESENCA_CHAVE = 'agroinfo_online';
+const PRESENCA_JANELA_MS = 90 * 1000; // quem deu sinal nos últimos 90 s está online
+const PRESENCA_MAX_SESSOES = 1500;    // limite para caber no cache (100 KB)
 const PALAVRAS_VAZIAS = {};
 ('o a os as um uma uns umas de da do das dos em no na nos nas num numa por pelo pela pelos pelas ' +
   'para pra pro pros com e ou que qual quais quem como onde quando porque pq se me mim te ti lhe eu tu ' +
@@ -61,7 +71,7 @@ const INSTRUCAO_SISTEMA = [
   'Escreva em texto corrido; use no máximo **negrito** para destacar números, sem títulos nem tabelas.',
 ].join('\n');
 
-/** Recebe a pergunta do painel e devolve { resposta } ou { erro }. */
+/** Recebe a pergunta do painel (ou o sinal de presença) e devolve JSON. */
 function doPost(e) {
   let corpo;
   try {
@@ -69,6 +79,7 @@ function doPost(e) {
   } catch (err) {
     return responderJson({ erro: 'Requisição inválida.' });
   }
+  if (corpo && corpo.acao === 'presenca') return responderJson(registrarPresenca(corpo));
   return responderJson(responderPergunta(corpo));
 }
 
@@ -336,6 +347,46 @@ function obterAbaDoCastor(nome, cabecalho, preparar) {
   return aba;
 }
 
+// ---------------------------------------------------------------- online agora
+
+/**
+ * Marca a sessão como online (ou tira, se estiver saindo) e devolve quantas
+ * sessões deram sinal nos últimos 90 s. Se o cache estiver ocupado, só conta.
+ */
+function registrarPresenca(corpo) {
+  const sessao = String((corpo && corpo.sessao) || '').replace(/[^a-zA-Z0-9-]/g, '').slice(0, 40);
+  if (!sessao) return { erro: 'Sessão inválida.' };
+  const cache = CacheService.getScriptCache();
+  const agora = Date.now();
+  const lerSessoes = function () {
+    try {
+      return JSON.parse(cache.get(PRESENCA_CHAVE) || '{}');
+    } catch (err) {
+      return {};
+    }
+  };
+  const ativas = function (sessoes) {
+    return Object.keys(sessoes).filter(function (s) { return agora - sessoes[s] <= PRESENCA_JANELA_MS; });
+  };
+
+  const trava = LockService.getScriptLock();
+  if (!trava.tryLock(5000)) return { online: Math.max(1, ativas(lerSessoes()).length) };
+  try {
+    const sessoes = lerSessoes();
+    const atualizadas = {};
+    ativas(sessoes)
+      .sort(function (a, b) { return sessoes[b] - sessoes[a]; })
+      .slice(0, PRESENCA_MAX_SESSOES)
+      .forEach(function (s) { atualizadas[s] = sessoes[s]; });
+    if (corpo.saindo) delete atualizadas[sessao];
+    else atualizadas[sessao] = agora;
+    cache.put(PRESENCA_CHAVE, JSON.stringify(atualizadas), 600);
+    return { online: Object.keys(atualizadas).length };
+  } finally {
+    trava.releaseLock();
+  }
+}
+
 // ---------------------------------------------------------------- utilidades
 
 function responderJson(obj) {
@@ -364,6 +415,16 @@ function testarGemini() {
   if (resultado.erro) console.error('Falhou: ' + resultado.erro);
   else console.log('Funcionou! Resposta ' + (resultado.origem === 'memoria' ? 'da memória' : 'do Gemini') + ':\n' + resultado.resposta);
   return resultado;
+}
+
+/** Teste do "online agora": duas sessões dão sinal; deve mostrar pelo menos 2. */
+function testarPresenca() {
+  const a = registrarPresenca({ sessao: 'teste-a' });
+  const b = registrarPresenca({ sessao: 'teste-b' });
+  registrarPresenca({ sessao: 'teste-a', saindo: true });
+  const c = registrarPresenca({ sessao: 'teste-b', saindo: true });
+  console.log('Online: ' + a.online + ' → ' + b.online + ' → depois que as duas saem: ' + c.online);
+  return b;
 }
 
 /**

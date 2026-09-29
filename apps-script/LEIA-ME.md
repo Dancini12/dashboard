@@ -69,6 +69,18 @@ perguntas respondidas pela memória:
 **Privacidade:** as perguntas ficam na planilha da escola, e o balão avisa os alunos
 ("As perguntas ficam guardadas para o Castor aprender").
 
+## Online agora
+
+O quadro de visitantes (canto inferior direito) mostra quantas pessoas estão com o site
+aberto. Enquanto a aba está visível, cada navegador manda um sinal de presença a cada
+45 s para este mesmo Web App (`{ acao: "presenca", sessao }`); quem ficou 90 s sem sinal
+sai da contagem, e quem fecha o site avisa na hora. Várias abas no mesmo navegador contam
+como uma pessoa. A contagem fica no cache do Apps Script, sem gravar nada na planilha.
+Enquanto o Apps Script não tiver essa função, a linha "Online agora" simplesmente não
+aparece.
+
+Navegadores controlados por automação (testes, robôs) não somam no total de visitantes.
+
 ## Dados que o painel envia junto com cada pergunta
 
 | Dado | Origem |
@@ -126,6 +138,9 @@ conceito e pede ao aluno que confira o preço e a variação na seção "Consult
    deve aparecer `Memória funcionando!`, e as abas "Memória do Castor" e "Perguntas dos
    alunos" surgem na planilha. Na primeira vez o Google pede autorização para o script
    acessar a planilha.
+6. Selecione **testarPresenca** e clique em **Executar**. Deve aparecer
+   `Online: 1 → 2 → depois que as duas saem: 0` (os números podem ser maiores se houver
+   gente com o site aberto).
 
 ### 5. Implantar como App da Web (item b)
 

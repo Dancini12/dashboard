@@ -742,7 +742,7 @@ export default function App() {
         indicadoresDeReferencia: INDICADORES.filter(i => i.nome !== "Selic").map(i => ({ nome: i.nome, valor: i.valor, descricao: i.desc })),
         historicoAnual: { descricao: "Tabela Histórico 2020–2026 do painel (CEPEA/ESALQ, Farmnews; R$ nominais)", linhas: HISTORICO },
       }} />}
-      <VisitorCounter />
+      <VisitorCounter presencaUrl={ASSISTENTE_URL} />
     </div>
   );
 }

@@ -38,3 +38,36 @@ test('mantém preço, moeda e horário informados pela BRAPI', async t => {
   assert.equal(res.data.value, 50.43);
   assert.equal(res.data.currency, 'BRL');
 });
+test('lê a cotação diária do DERAL (Paraná) a partir do boletim mais recente', async t => {
+  const { readFileSync } = await import('node:fs');
+  const planilha = readFileSync(new URL('./fixtures/sima-exemplo.xlsx', import.meta.url));
+  const pedidos = [];
+  t.mock.method(globalThis, 'fetch', async url => {
+    pedidos.push(url);
+    if (url.endsWith('/Cotacao-Diaria-SIMA')) {
+      return { ok: true, text: async () => '<a href="/Pagina/Cotacao-Diaria-SIMA-2701">x</a><a href="/Pagina/Cotacao-Diaria-SIMA-2702">x</a>' };
+    }
+    if (url.endsWith('/Pagina/Cotacao-Diaria-SIMA-2702')) {
+      return { ok: true, text: async () => '<a href="/sites/default/arquivos_restritos/files/documento/2026-09/29-09-2026-impressao.xlsx">planilha</a>' };
+    }
+    return { ok: true, arrayBuffer: async () => planilha.buffer.slice(planilha.byteOffset, planilha.byteOffset + planilha.byteLength) };
+  });
+  const res = await call({ type: 'pr' });
+  assert.equal(res.code, 200);
+  assert.equal(pedidos.length, 3);
+  assert.match(pedidos[2], /29-09-2026-impressao\.xlsx$/);
+  assert.equal(res.data.data, '29/09/2026');
+  assert.deepEqual(res.data.regioes, ['Apucarana', 'Cornélio Procópio', 'Laranjeiras do Sul', 'União da Vitória']);
+  assert.deepEqual(res.data.produtos.map(p => p.nome), ['Soja industrial tipo 1', 'Boi em pé'], 'arroz sem preços fica de fora');
+  const soja = res.data.produtos[0];
+  assert.equal(soja.unidade, 'sc 60 Kg');
+  assert.deepEqual(soja.precos[1], { min: 139, comum: 140, max: 141 });
+  assert.deepEqual(soja.precos[2], { min: 'sinf', comum: 'sinf', max: 'sinf' });
+  assert.deepEqual([soja.mediaEstado, soja.mediaAnterior, soja.variacaoPct], [139.5, 139.2, 0.22]);
+});
+test('sinaliza falha do DERAL em vez de inventar cotação', async t => {
+  t.mock.method(globalThis, 'fetch', async () => ({ ok: false, status: 503 }));
+  const res = await call({ type: 'pr' });
+  assert.equal(res.code, 502);
+  assert.match(res.data.error, /DERAL/);
+});

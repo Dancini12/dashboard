@@ -5,7 +5,8 @@ import lerPlanilha from 'read-excel-file/node';
 const ATIVOS_LIVRES = ['PETR4', 'VALE3', 'ITUB4', 'MGLU3'];
 const MSG_ATIVO_RESTRITO = 'Este ativo não está liberado no plano gratuito da nossa fonte de cotações da Bolsa (BRAPI). '
   + 'Sem chave, dá para consultar PETR4, VALE3, ITUB4 e MGLU3.';
-const FUTUROS_AGRO = new Set(['ZS=F', 'ZC=F', 'ZW=F', 'KC=F', 'SB=F', 'LE=F', 'CT=F']);
+const FUTUROS_AGRO = new Set(['ZC=F', 'ZS=F', 'ZM=F', 'ZL=F', 'ZW=F', 'KE=F', 'ZO=F', 'ZR=F',
+  'KC=F', 'SB=F', 'CT=F', 'CC=F', 'OJ=F', 'LE=F', 'GF=F', 'HE=F', 'DC=F']);
 
 export default async function handler(req, res) {
   const { type, symbol = '', q = '' } = req.query ?? {};
@@ -18,9 +19,12 @@ export default async function handler(req, res) {
       });
       if (!response.ok) throw new Error('future source failed');
       const data = await response.json();
-      const meta = data?.chart?.result?.[0]?.meta;
+      const result = data?.chart?.result?.[0];
+      const meta = result?.meta;
       const value = meta?.regularMarketPrice;
-      const previous = meta?.chartPreviousClose ?? meta?.previousClose;
+      // variação do dia: fechamento do pregão anterior (chartPreviousClose é o fechamento de antes dos 5 dias)
+      const fechamentos = (result?.indicators?.quote?.[0]?.close ?? []).filter(Number.isFinite);
+      const previous = fechamentos.length >= 2 ? fechamentos.at(-2) : meta?.previousClose;
       if (!Number.isFinite(value) || !Number.isFinite(meta?.regularMarketTime)) throw new Error('invalid future quote');
       const change = Number.isFinite(previous) && previous !== 0 ? ((value - previous) / previous) * 100 : 0;
       res.setHeader('Cache-Control', 's-maxage=60, stale-while-revalidate=120');

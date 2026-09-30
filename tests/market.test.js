@@ -85,3 +85,17 @@ test('marca nas sugestões os ativos que precisam de chave, com os livres primei
   const res = await call({ type: 'search', q: 'soja' });
   assert.deepEqual(res.data.results.map(r => [r.symbol, r.restrito]), [['PETR4', false], ['SOJA3', true]]);
 });
+test('futuros: só contratos agrícolas da lista e variação contra o pregão anterior', async t => {
+  assert.equal((await call({ type: 'future', symbol: 'AAPL' })).code, 400);
+  t.mock.method(globalThis, 'fetch', async url => {
+    assert.match(url, /chart\/ZC%3DF/);
+    return { ok: true, json: async () => ({ chart: { result: [{
+      meta: { regularMarketPrice: 501.25, regularMarketTime: 1790792399, chartPreviousClose: 528.25, currency: 'USX' },
+      indicators: { quote: [{ close: [528.25, 523, 522, null, 501.25] }] },
+    }] } }) };
+  });
+  const res = await call({ type: 'future', symbol: 'ZC=F' });
+  assert.equal(res.code, 200);
+  assert.equal(res.data.value, 501.25);
+  assert.equal(res.data.change.toFixed(2), ((501.25 - 522) / 522 * 100).toFixed(2));
+});

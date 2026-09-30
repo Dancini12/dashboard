@@ -5,9 +5,30 @@ import lerPlanilha from 'read-excel-file/node';
 const ATIVOS_LIVRES = ['PETR4', 'VALE3', 'ITUB4', 'MGLU3'];
 const MSG_ATIVO_RESTRITO = 'Este ativo não está liberado no plano gratuito da nossa fonte de cotações da Bolsa (BRAPI). '
   + 'Sem chave, dá para consultar PETR4, VALE3, ITUB4 e MGLU3.';
+const FUTUROS_AGRO = new Set(['ZS=F', 'ZC=F', 'ZW=F', 'KC=F', 'SB=F', 'LE=F', 'CT=F']);
 
 export default async function handler(req, res) {
   const { type, symbol = '', q = '' } = req.query ?? {};
+
+  if (type === 'future') {
+    if (!FUTUROS_AGRO.has(symbol)) return res.status(400).json({ error: 'Contrato futuro não reconhecido.' });
+    try {
+      const response = await fetch(`https://query2.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?interval=1d&range=5d`, {
+        signal: AbortSignal.timeout(10000), headers: { 'User-Agent': 'Mozilla/5.0 AgroInfo/1.0' },
+      });
+      if (!response.ok) throw new Error('future source failed');
+      const data = await response.json();
+      const meta = data?.chart?.result?.[0]?.meta;
+      const value = meta?.regularMarketPrice;
+      const previous = meta?.chartPreviousClose ?? meta?.previousClose;
+      if (!Number.isFinite(value) || !Number.isFinite(meta?.regularMarketTime)) throw new Error('invalid future quote');
+      const change = Number.isFinite(previous) && previous !== 0 ? ((value - previous) / previous) * 100 : 0;
+      res.setHeader('Cache-Control', 's-maxage=60, stale-while-revalidate=120');
+      return res.status(200).json({ symbol, value, change, date: meta.regularMarketTime, currency: meta.currency, exchange: meta.fullExchangeName || meta.exchangeName, source: 'Yahoo Finance · cotação indicativa' });
+    } catch {
+      return res.status(502).json({ error: 'Cotação futura temporariamente indisponível. Tente novamente em alguns minutos.' });
+    }
+  }
 
   if (type === 'pr') {
     try {

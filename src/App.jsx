@@ -2,10 +2,10 @@ import VisitorCounter from "./components/VisitorCounter";
 import Mascote, { BotaoMascote } from "./components/Mascote";
 import useMascote from "./components/useMascote";
 import CotacoesCooperativas from "./components/CotacoesCooperativas";
-import { StockQuotes, CommodityQuotes, TICKER_RE } from "./components/MarketQuotes";
+import { StockQuotes, CommodityQuotes, FuturesQuotes, TICKER_RE } from "./components/MarketQuotes";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
-import { RefreshCw, BookOpen, BarChart3, Clock, Wheat, DollarSign, Activity, ChevronDown, ChevronUp, Timer, ArrowRight, Pause, Play, Newspaper, ExternalLink, Search, MapPin, Warehouse } from "lucide-react";
+import { RefreshCw, BookOpen, BarChart3, Clock, Wheat, DollarSign, Activity, ChevronDown, ChevronUp, Timer, ArrowRight, Pause, Play, Newspaper, ExternalLink, Search, MapPin, Warehouse, TrendingUp } from "lucide-react";
 
 const UPDATE_SEC = 60;
 const DOCENTE = "Marcel Dancini Rodrigues";
@@ -14,9 +14,9 @@ const ALUNOS_PARTICIPANTES = ["Pietra Sanguini"]; // para incluir mais alunos, a
 const ASSISTENTE_URL = import.meta.env.VITE_ASSISTENTE_URL
   || "https://script.google.com/macros/s/AKfycbyDYcrR3XX5bqo0rKCp1c1ZgDHf4GCHsJv7jesNPo5PEtJT6qYMLCyUV6OGmB1ur-jrBA/exec";
 const API_MOEDAS_URL = "https://economia.awesomeapi.com.br/json/last/USD-BRL,EUR-BRL,GBP-BRL,ARS-BRL";
-const TABS = ["painel", "cooperativas", "noticias", "historico", "graficos", "glossario"];
-const TAB_LABELS = { painel: "Painel", cooperativas: "Cotações Cooperativas", noticias: "Notícias", historico: "Histórico", graficos: "Gráficos", glossario: "Glossário" };
-const TAB_ICONS = { painel: Activity, cooperativas: Warehouse, noticias: Newspaper, historico: Clock, graficos: BarChart3, glossario: BookOpen };
+const TABS = ["painel", "futuros", "cooperativas", "noticias", "historico", "graficos", "glossario"];
+const TAB_LABELS = { painel: "Painel", futuros: "Futuros", cooperativas: "Cotações Cooperativas", noticias: "Notícias", historico: "Histórico", graficos: "Gráficos", glossario: "Glossário" };
+const TAB_ICONS = { painel: Activity, futuros: TrendingUp, cooperativas: Warehouse, noticias: Newspaper, historico: Clock, graficos: BarChart3, glossario: BookOpen };
 
 const INIT_MOEDAS = [
   { id: "usd", nome: "Dólar Comercial", emoji: "💵", valor: 4.912, var: -1.12 },
@@ -729,6 +729,7 @@ export default function App() {
       <div className="max-w-4xl mx-auto px-3 py-4">
         {tab === "painel" && <CountdownBar sec={cd} total={UPDATE_SEC} paused={paused} onToggle={() => setPaused(p => !p)} onRefresh={doUpdate} count={count} last={last} source={dataSource} />}
         {tab === "painel" && <PainelTab moedas={moedas} pm={pm} flash={flash} selic={selic} refresh={count} onViewChart={viewChart} />}
+        {tab === "futuros" && <FuturesQuotes />}
         {tab === "cooperativas" && <CotacoesCooperativas />}
         {tab === "noticias" && <NoticiasTab />}
         {tab === "historico" && <HistoricoTab />}

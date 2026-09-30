@@ -29,7 +29,8 @@ test('sinaliza autorização ausente para ações restritas', async t => {
   t.mock.method(globalThis, 'fetch', async () => ({ ok: false, status: 401 }));
   const res = await call({ type: 'stock', symbol: 'BBAS3' });
   assert.equal(res.code, 403);
-  assert.match(res.data.error, /BRAPI_TOKEN/);
+  assert.match(res.data.error, /plano gratuito/);
+  assert.doesNotMatch(res.data.error, /BRAPI_TOKEN/, 'aluno não vê instrução técnica');
 });
 test('mantém preço, moeda e horário informados pela BRAPI', async t => {
   t.mock.method(globalThis, 'fetch', async () => ({ ok: true, json: async () => ({ results: [{ symbol: 'PETR4', regularMarketPrice: 50.43, currency: 'BRL', regularMarketTime: '2026-09-15T20:00:00Z' }] }) }));
@@ -76,4 +77,11 @@ test('sinaliza falha do DERAL em vez de inventar cotação', async t => {
   const res = await call({ type: 'pr' });
   assert.equal(res.code, 502);
   assert.match(res.data.error, /DERAL/);
+});
+test('marca nas sugestões os ativos que precisam de chave, com os livres primeiro', async t => {
+  t.mock.method(globalThis, 'fetch', async () => ({ ok: true, json: async () => ({ stocks: [
+    { stock: 'SOJA3', name: 'BOA SAFRA SEMENTES S.A.' }, { stock: 'PETR4', name: 'Petrobras PN' },
+  ] }) }));
+  const res = await call({ type: 'search', q: 'soja' });
+  assert.deepEqual(res.data.results.map(r => [r.symbol, r.restrito]), [['PETR4', false], ['SOJA3', true]]);
 });

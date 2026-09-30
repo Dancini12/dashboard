@@ -16,6 +16,12 @@ function savePreference(key, value) {
 
 export const TICKER_RE = /^[A-Z]{4}\d{1,2}$/;
 
+// Nomes de commodities digitados no campo de ações: a busca da Bolsa devolveria empresas
+// e fundos com esse nome (ex.: "soja" → SOJA3), não o preço da commodity.
+const COMMODITY_RE = /\b(soja|milho|cafe|boi|trigo|feijao|algodao|leite|laranja|cacau|acucar|etanol|suino|arroz|mandioca|sorgo|commodit)/;
+const semAcento = texto => texto.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+const EVENTO_BUSCAR_COMMODITY = 'agroinfo:buscar-commodity';
+
 export function StockQuotes({ refresh, onViewChart }) {
   const [symbol, setSymbol] = useState(() => {
     const saved = readPreference('agroinfo.stock.v1', 'PETR4');
@@ -40,6 +46,11 @@ export function StockQuotes({ refresh, onViewChart }) {
 
   const term = input.trim();
   const showDropdown = term.length >= 2 && !TICKER_RE.test(term.toUpperCase());
+  const commodityDigitada = showDropdown ? semAcento(term).match(COMMODITY_RE)?.[1] : null;
+  const irParaCommodity = () => {
+    window.dispatchEvent(new CustomEvent(EVENTO_BUSCAR_COMMODITY, { detail: term }));
+    document.getElementById('consultar-commodity')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
 
   useEffect(() => {
     if (!showDropdown) return;
@@ -70,6 +81,7 @@ export function StockQuotes({ refresh, onViewChart }) {
       const raw = input.trim();
       const upper = raw.toUpperCase();
       if (TICKER_RE.test(upper)) { pick(upper, ''); return; }
+      if (commodityDigitada) { irParaCommodity(); return; } // preço de commodity não é ação
       if (suggestions.length) { pick(suggestions[0].symbol, suggestions[0].name); return; }
       setValidation('Digite o nome da empresa (ex.: Petrobras) e escolha uma sugestão, ou informe o código (ex.: PETR4).');
     }} className="flex flex-wrap gap-2 relative">
@@ -81,13 +93,24 @@ export function StockQuotes({ refresh, onViewChart }) {
           placeholder="Ex.: Petrobras ou PETR4"
           autoComplete="off"
         />
-        {showDropdown && (searching || suggestions.length > 0) && (
-          <div className="absolute left-0 right-0 mt-1 bg-white border rounded-lg shadow-md z-10 max-h-56 overflow-auto">
+        {showDropdown && (searching || suggestions.length > 0 || commodityDigitada) && (
+          <div className="absolute left-0 right-0 mt-1 bg-white border rounded-lg shadow-md z-10 max-h-72 overflow-auto">
+            {commodityDigitada && (
+              <div className="p-2 text-xs border-b" style={{ background: '#fffbeb', color: '#78350f' }}>
+                Procurando o preço de <strong>{term}</strong>? Este campo é para ações e fundos da Bolsa; a busca mostra
+                empresas com esse nome, não o preço da commodity. O preço está em "Consultar commodity", logo abaixo, e
+                na aba "Cotações Cooperativas".
+                <button type="button" onClick={irParaCommodity} className="mt-1.5 block rounded-lg bg-green-800 px-2 py-1 font-bold text-white">
+                  Ver {term} em Consultar commodity
+                </button>
+              </div>
+            )}
             {searching && <div className="p-2 text-xs text-slate-500">Buscando…</div>}
             {!searching && suggestions.map(s => (
               <button key={s.symbol} type="button" onClick={() => pick(s.symbol, s.name)}
                 className="block w-full text-left px-2 py-1.5 text-xs hover:bg-blue-50 border-b last:border-b-0">
                 <span className="font-bold">{s.symbol}</span> · {s.name}
+                {s.restrito && <span className="ml-1 rounded bg-slate-100 px-1 text-slate-500">precisa de chave</span>}
               </button>
             ))}
           </div>
@@ -95,6 +118,7 @@ export function StockQuotes({ refresh, onViewChart }) {
       </label>
       <button className="self-end rounded-lg bg-blue-900 text-white p-2 text-sm" type="submit">Consultar</button>
     </form>
+
     <div aria-live="polite" className="mt-3 text-sm">
       {validation && <p role="alert" className="text-red-700">{validation}</p>}
       {state.symbol !== symbol && <p>Buscando {symbol}…</p>}
@@ -140,6 +164,13 @@ export function CommodityQuotes({ refresh, onViewChart }) {
   const [notFound, setNotFound] = useState(false);
   const normalize = value => value.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
 
+  // quem digitou uma commodity no campo de ações é trazido para cá com a busca preenchida
+  useEffect(() => {
+    const receber = e => { setSearch(String(e.detail || '')); setNotFound(false); };
+    window.addEventListener(EVENTO_BUSCAR_COMMODITY, receber);
+    return () => window.removeEventListener(EVENTO_BUSCAR_COMMODITY, receber);
+  }, []);
+
   const addFirstMatch = () => {
     const term = search.trim();
     if (!term) return;
@@ -152,7 +183,7 @@ export function CommodityQuotes({ refresh, onViewChart }) {
     setSearch(''); setNotFound(false);
   };
 
-  return <section className="rounded-xl border bg-white p-3 shadow-sm">
+  return <section id="consultar-commodity" className="rounded-xl border bg-white p-3 shadow-sm" style={{ scrollMarginTop: 90 }}>
     <h2 className="text-sm font-bold text-green-800">Consultar commodity</h2>
     <p className="text-xs text-slate-600 mt-1">Digite o nome (ex.: soja, café, boi) e aperte Enter ou clique em Adicionar para ver o valor. Também dá pra escolher direto na lista abaixo.</p>
     <div className="flex gap-2 mt-3">

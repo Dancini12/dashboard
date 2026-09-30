@@ -1,6 +1,11 @@
 /* global process, Buffer */
 import lerPlanilha from 'read-excel-file/node';
 
+// Ativos liberados sem chave na BRAPI; com BRAPI_TOKEN no servidor, o plano define o resto.
+const ATIVOS_LIVRES = ['PETR4', 'VALE3', 'ITUB4', 'MGLU3'];
+const MSG_ATIVO_RESTRITO = 'Este ativo não está liberado no plano gratuito da nossa fonte de cotações da Bolsa (BRAPI). '
+  + 'Sem chave, dá para consultar PETR4, VALE3, ITUB4 e MGLU3.';
+
 export default async function handler(req, res) {
   const { type, symbol = '', q = '' } = req.query ?? {};
 
@@ -34,7 +39,8 @@ export default async function handler(req, res) {
           return true;
         })
         .slice(0, 6)
-        .map(item => ({ symbol: item.stock, name: item.name }));
+        .map(item => ({ symbol: item.stock, name: item.name, restrito: !process.env.BRAPI_TOKEN && !ATIVOS_LIVRES.includes(item.stock) }))
+        .sort((a, b) => a.restrito - b.restrito);
       res.setHeader('Cache-Control', 's-maxage=300, stale-while-revalidate=60');
       return res.status(200).json({ results });
     } catch {
@@ -54,7 +60,7 @@ export default async function handler(req, res) {
       if (!response.ok) {
         const restricted = [401, 403].includes(response.status);
         return res.status(restricted ? 403 : 502).json({ error: restricted
-          ? 'Este ativo exige acesso autorizado na BRAPI. Configure BRAPI_TOKEN no servidor. PETR4, VALE3, ITUB4 e MGLU3 podem ser consultados sem chave.'
+          ? MSG_ATIVO_RESTRITO
           : 'Histórico indisponível ou ativo não encontrado. Tente novamente.' });
       }
       const data = await response.json();
@@ -88,7 +94,7 @@ export default async function handler(req, res) {
     if (!response.ok) {
       const restricted = type === 'stock' && [401, 403].includes(response.status);
       return res.status(restricted ? 403 : 502).json({ error: restricted
-        ? 'Este ativo exige acesso autorizado na BRAPI. Configure BRAPI_TOKEN no servidor. PETR4, VALE3, ITUB4 e MGLU3 podem ser consultados sem chave.'
+        ? MSG_ATIVO_RESTRITO
         : 'Fonte indisponível ou ativo não encontrado. Tente novamente.' });
     }
     const data = await response.json();

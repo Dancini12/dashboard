@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { ExternalLink } from "lucide-react";
+import { Clock, ExternalLink } from "lucide-react";
 
 // Aba "Cotações Cooperativas", por enquanto só com o Paraná: cotação diária do SIMA
 // (DERAL/SEAB-PR), o preço de compra pago pelos atacadistas (cooperativas, cerealistas
@@ -25,6 +25,13 @@ const unidadeLegivel = u => UNIDADES[u.toLowerCase()] ?? u.toLowerCase();
 const reais = v => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL", minimumFractionDigits: 2 });
 const SITUACAO = { sinf: "s/ inf.", aus: "ausente" };
 const valorDa = v => (typeof v === "number" ? reais(v) : SITUACAO[v] ?? "—");
+// "29/09 às 11:51", no horário de Brasília
+const quando = iso => {
+  const d = new Date(iso);
+  const dia = d.toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo", day: "2-digit", month: "2-digit" });
+  const hora = d.toLocaleTimeString("pt-BR", { timeZone: "America/Sao_Paulo", hour: "2-digit", minute: "2-digit" });
+  return `${dia} às ${hora}`;
+};
 
 // Cooperativas paranaenses acompanhadas. Cada uma divulga o próprio preço aos cooperados
 // (aplicativo ou área do cooperado). "regiao": região do DERAL com o nome da cidade-sede.
@@ -67,15 +74,40 @@ export default function CotacoesCooperativas() {
   return (
     <div className="space-y-4">
       <section className="rounded-xl border bg-white p-3 shadow-sm">
-        <div className="flex flex-wrap items-baseline justify-between gap-2">
-          <h2 className="text-sm font-bold text-green-800">Cotações Cooperativas · Paraná</h2>
-          {cotacao?.data && <span className="text-xs text-slate-500">Cotação do dia {cotacao.data}</span>}
-        </div>
+        <h2 className="text-sm font-bold text-green-800">Cotações Cooperativas · Paraná</h2>
         <p className="text-xs text-slate-600 mt-1">
           Quanto quem compra do produtor (cooperativas, cerealistas e indústrias) está pagando em cada região do
           Paraná, segundo o levantamento diário do DERAL, da Secretaria da Agricultura do estado. A região de
           Cornélio Procópio, onde fica Santa Mariana, aparece em destaque.
         </p>
+        {cotacao && (
+          <div className="mt-3 flex gap-2 rounded-lg p-2.5 text-xs" style={{ background: "#eff6ff", border: "1px solid #bfdbfe", color: "#1e3a8a" }}>
+            <Clock size={15} className="shrink-0 mt-0.5" aria-hidden="true" />
+            <div>
+              <div>
+                <strong>Cotação do dia {cotacao.data}</strong>
+                {cotacao.publicadoEm && <> · publicada pelo DERAL em {quando(cotacao.publicadoEm)}</>}
+                {cotacao.consultadoEm && <> · conferida pelo site em {quando(cotacao.consultadoEm)}</>}
+              </div>
+              <div className="mt-0.5">
+                Não é em tempo real: o DERAL publica um boletim por dia útil. O site confere a cada 30 minutos e mostra o
+                boletim novo assim que ele sai.
+              </div>
+            </div>
+          </div>
+        )}
+        <details className="mt-2 text-xs text-slate-600">
+          <summary className="cursor-pointer font-semibold text-green-800">Como esta cotação é feita</summary>
+          <ul className="mt-2 space-y-1 pl-5" style={{ listStyle: "disc" }}>
+            <li><strong>Quem levanta:</strong> o DERAL (Departamento de Economia Rural) da Secretaria da Agricultura e do Abastecimento do Paraná, pelo SIMA, o Sistema de Informação de Mercado Agrícola.</li>
+            <li><strong>O que é:</strong> a "cotação de compra pelos atacadistas paranaenses", ou seja, o preço que os compradores atacadistas, como cooperativas, cerealistas e indústrias, pagam ao produtor, em reais por unidade (saca de 60 kg, arroba, kg ou tonelada).</li>
+            <li><strong>Onde:</strong> em 20 regiões do estado, os núcleos regionais da Secretaria da Agricultura.</li>
+            <li><strong>Mínimo, mais comum e máximo:</strong> o menor preço, o preço que mais se repetiu e o maior preço entre os compradores consultados na região naquele dia.</li>
+            <li><strong>Média do Paraná e variação:</strong> calculadas pelo próprio DERAL; a variação compara com o boletim anterior.</li>
+            <li><strong>Quando:</strong> nos dias úteis. O horário de publicação é o momento em que a planilha do dia foi colocada no site do DERAL.</li>
+            <li><strong>Sinais na tabela:</strong> "—" região não pesquisada para o produto; "s/ inf." sem informação no dia; "ausente" produto ausente do mercado da região.</li>
+          </ul>
+        </details>
         {produtos.length > 0 && (
           <div className="flex flex-wrap gap-2 mt-3" role="group" aria-label="Produto">
             {produtos.map(p => {

@@ -118,7 +118,10 @@ const UA_AGROINFO = 'Mozilla/5.0 (compatible; AgroInfo-CEEPA/1.0; +https://agroi
 async function buscar(url, comoArquivo = false) {
   const response = await fetch(url, { signal: AbortSignal.timeout(15000), headers: { 'User-Agent': UA_AGROINFO } });
   if (!response.ok) throw new Error(`HTTP ${response.status}`);
-  return comoArquivo ? Buffer.from(await response.arrayBuffer()) : response.text();
+  if (!comoArquivo) return response.text();
+  // a data de modificação do arquivo é a hora em que o DERAL publicou a planilha
+  const modificado = Date.parse(response.headers?.get?.('last-modified') ?? '');
+  return { conteudo: Buffer.from(await response.arrayBuffer()), publicadoEm: Number.isFinite(modificado) ? new Date(modificado).toISOString() : null };
 }
 
 // Cotação diária do SIMA (DERAL/SEAB-PR): boletim mais recente → planilha do dia → tabela.
@@ -130,11 +133,12 @@ async function cotacaoDiariaParana() {
   const caminho = boletim.match(/href="([^"]+\.xlsx)"/i)?.[1];
   if (!caminho) throw new Error('boletim sem planilha');
   const arquivo = new URL(caminho.replace(/&amp;/g, '&'), DERAL).href;
-  const abas = await lerPlanilha(await buscar(arquivo, true));
+  const { conteudo, publicadoEm } = await buscar(arquivo, true);
+  const abas = await lerPlanilha(conteudo);
   const doArquivo = arquivo.match(/(\d{2}-\d{2}-\d{4})/)?.[1];
   const aba = abas.find(a => a.sheet === doArquivo) || abas.find(a => /^\d{2}-\d{2}-\d{4}$/.test(a.sheet));
   if (!aba) throw new Error('aba do dia não encontrada');
-  return { ...lerCotacaoParana(aba.data), arquivo };
+  return { ...lerCotacaoParana(aba.data), arquivo, publicadoEm, consultadoEm: new Date().toISOString() };
 }
 
 const REGIOES_ABREVIADAS = { 'C,PROCÓPIO': 'Cornélio Procópio', 'F,BELTRÃO': 'Francisco Beltrão', 'LARANJ, SUL': 'Laranjeiras do Sul' };

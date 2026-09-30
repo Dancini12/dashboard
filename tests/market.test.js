@@ -50,7 +50,11 @@ test('lê a cotação diária do DERAL (Paraná) a partir do boletim mais recent
     if (url.endsWith('/Pagina/Cotacao-Diaria-SIMA-2702')) {
       return { ok: true, text: async () => '<a href="/sites/default/arquivos_restritos/files/documento/2026-09/29-09-2026-impressao.xlsx">planilha</a>' };
     }
-    return { ok: true, arrayBuffer: async () => planilha.buffer.slice(planilha.byteOffset, planilha.byteOffset + planilha.byteLength) };
+    return {
+      ok: true,
+      headers: { get: nome => (nome === 'last-modified' ? 'Tue, 29 Sep 2026 14:51:57 GMT' : null) },
+      arrayBuffer: async () => planilha.buffer.slice(planilha.byteOffset, planilha.byteOffset + planilha.byteLength),
+    };
   });
   const res = await call({ type: 'pr' });
   assert.equal(res.code, 200);
@@ -64,6 +68,8 @@ test('lê a cotação diária do DERAL (Paraná) a partir do boletim mais recent
   assert.deepEqual(soja.precos[1], { min: 139, comum: 140, max: 141 });
   assert.deepEqual(soja.precos[2], { min: 'sinf', comum: 'sinf', max: 'sinf' });
   assert.deepEqual([soja.mediaEstado, soja.mediaAnterior, soja.variacaoPct], [139.5, 139.2, 0.22]);
+  assert.equal(res.data.publicadoEm, '2026-09-29T14:51:57.000Z', 'hora de publicação vem da data do arquivo');
+  assert.ok(!Number.isNaN(Date.parse(res.data.consultadoEm)));
 });
 test('sinaliza falha do DERAL em vez de inventar cotação', async t => {
   t.mock.method(globalThis, 'fetch', async () => ({ ok: false, status: 503 }));

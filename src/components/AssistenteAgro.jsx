@@ -9,7 +9,11 @@ const MAX_PERGUNTA = 500;
 const MAX_HISTORICO = 6;
 // Mesma mensagem do Assistente.gs para Gemini sobrecarregado (500/503): vale tentar de novo.
 const MSG_INDISPONIVEL = "O assistente está indisponível agora. Tente de novo em instantes.";
-const ESPERAS_NOVA_TENTATIVA = [3000, 6000]; // até 2 novas tentativas, esperando mais a cada vez
+// O Apps Script já tenta um modelo reserva; o site tenta mais uma vez se ainda assim falhar
+// ou se a resposta demorar demais / a conexão cair.
+const ESPERAS_NOVA_TENTATIVA = [3000];
+const TEMPO_MAXIMO_MS = 60000; // por tentativa (o Apps Script pode consultar dois modelos)
+const MSG_SEM_CONEXAO = "Não consegui falar com o assistente. Verifique a internet e tente de novo.";
 // As tabelas de commodities do painel vêm do Notícias Agrícolas, que bloqueia leitura automática
 // (Cloudflare); o assistente não recebe esses números e orienta o aluno a conferir a tabela.
 const AVISO_COMMODITIES = "Os preços do dia das commodities (soja, milho, boi, café etc.) não chegam ao assistente: "
@@ -185,11 +189,11 @@ export default function AssistenteAgro({ url, dadosDashboard, aberto, onFechar, 
         // text/plain evita o preflight de CORS, que o Apps Script não atende
         headers: { "Content-Type": "text/plain;charset=utf-8" },
         body: corpo,
-        signal: AbortSignal.timeout(40000),
-      }).then(r => r.json());
+        signal: AbortSignal.timeout(TEMPO_MAXIMO_MS),
+      }).then(r => r.json()).catch(() => ({ erro: MSG_SEM_CONEXAO })); // demora demais ou sem conexão
       let dados = await perguntar();
       for (const espera of ESPERAS_NOVA_TENTATIVA) { // pico de demanda no Gemini: tenta de novo
-        if (dados.erro !== MSG_INDISPONIVEL) break;
+        if (dados.erro !== MSG_INDISPONIVEL && dados.erro !== MSG_SEM_CONEXAO) break;
         setTentandoDeNovo(true);
         await new Promise(r => setTimeout(r, espera));
         dados = await perguntar();
@@ -198,7 +202,7 @@ export default function AssistenteAgro({ url, dadosDashboard, aberto, onFechar, 
         setMensagens(m => [...m, { id: ++ultimoId.current, autor: "assistente", texto: semEmoji(dados.resposta), origem: dados.origem, digitar: !reduzMovimento }]);
       } else setErro(dados.erro || "Não consegui responder agora. Tente de novo.");
     } catch {
-      setErro("Não consegui falar com o assistente. Verifique a internet e tente de novo.");
+      setErro(MSG_SEM_CONEXAO);
     } finally {
       setPensando(false);
       setTentandoDeNovo(false);

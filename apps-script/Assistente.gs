@@ -24,7 +24,12 @@
  */
 
 const MODELO = 'gemini-3.8-flash';
-const URL_GEMINI = 'https://generativelanguage.googleapis.com/v1beta/models/' + MODELO + ':generateContent';
+// Reserva: modelo mais leve, com cota própria no nível gratuito, usado quando o principal
+// está sobrecarregado, lento, sem cota ou indisponível. "-latest" aponta para a versão atual.
+const MODELO_RESERVA = 'gemini-flash-lite-latest';
+const urlDoModelo = function (modelo) {
+  return 'https://generativelanguage.googleapis.com/v1beta/models/' + modelo + ':generateContent';
+};
 
 const MAX_PERGUNTA = 500;          // caracteres
 const MAX_HISTORICO = 6;           // últimas mensagens da conversa
@@ -148,42 +153,61 @@ function consultarGemini(pergunta, corpo) {
     },
   };
 
+  const opcoes = {
+    method: 'post',
+    contentType: 'application/json',
+    headers: { 'x-goog-api-key': chave },
+    payload: JSON.stringify(payload),
+    muteHttpExceptions: true,
+  };
+  // tenta o principal; se falhar por sobrecarga, lentidão, cota ou modelo indisponível,
+  // tenta a reserva. Se as duas falharem, vale a mensagem da falha do principal.
+  let primeiraFalha = null;
+  const modelos = [MODELO, MODELO_RESERVA];
+  for (let i = 0; i < modelos.length; i++) {
+    const r = chamarModelo(modelos[i], opcoes);
+    if (r.resposta) return { resposta: r.resposta };
+    if (r.bloqueada) return { erro: MSG_BLOQUEADA };
+    primeiraFalha = primeiraFalha || r;
+    if (!r.tentarReserva) break;
+  }
+  return { erro: primeiraFalha.erro };
+}
+
+/** Uma chamada a um modelo: { resposta } | { bloqueada } | { erro, tentarReserva }. */
+function chamarModelo(modelo, opcoes) {
   let resposta;
   try {
-    resposta = UrlFetchApp.fetch(URL_GEMINI, {
-      method: 'post',
-      contentType: 'application/json',
-      headers: { 'x-goog-api-key': chave },
-      payload: JSON.stringify(payload),
-      muteHttpExceptions: true,
-    });
+    resposta = UrlFetchApp.fetch(urlDoModelo(modelo), opcoes);
   } catch (err) {
-    console.error('Falha de rede ao chamar o Gemini: ' + err);
-    return { erro: MSG_INDISPONIVEL };
+    console.error(modelo + ': falha de rede ao chamar o Gemini: ' + err);
+    return { erro: MSG_INDISPONIVEL, tentarReserva: true };
   }
 
   const codigo = resposta.getResponseCode();
   const texto = resposta.getContentText();
-  if (codigo === 429) return { erro: MSG_LIMITE };
   if (codigo !== 200) {
-    console.error('Gemini respondeu HTTP ' + codigo + ': ' + texto.slice(0, 500));
-    return { erro: [400, 401, 403, 404].indexOf(codigo) >= 0 ? MSG_CONFIGURACAO : MSG_INDISPONIVEL };
+    console.error(modelo + ' respondeu HTTP ' + codigo + ': ' + texto.slice(0, 500));
+    if (codigo === 429) return { erro: MSG_LIMITE, tentarReserva: true };
+    if (codigo === 404) return { erro: MSG_CONFIGURACAO, tentarReserva: true }; // modelo indisponível
+    if ([400, 401, 403].indexOf(codigo) >= 0) return { erro: MSG_CONFIGURACAO, tentarReserva: false };
+    return { erro: MSG_INDISPONIVEL, tentarReserva: true };
   }
 
   let json;
   try {
     json = JSON.parse(texto);
   } catch (err) {
-    console.error('Resposta do Gemini não é JSON: ' + texto.slice(0, 500));
-    return { erro: MSG_INDISPONIVEL };
+    console.error(modelo + ': resposta do Gemini não é JSON: ' + texto.slice(0, 500));
+    return { erro: MSG_INDISPONIVEL, tentarReserva: true };
   }
 
   const candidato = json.candidates && json.candidates[0];
   const partes = (candidato && candidato.content && candidato.content.parts) || [];
   const respostaTexto = partes.map(function (p) { return p.text || ''; }).join('').trim();
   if (!respostaTexto) {
-    console.warn('Sem texto na resposta: ' + JSON.stringify(json.promptFeedback || (candidato && candidato.finishReason)));
-    return { erro: MSG_BLOQUEADA };
+    console.warn(modelo + ': sem texto na resposta: ' + JSON.stringify(json.promptFeedback || (candidato && candidato.finishReason)));
+    return { bloqueada: true };
   }
   return { resposta: respostaTexto };
 }
@@ -415,6 +439,49 @@ function testarGemini() {
   if (resultado.erro) console.error('Falhou: ' + resultado.erro);
   else console.log('Funcionou! Resposta ' + (resultado.origem === 'memoria' ? 'da memória' : 'do Gemini') + ':\n' + resultado.resposta);
   return resultado;
+}
+
+/**
+ * Diagnóstico: mostra os modelos que esta chave pode usar e se o principal e a
+ * reserva estão entre eles.
+ */
+function listarModelos() {
+  const chave = PropertiesService.getScriptProperties().getProperty('GEMINI_API_KEY');
+  const r = UrlFetchApp.fetch('https://generativelanguage.googleapis.com/v1beta/models?pageSize=200', {
+    headers: { 'x-goog-api-key': chave },
+    muteHttpExceptions: true,
+  });
+  if (r.getResponseCode() !== 200) {
+    console.error('Não consegui listar os modelos: HTTP ' + r.getResponseCode() + ' ' + r.getContentText().slice(0, 300));
+    return [];
+  }
+  const modelos = (JSON.parse(r.getContentText()).models || [])
+    .filter(function (m) { return (m.supportedGenerationMethods || []).indexOf('generateContent') >= 0; })
+    .map(function (m) { return m.name.replace('models/', ''); });
+  console.log('Modelos disponíveis: ' + modelos.join(', '));
+  [MODELO, MODELO_RESERVA].forEach(function (m) {
+    console.log(m + ': ' + (modelos.indexOf(m) >= 0 ? 'na lista' : 'fora da lista (se for um apelido "-latest", teste com testarReserva)'));
+  });
+  return modelos;
+}
+
+/** Teste do modelo reserva: faz uma pergunta curta direto a ele. */
+function testarReserva() {
+  const chave = PropertiesService.getScriptProperties().getProperty('GEMINI_API_KEY');
+  const r = chamarModelo(MODELO_RESERVA, {
+    method: 'post',
+    contentType: 'application/json',
+    headers: { 'x-goog-api-key': chave },
+    payload: JSON.stringify({
+      systemInstruction: { parts: [{ text: INSTRUCAO_SISTEMA }] },
+      contents: [{ role: 'user', parts: [{ text: 'Em uma frase: o que é o indicador CEPEA?' }] }],
+      generationConfig: { maxOutputTokens: 120, temperature: 0.4, thinkingConfig: { thinkingBudget: 0 } },
+    }),
+    muteHttpExceptions: true,
+  });
+  if (r.resposta) console.log('Reserva (' + MODELO_RESERVA + ') funcionando: ' + r.resposta);
+  else console.error('Reserva (' + MODELO_RESERVA + ') falhou: ' + (r.erro || 'resposta bloqueada') + '. Veja os detalhes acima.');
+  return r;
 }
 
 /** Teste do "online agora": duas sessões dão sinal; deve mostrar pelo menos 2. */

@@ -3,7 +3,9 @@
 O castor do painel responde dúvidas dos alunos em um balão de diálogo. A pergunta vai
 para um **Web App do Google Apps Script** (`Assistente.gs`), que consulta o **Gemini no
 nível gratuito** (modelo definido na constante `MODELO`, hoje `gemini-3.8-flash`) e devolve
-uma explicação baseada nas cotações do painel.
+uma explicação baseada nas cotações do painel. Se o modelo principal estiver sobrecarregado,
+lento, sem cota ou indisponível, o script tenta na hora o **modelo reserva**
+(`MODELO_RESERVA`, hoje `gemini-flash-lite-latest`, mais leve e com cota própria).
 
 **Situação atual:** implantado no projeto do Apps Script da planilha do AgroInfo, arquivo
 `Assistente.gs`, com a chave do projeto "AgroInfo Gratuito" (nível gratuito, sem
@@ -138,7 +140,10 @@ conceito e pede ao aluno que confira o preço e a variação na seção "Consult
    deve aparecer `Memória funcionando!`, e as abas "Memória do Castor" e "Perguntas dos
    alunos" surgem na planilha. Na primeira vez o Google pede autorização para o script
    acessar a planilha.
-6. Selecione **testarPresenca** e clique em **Executar**. Deve aparecer
+6. Selecione **testarReserva** e clique em **Executar**. Deve aparecer `Reserva (...)
+   funcionando:` e uma frase. Se falhar, rode **listarModelos**: ele mostra os modelos que a
+   chave pode usar; troque `MODELO_RESERVA` por um modelo "flash-lite" da lista.
+7. Selecione **testarPresenca** e clique em **Executar**. Deve aparecer
    `Online: 1 → 2 → depois que as duas saem: 0` (os números podem ser maiores se houver
    gente com o site aberto).
 
@@ -237,7 +242,7 @@ já não está disponível para projetos novos; por isso o modelo atual é o `ge
 |---|---|---|
 | "Muitas perguntas agora…" | Limite gratuito por minuto ou por dia atingido | Esperar. Os limites atuais aparecem no AI Studio. |
 | "…problema de configuração. Avise o professor." | Chave ausente, com nome errado ou inválida; modelo indisponível | Confira `GEMINI_API_KEY` (passo 3) e rode `testarGemini`. Veja o erro em **Execuções**, na barra da esquerda. |
-| "O assistente está indisponível agora…" | Gemini sobrecarregado (erro 503, comum em horários de pico) ou falha de rede | Tentar de novo em instantes. |
+| "O assistente está indisponível agora…" | Principal e reserva sobrecarregados ao mesmo tempo (erro 503, comum em horários de pico) ou falha de rede | Tentar de novo em instantes. Em **Execuções** aparece o código de erro de cada modelo. |
 | "Não consegui falar com o assistente…" | URL errada, implantação sem acesso "Qualquer pessoa" ou sem internet | Abra a URL no navegador (passo 7). |
 
 **Privacidade:** no nível gratuito, o Google pode usar as conversas para melhorar seus

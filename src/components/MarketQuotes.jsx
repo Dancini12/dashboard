@@ -180,24 +180,30 @@ const FUTURES_GROUPS = [...new Set(FUTURES.map(item => item.group))];
 const pesoDaUnidade = kg => `${kg.toLocaleString('pt-BR', { maximumFractionDigits: kg >= 100 ? 0 : kg >= 1 ? 1 : 3 })} kg`;
 const dolar = valor => valor.toLocaleString('pt-BR', { style: 'currency', currency: 'USD', minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
-export function FuturesQuotes() {
-  const [query, setQuery] = useState('Milho');
-  const [selected, setSelected] = useState(FUTURES[0]);
-  const [consulta, setConsulta] = useState(0); // escolher de novo o mesmo produto busca a cotação outra vez
-  const [notFound, setNotFound] = useState('');
-  const [state, setState] = useState({ loading: true });
-  const normalize = value => value.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
-  const choose = item => { setState({ loading: true }); setNotFound(''); setQuery(item.name); setSelected(item); setConsulta(n => n + 1); };
+// Outros nomes que o aluno pode digitar para achar o produto na lista.
+const APELIDOS = {
+  milho: 'grão de milho', soja: 'grão de soja', farelo: 'ração', oleo: 'óleo de cozinha biodiesel',
+  trigo: 'farinha pão', 'trigo-hrw': 'farinha pão', acucar: 'cana-de-açúcar', algodao: 'pluma fibra',
+  cacau: 'chocolate', suco: 'laranja citros', boi: 'gado bovino arroba', 'boi-reposicao': 'gado bovino bezerro garrote',
+  suino: 'porco carne suína', leite: 'queijo laticínio',
+};
 
-  const search = event => {
-    event?.preventDefault();
-    const term = normalize(query);
-    const match = FUTURES.find(item => normalize(item.name).includes(term) || term.includes(normalize(item.key)));
-    if (!match) { setNotFound('Produto não encontrado. Abra a lista abaixo para ver todas as commodities disponíveis.'); return; }
-    choose(match);
+export function FuturesQuotes() {
+  const [query, setQuery] = useState('');
+  const [selected, setSelected] = useState(null); // nada pré-selecionado: o aluno escolhe na lista
+  const [consulta, setConsulta] = useState(0); // escolher de novo o mesmo produto busca a cotação outra vez
+  const [state, setState] = useState({});
+  const normalize = value => value.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
+  const term = normalize(query);
+  const visiveis = FUTURES.filter(item => normalize(`${item.name} ${item.key} ${APELIDOS[item.key] ?? ''}`).includes(term));
+
+  const choose = item => {
+    setState({ loading: true }); setSelected(item); setConsulta(n => n + 1);
+    requestAnimationFrame(() => document.getElementById('cotacao-futuro')?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
   };
 
   useEffect(() => {
+    if (!selected) return;
     const controller = new AbortController();
     fetchMarket({ type: 'future', symbol: selected.symbol }, controller.signal)
       .then(quote => setState({ quote }))
@@ -212,45 +218,59 @@ export function FuturesQuotes() {
   return <section className="space-y-4">
     <div className="rounded-2xl p-5 text-white shadow-sm" style={{ background: 'linear-gradient(135deg,#0c2340 0%,#14532d 100%)' }}>
       <div className="text-xs font-bold uppercase tracking-widest" style={{ color: '#bef264' }}>Mercado futuro</div>
-      <h2 className="text-2xl font-black mt-1">Consulte pelo nome do produto</h2>
-      <p className="text-sm mt-1 max-w-2xl" style={{ color: 'rgba(255,255,255,.68)' }}>Compare a referência internacional com o contrato brasileiro correspondente. Cada produto mostra a unidade em que é cotado e quanto isso dá por tonelada e por quilo. Os valores são indicativos e podem ter atraso.</p>
-      <form onSubmit={search} className="flex flex-col sm:flex-row gap-2 mt-4">
-        <label className="flex-1 text-xs font-semibold">Produto agrícola
-          <input value={query} onChange={event => { setQuery(event.target.value); setNotFound(''); }} placeholder="Digite: soja, milho, café…" className="block w-full rounded-xl border-0 p-3 mt-1 text-sm text-slate-900" />
-        </label>
-        <button className="self-stretch sm:self-end rounded-xl px-5 py-3 text-sm font-black" style={{ background: '#d9f99d', color: '#14532d' }}>Consultar</button>
-      </form>
-      <label className="block text-xs font-semibold mt-3">Ou abra a lista com todas as commodities ({FUTURES.length})
-        <select value={selected.key} onChange={event => choose(FUTURES.find(item => item.key === event.target.value))}
-          className="block w-full rounded-xl border-0 p-3 mt-1 text-sm text-slate-900 bg-white">
-          {FUTURES_GROUPS.map(group => <optgroup key={group} label={group}>
-            {FUTURES.filter(item => item.group === group).map(item =>
-              <option key={item.key} value={item.key}>{item.emoji} {item.name} — {item.unit} ({pesoDaUnidade(item.kg)})</option>)}
-          </optgroup>)}
-        </select>
+      <h2 className="text-2xl font-black mt-1">Escolha o produto na lista</h2>
+      <p className="text-sm mt-1 max-w-2xl" style={{ color: 'rgba(255,255,255,.68)' }}>Abaixo estão todos os produtos agrícolas que dá para consultar no mercado futuro. Clique no nome para ver o preço, a unidade em que é cotado e quanto isso dá por tonelada e por quilo. Os valores são indicativos e podem ter atraso.</p>
+      <label className="block text-xs font-semibold mt-4">Procurar pelo nome
+        <input value={query} onChange={event => setQuery(event.target.value)} placeholder="Ex.: soja, porco, laranja, gado…"
+          onKeyDown={event => { if (event.key === 'Enter' && visiveis.length) { event.preventDefault(); choose(visiveis[0]); } }}
+          className="block w-full rounded-xl border-0 p-3 mt-1 text-sm text-slate-900" />
       </label>
     </div>
-    {notFound && <div role="alert" className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-800">{notFound}</div>}
-    {state.error && <div role="alert" className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-800">{state.error}</div>}
-    <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
-      <article className="md:col-span-3 rounded-2xl p-5 text-white shadow-sm" style={{ background: '#16382a' }}>
-        <div className="flex justify-between items-start gap-3"><div><div className="text-xs uppercase tracking-wider opacity-60">Futuro internacional</div><h3 className="text-xl font-black mt-1">{selected.emoji} {selected.name}</h3></div><span className="rounded-lg px-2 py-1 text-xs font-bold" style={{ background: 'rgba(255,255,255,.12)' }}>{selected.exchange}</span></div>
-        {state.loading ? <div className="animate-pulse h-20 rounded-xl mt-5" style={{ background: 'rgba(255,255,255,.1)' }} /> : quote && <>
-          <div className="flex items-baseline gap-2 mt-5"><strong className="text-5xl font-black">{quote.value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong><span className="text-sm opacity-60">{selected.unit}</span></div>
-          <div className="inline-block rounded-lg px-2 py-1 mt-2 text-xs font-bold" style={{ background: up ? 'rgba(190,242,100,.16)' : 'rgba(254,202,202,.14)', color: up ? '#d9f99d' : '#fecaca' }}>{up ? '▲' : '▼'} {Math.abs(quote.change).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}%</div>
-        </>}
-        <p className="text-sm mt-4"><span className="opacity-60">Cotado em </span>{selected.cotacao}.</p>
-        {quote && !state.loading && <>
-          <p className="text-sm font-bold mt-1" style={{ color: '#d9f99d' }}>Equivale a {selected.kg !== 1000 && `${dolar(porKg * 1000)} por tonelada · `}{dolar(porKg)} por kg</p>
-          <p className="text-xs mt-4 opacity-50">Contrato contínuo {selected.symbol} · atualização {new Date(quote.date * 1000).toLocaleString('pt-BR')} · fonte: {quote.source}</p>
-        </>}
-      </article>
-      <article className="md:col-span-2 rounded-2xl border bg-white p-5 shadow-sm">
-        <div className="text-xs uppercase tracking-wider text-green-800">Referência no Brasil</div>
-        <h3 className="text-xl font-black text-slate-900 mt-2">{selected.b3}</h3>
-        <p className="text-sm text-slate-600 mt-3 leading-relaxed">{selected.explanation}</p>
-        <a href="https://www.b3.com.br/pt_br/solucoes/plataformas/puma-trading-system/para-participantes-e-traders/calendario-de-negociacao/vencimentos/calendario-de-vencimentos-de-contratos-agropecuarios/" target="_blank" rel="noopener noreferrer" className="inline-block text-xs font-bold text-green-800 underline mt-4">Ver contratos na B3 ↗</a>
-      </article>
+
+    <div className="rounded-2xl border bg-white p-4 shadow-sm">
+      <h3 className="text-sm font-bold text-green-900">{term ? `Produtos encontrados (${visiveis.length} de ${FUTURES.length})` : `Todos os produtos do mercado futuro (${FUTURES.length})`}</h3>
+      {!visiveis.length && <p className="text-sm text-slate-600 mt-2">Nenhum produto com esse nome. <button type="button" onClick={() => setQuery('')} className="font-bold text-green-800 underline">Ver a lista completa</button></p>}
+      {FUTURES_GROUPS.map(group => {
+        const itens = visiveis.filter(item => item.group === group);
+        if (!itens.length) return null;
+        return <div key={group} className="mt-3">
+          <div className="text-xs font-bold uppercase tracking-wider text-slate-500">{group}</div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 mt-1.5">{itens.map(item => {
+            const ativo = selected?.key === item.key;
+            return <button type="button" key={item.key} onClick={() => choose(item)} aria-pressed={ativo}
+              className="text-left rounded-xl border p-2.5 transition-colors"
+              style={{ background: ativo ? '#14532d' : '#f7fdf9', borderColor: ativo ? '#14532d' : '#d1e7dd', color: ativo ? '#fff' : '#0f172a' }}>
+              <span className="block text-sm font-bold">{item.emoji} {item.name}</span>
+              <span className="block text-xs mt-0.5" style={{ color: ativo ? '#d9f99d' : '#475569' }}>Cotado em {item.unit} ({pesoDaUnidade(item.kg)}) · {item.exchange}</span>
+            </button>;
+          })}</div>
+        </div>;
+      })}
+    </div>
+
+    <div id="cotacao-futuro" style={{ scrollMarginTop: 90 }}>
+      {!selected && <p className="rounded-xl border border-dashed p-4 text-sm text-slate-600 text-center">Escolha um produto na lista acima para ver o preço.</p>}
+      {state.error && <div role="alert" className="rounded-xl border border-red-200 bg-red-50 p-3 mb-3 text-sm text-red-800">{state.error}</div>}
+      {selected && <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
+        <article className="md:col-span-3 rounded-2xl p-5 text-white shadow-sm" style={{ background: '#16382a' }}>
+          <div className="flex justify-between items-start gap-3"><div><div className="text-xs uppercase tracking-wider opacity-60">Futuro internacional</div><h3 className="text-xl font-black mt-1">{selected.emoji} {selected.name}</h3></div><span className="rounded-lg px-2 py-1 text-xs font-bold" style={{ background: 'rgba(255,255,255,.12)' }}>{selected.exchange}</span></div>
+          {state.loading ? <div className="animate-pulse h-20 rounded-xl mt-5" style={{ background: 'rgba(255,255,255,.1)' }} /> : quote && <>
+            <div className="flex items-baseline gap-2 mt-5"><strong className="text-5xl font-black">{quote.value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong><span className="text-sm opacity-60">{selected.unit}</span></div>
+            <div className="inline-block rounded-lg px-2 py-1 mt-2 text-xs font-bold" style={{ background: up ? 'rgba(190,242,100,.16)' : 'rgba(254,202,202,.14)', color: up ? '#d9f99d' : '#fecaca' }}>{up ? '▲' : '▼'} {Math.abs(quote.change).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}%</div>
+          </>}
+          <p className="text-sm mt-4"><span className="opacity-60">Cotado em </span>{selected.cotacao}.</p>
+          {quote && !state.loading && <>
+            <p className="text-sm font-bold mt-1" style={{ color: '#d9f99d' }}>Equivale a {selected.kg !== 1000 && `${dolar(porKg * 1000)} por tonelada · `}{dolar(porKg)} por kg</p>
+            <p className="text-xs mt-4 opacity-50">Contrato contínuo {selected.symbol} · atualização {new Date(quote.date * 1000).toLocaleString('pt-BR')} · fonte: {quote.source}</p>
+          </>}
+        </article>
+        <article className="md:col-span-2 rounded-2xl border bg-white p-5 shadow-sm">
+          <div className="text-xs uppercase tracking-wider text-green-800">Referência no Brasil</div>
+          <h3 className="text-xl font-black text-slate-900 mt-2">{selected.b3}</h3>
+          <p className="text-sm text-slate-600 mt-3 leading-relaxed">{selected.explanation}</p>
+          <a href="https://www.b3.com.br/pt_br/solucoes/plataformas/puma-trading-system/para-participantes-e-traders/calendario-de-negociacao/vencimentos/calendario-de-vencimentos-de-contratos-agropecuarios/" target="_blank" rel="noopener noreferrer" className="inline-block text-xs font-bold text-green-800 underline mt-4">Ver contratos na B3 ↗</a>
+        </article>
+      </div>}
     </div>
     <div className="rounded-xl border bg-amber-50 border-amber-200 p-4"><h3 className="font-bold text-amber-900 text-sm">Preço estimado ao produtor</h3><p className="text-sm text-amber-800 mt-1"><strong>Futuro ± base regional − frete − armazenagem e descontos</strong>. A bolsa não informa exatamente quanto a cooperativa pagará.</p></div>
   </section>;

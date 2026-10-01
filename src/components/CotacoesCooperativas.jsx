@@ -46,12 +46,13 @@ const MAPA = {
   "Laranjeiras do Sul": [1, 3, "L. do Sul"], "Guarapuava": [2, 3], "Irati": [3, 3], "Curitiba": [5, 3],
   "Francisco Beltrão": [0, 4, "F. Beltrão"], "Pato Branco": [1, 4, "P. Branco"], "União da Vitória": [3, 4, "U. Vitória"],
 };
-// Semáforo do preço: verde nas regiões mais baratas, amarelo nas do meio e vermelho nas mais caras.
-// Cada faixa leva também um sinal (▼ ◆ ▲), para não depender só da cor.
+// Semáforo do preço, do ponto de vista de quem vende: verde nas regiões que pagam mais, amarelo
+// nas do meio e vermelho nas que pagam menos. Cada faixa leva também um sinal (▲ ◆ ▼), para não
+// depender só da cor.
 const FAIXAS = {
-  barato: { nome: "Mais baratas", sinal: "▼", fundo: "#15803d", cor: "#fff" },
+  caro: { nome: "Pagam mais", sinal: "▲", fundo: "#15803d", cor: "#fff" },
   meio: { nome: "No meio", sinal: "◆", fundo: "#facc15", cor: "#422006" },
-  caro: { nome: "Mais caras", sinal: "▲", fundo: "#dc2626", cor: "#fff" },
+  barato: { nome: "Pagam menos", sinal: "▼", fundo: "#dc2626", cor: "#fff" },
 };
 const duasCasas = v => v.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
@@ -62,7 +63,7 @@ function MapaDePrecos({ regioes, precos, onVerRegiao }) {
   const faixaDe = v => faixaDePreco(v, menor, maior);
   return (
     <div className="mt-3">
-      <strong className="block text-xs text-slate-700">Onde está mais caro e mais barato</strong>
+      <strong className="block text-xs text-slate-700">Onde o produtor recebe mais e onde recebe menos</strong>
       {maior === menor
         ? <p className="text-xs text-slate-600 mt-1">Hoje todas as regiões pesquisadas têm o mesmo preço: {reais(menor)}.</p>
         : <ul className="flex flex-wrap gap-x-3 gap-y-1 mt-1 text-xs text-slate-700">
@@ -84,7 +85,7 @@ function MapaDePrecos({ regioes, precos, onVerRegiao }) {
           const valor = precos[i].comum;
           const faixa = typeof valor === "number" ? FAIXAS[faixaDe(valor)] : null;
           return (
-            <button key={regiao} type="button" onClick={() => onVerRegiao(regiao)} title={`${regiao}: ${valorDa(valor)}${faixa ? ` (${faixa.nome.toLowerCase()})` : ""}`} className="rounded-md px-0.5 py-1.5 text-center leading-tight"
+            <button key={regiao} type="button" onClick={() => onVerRegiao(regiao)} title={`${regiao}: ${valorDa(valor)}${faixa ? ` (${faixa === FAIXAS.meio ? "no meio" : `entre as que ${faixa.nome.toLowerCase()}`})` : ""}`} className="rounded-md px-0.5 py-1.5 text-center leading-tight"
               style={{ gridColumn: coluna + 1, gridRow: linha + 1, background: faixa?.fundo ?? "#f1f5f9", color: faixa?.cor ?? "#64748b", outline: regiao === REGIAO_DA_ESCOLA ? "3px solid #0f172a" : "none", outlineOffset: -3 }}>
               <span className="block truncate" style={{ fontSize: "clamp(8.5px, 2.3vw, 10px)" }}>{curto ?? regiao}</span>
               <span className="block font-bold whitespace-nowrap" style={{ fontSize: 11 }}>{faixa ? <><span aria-hidden="true" style={{ fontSize: 8 }}>{faixa.sinal} </span>{duasCasas(valor)}</> : "—"}</span>
@@ -93,8 +94,8 @@ function MapaDePrecos({ regioes, precos, onVerRegiao }) {
         })}
       </div>
       <p className="text-xs text-slate-500 mt-1.5">
-        Mapa esquemático: oeste à esquerda, norte em cima. As cores dividem em três partes a distância entre o menor e o maior preço do dia e mudam sozinhas a cada
-        boletim novo do DERAL. O contorno escuro é a região de Santa Mariana. Toque em uma região para achá-la na tabela.
+        Mapa esquemático: oeste à esquerda, norte em cima. Verde é onde o comprador paga mais pelo produto, vermelho onde paga menos. As cores dividem em três
+        partes a distância entre o menor e o maior preço do dia e mudam sozinhas a cada boletim novo do DERAL. O contorno escuro é a região de Santa Mariana. Toque em uma região para achá-la na tabela.
       </p>
     </div>
   );

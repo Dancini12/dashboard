@@ -627,7 +627,7 @@ const DESCRICAO_ABA = {
   exportacoes: "Quanto o Brasil e o Paraná exportam de soja, milho, carnes e outros, e para quais países",
   clima: "Chuva que caiu e que vai cair, água no solo e risco de geada", calculadoras: "Preço da saca, conversor de unidades, relação de troca, ponto de equilíbrio e financiamento",
   aprender: "Simulação de uma safra com decisões do produtor e simulador de hedge",
-  cooperativas: "Preço pago ao produtor nas regiões do Paraná, com mapa de onde está mais caro", noticias: "Agronegócio, mercado e mercado internacional",
+  cooperativas: "Preço pago ao produtor nas regiões do Paraná, com mapa de onde se paga mais e menos", noticias: "Agronegócio, mercado e mercado internacional",
   historico: "Comparação de qual item subiu mais e tabela de preços de 2020 a 2026", graficos: "Evolução dos preços em gráficos", glossario: "Significado dos termos do mercado",
 };
 const INDICE_BUSCA = [

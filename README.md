@@ -10,7 +10,8 @@ Painel educacional gratuito do **C.E.E.P.A. Fernando Costa** (Santa Mariana, PR)
 - **Chicago:** todos os contratos agrícolas da Bolsa de Chicago (CBOT e CME) em uma tabela, com variação do dia, próximos vencimentos e o valor convertido para saca, tonelada ou kg em dólares e em reais.
 - **Cotações Cooperativas:** cotação diária do Paraná (DERAL/SEAB), por região.
 - **Notícias:** agronegócio, mercado e mercado internacional.
-- **Histórico, Gráficos e Glossário** para estudar a evolução dos preços e os termos do mercado.
+- **Histórico:** comparação de qual item subiu mais (o visitante escolhe em cascata entre Chicago, commodities, futuros e ações da Bolsa, e inclui quantos campos quiser, até 6) e a tabela de preços de 2020 a 2026.
+- **Gráficos e Glossário** para estudar a evolução dos preços e os termos do mercado.
 - **Castor:** assistente que responde dúvidas dos alunos sobre o mercado.
 
 Docente: Marcel Dancini Rodrigues.

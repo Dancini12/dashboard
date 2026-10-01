@@ -60,6 +60,9 @@ export const UNIDADE_BRASIL = {
   boi: KG, 'boi-reposicao': KG, suino: KG, leite: { nome: 'litro', curto: 'litro', kg: 1.032 },
 };
 
+// Ações com histórico liberado sem chave na fonte da Bolsa (mesma lista ATIVOS_LIVRES do api/market.js).
+export const ACOES_LIVRES = [['PETR4', 'Petrobras'], ['VALE3', 'Vale'], ['ITUB4', 'Itaú Unibanco'], ['MGLU3', 'Magazine Luiza']];
+
 // Produtos da cotação diária do Paraná (DERAL): nome curto dos botões, na ordem em que aparecem.
 export const APELIDOS_PARANA = [
   [/^soja/i, "Soja"], [/^milho/i, "Milho"], [/^trigo/i, "Trigo"],

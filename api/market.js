@@ -45,6 +45,21 @@ async function cotacaoFutura(symbol) {
     high: meta.regularMarketDayHigh ?? null, low: meta.regularMarketDayLow ?? null, nome: meta.shortName ?? '' };
 }
 
+// Fechamentos mensais do contrato contínuo desde 2020, no mesmo formato do histórico das ações.
+async function historicoFuturo(symbol) {
+  const response = await fetch(`https://query2.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?interval=1mo&period1=${Date.UTC(2020, 0, 1) / 1000}&period2=${Math.floor(Date.now() / 1000)}`, {
+    signal: AbortSignal.timeout(15000), headers: { 'User-Agent': 'Mozilla/5.0 AgroInfo/1.0' },
+  });
+  if (!response.ok) throw new Error('future history failed');
+  const result = (await response.json())?.chart?.result?.[0];
+  const fechamentos = result?.indicators?.quote?.[0]?.close ?? [];
+  const points = (result?.timestamp ?? [])
+    .map((t, i) => ({ date: new Date(t * 1000).toISOString().slice(0, 10), close: fechamentos[i] }))
+    .filter(p => Number.isFinite(p.close) && p.date >= '2020-01-01');
+  if (!points.length) throw new Error('no points since 2020');
+  return { symbol, name: result.meta?.shortName || symbol, currency: result.meta?.currency ?? 'USD', points, source: 'Yahoo Finance' };
+}
+
 // O contrato contínuo traz o vencimento no nome ("Soybean Futures,Nov-2026"). Quando o ano
 // vem cortado ("…,Dec-2"), vale o próximo mês com esse nome a partir de hoje.
 function vencimentoDoNome(nome, hoje) {
@@ -150,6 +165,16 @@ export default async function handler(req, res) {
       return res.status(200).json({ results });
     } catch {
       return res.status(502).json({ error: 'Busca indisponível. Tente novamente.' });
+    }
+  }
+
+  if (type === 'history' && FUTUROS_AGRO.has(symbol)) {
+    try {
+      const historico = await historicoFuturo(symbol);
+      res.setHeader('Cache-Control', 's-maxage=3600, stale-while-revalidate=300');
+      return res.status(200).json(historico);
+    } catch {
+      return res.status(502).json({ error: 'Não foi possível obter o histórico desde 2020 deste contrato. Tente novamente.' });
     }
   }
 

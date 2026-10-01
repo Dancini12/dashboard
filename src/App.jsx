@@ -3,6 +3,7 @@ import Mascote, { BotaoMascote } from "./components/Mascote";
 import useMascote from "./components/useMascote";
 import CotacoesCooperativas from "./components/CotacoesCooperativas";
 import BolsaChicago from "./components/BolsaChicago";
+import CompararHistorico from "./components/CompararHistorico";
 import { StockQuotes, CommodityQuotes, FuturesQuotes, TICKER_RE } from "./components/MarketQuotes";
 import { COMMODITIES, FUTURES, CHICAGO, APELIDOS_FUTUROS, PRODUTOS_PARANA } from "./catalogo";
 import BuscaAgro from "./components/BuscaAgro";
@@ -442,6 +443,8 @@ function HistoricoTab() {
   const cols = ["boi", "soja", "milho", "cafe", "trigo", "feijao", "cana", "leite"];
   const lb = { boi: "🐂 Boi", soja: "🌱 Soja", milho: "🌽 Milho", cafe: "☕ Café", trigo: "🌾 Trigo", feijao: "🥔 Feijão", cana: "🎋 Cana", leite: "🥛 Leite" };
   return (
+    <div className="space-y-4">
+    <CompararHistorico historico={HISTORICO} nomes={lb} />
     <Card className="p-3 overflow-x-auto">
       <SecTitle icon={Clock} title="Histórico 2020–2026" color="#166534" />
       <p className="text-xs opacity-40 mb-2">Fonte: CEPEA/ESALQ, Farmnews • R$ nominais</p>
@@ -451,6 +454,7 @@ function HistoricoTab() {
           <tr key={c} style={{ background: i % 2 === 0 ? "#f0fdf4" : "#fff" }}><td className="py-1 px-1 font-semibold whitespace-nowrap">{lb[c]}</td>{HISTORICO.map(h => <td key={h.ano} className="py-1 px-1 text-center font-mono" style={{ color: h.ano === "Mar/26" ? "#166534" : "#333", fontWeight: h.ano === "Mar/26" ? 700 : 400 }}>{fmt(h[c])}</td>)}<td className="py-1 px-1 text-center"><VarBadge val={parseFloat(pct.toFixed(1))} /></td></tr>); })}</tbody>
       </table>
     </Card>
+    </div>
   );
 }
 
@@ -622,7 +626,7 @@ const DESCRICAO_ABA = {
   painel: "Moedas, ações, commodities, indicadores e previsão do tempo", futuros: "Contratos agrícolas nas bolsas internacionais",
   chicago: "Soja, milho, trigo e boi na Bolsa de Chicago, com vencimentos e valor em reais",
   cooperativas: "Preço pago ao produtor nas regiões do Paraná", noticias: "Agronegócio, mercado e mercado internacional",
-  historico: "Tabela de preços de 2020 a 2026", graficos: "Evolução dos preços em gráficos", glossario: "Significado dos termos do mercado",
+  historico: "Comparação de qual item subiu mais e tabela de preços de 2020 a 2026", graficos: "Evolução dos preços em gráficos", glossario: "Significado dos termos do mercado",
 };
 const INDICE_BUSCA = [
   { titulo: "Chicago · cotações da bolsa (CBOT e CME)", detalhe: DESCRICAO_ABA.chicago, grupo: "Chicago", termos: "indices internacional vencimento", acao: { aba: "chicago" } },
@@ -639,6 +643,8 @@ const INDICE_BUSCA = [
   ...GLOSSARIO.map((g, i) => ({ titulo: g.termo, detalhe: g.def, grupo: "Glossário", termos: `${g.def} significado`, acao: { aba: "glossario", termo: i, ancora: `glossario-${i}` } })),
   ...INIT_MOEDAS.map(m => ({ titulo: m.nome, detalhe: "Cotação em reais · Painel", grupo: "Painel", termos: "moeda", acao: { aba: "painel", ancora: "card-moedas" } })),
   ...INDICADORES.map(ind => ({ titulo: ind.nome, detalhe: ind.desc, grupo: "Painel", termos: "indicador economia juros", acao: { aba: "painel", ancora: "card-indicadores" } })),
+  { titulo: "Comparar qual subiu mais", detalhe: "Chicago, commodities, futuros e ações no mesmo gráfico · Histórico", grupo: "Histórico",
+    termos: "comparacao valorizou alta queda grafico historico", acao: { aba: "historico", ancora: "comparar-historico" } },
   { titulo: "Previsão do tempo", detalhe: "Temperatura e chuva dos próximos 5 dias", grupo: "Painel", termos: "temperatura", acao: { aba: "painel", ancora: "card-tempo" } },
   { titulo: "Ações e fundos da B3", detalhe: "Consultar empresas da Bolsa · Painel", grupo: "Painel", termos: "acoes bolsa empresa etf investimento", acao: { aba: "painel", ancora: "consultar-acao" } },
   ...TABS.map(t => ({ titulo: `Aba ${TAB_LABELS[t]}`, detalhe: DESCRICAO_ABA[t], grupo: "Abas", termos: DESCRICAO_ABA[t], acao: { aba: t } })),

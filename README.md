@@ -1,19 +1,21 @@
-# React + Vite
+# AgroInfo — Painel de cotações agrícolas
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+**Acesse: https://agroinfo-dashboard.vercel.app**
 
-Currently, two official plugins are available:
+Painel educacional gratuito do **C.E.E.P.A. Fernando Costa** (Santa Mariana, PR) para alunos e produtores acompanharem o mercado agrícola:
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- **Painel:** moedas, Selic, ações da B3, cotações de commodities (soja, milho, café, boi, trigo, leite…) e previsão do tempo.
+- **Futuros:** os principais contratos agrícolas de Chicago, Nova Iorque e CME, com a unidade em que cada um é cotado e o equivalente em US$ por tonelada e por kg.
+- **Cotações Cooperativas:** cotação diária do Paraná (DERAL/SEAB), por região.
+- **Notícias:** agronegócio, mercado e mercado internacional.
+- **Histórico, Gráficos e Glossário** para estudar a evolução dos preços e os termos do mercado.
+- **Castor:** assistente que responde dúvidas dos alunos sobre o mercado.
 
-## React Compiler
+Docente: Marcel Dancini Rodrigues.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+---
 
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+Projeto em React + Vite, hospedado na Vercel. Notas técnicas abaixo.
 
 ## Cotações e Selic
 

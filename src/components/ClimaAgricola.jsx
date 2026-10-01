@@ -4,7 +4,7 @@ import { MapPin, Search } from "lucide-react";
 import { avisosDaPrevisao, buscarClima, getWmo, resumoDaChuva, SANTA_MARIANA, WEEK } from "../clima";
 
 // Aba "Clima": chuva que já caiu, chuva prevista, umidade do solo e avisos para a lavoura,
-// a partir do Open-Meteo (o mesmo serviço da previsão do Painel). Os valores passados são
+// a partir do Open-Meteo (o mesmo serviço do resumo da página inicial). Os valores passados são
 // estimativas do modelo para o ponto escolhido, não a leitura de um pluviômetro.
 const AZUL = "#2a78d6";      // o que já choveu
 const AZUL_CLARO = "#86b6ef"; // previsão (mesmo tom, mais claro)

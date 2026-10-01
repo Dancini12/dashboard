@@ -21,9 +21,8 @@ export const TICKER_RE = /^[A-Z]{4}\d{1,2}$/;
 // e fundos com esse nome (ex.: "soja" → SOJA3), não o preço da commodity.
 const COMMODITY_RE = /\b(soja|milho|cafe|boi|trigo|feijao|algodao|leite|laranja|cacau|acucar|etanol|suino|arroz|mandioca|sorgo|commodit)/;
 const semAcento = texto => texto.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
-const EVENTO_BUSCAR_COMMODITY = 'agroinfo:buscar-commodity';
 
-export function StockQuotes({ refresh, onViewChart, buscaInicial }) {
+export function StockQuotes({ refresh, onViewChart, buscaInicial, onCommodity }) {
   const [symbol, setSymbol] = useState(() => {
     const direto = buscaInicial?.trim().toUpperCase();
     if (direto && TICKER_RE.test(direto)) return direto; // código vindo da busca do topo
@@ -50,10 +49,7 @@ export function StockQuotes({ refresh, onViewChart, buscaInicial }) {
   const term = input.trim();
   const showDropdown = term.length >= 2 && !TICKER_RE.test(term.toUpperCase());
   const commodityDigitada = showDropdown ? semAcento(term).match(COMMODITY_RE)?.[1] : null;
-  const irParaCommodity = () => {
-    window.dispatchEvent(new CustomEvent(EVENTO_BUSCAR_COMMODITY, { detail: term }));
-    document.getElementById('consultar-commodity')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  };
+  const irParaCommodity = () => onCommodity?.(term); // os indicadores de preço ficam na aba Cotações Cooperativas
 
   useEffect(() => {
     if (!showDropdown) return;
@@ -101,10 +97,9 @@ export function StockQuotes({ refresh, onViewChart, buscaInicial }) {
             {commodityDigitada && (
               <div className="p-2 text-xs border-b" style={{ background: '#fffbeb', color: '#78350f' }}>
                 Procurando o preço de <strong>{term}</strong>? Este campo é para ações e fundos da Bolsa; a busca mostra
-                empresas com esse nome, não o preço da commodity. O preço está em "Consultar commodity", logo abaixo, e
-                na aba "Cotações Cooperativas".
+                empresas com esse nome, não o preço da commodity. O preço está na aba "Cotações Cooperativas".
                 <button type="button" onClick={irParaCommodity} className="mt-1.5 block rounded-lg bg-green-800 px-2 py-1 font-bold text-white">
-                  Ver {term} em Consultar commodity
+                  Ver o preço de {term}
                 </button>
               </div>
             )}
@@ -145,23 +140,16 @@ const COMMODITY_HISTORY_KEY = {
   '29': 'cafe', '31': 'cafe', '211': 'trigo', '155': 'leite', '288': 'feijao',
 };
 
-export function CommodityQuotes({ refresh, onViewChart, adicionar }) {
+export function CommodityQuotes({ refresh, onViewChart, adicionar, buscaInicial }) {
   const [selected, setSelected] = useState(() => {
     const saved = readPreference('agroinfo.commodities.v1', ['121', '12']);
     const lista = Array.isArray(saved) ? saved.filter(id => COMMODITIES.some(row => row[0] === id)) : ['121', '12'];
     // commodity escolhida na busca do topo entra na lista
     return adicionar && !lista.includes(adicionar) ? [...lista, adicionar] : lista;
   });
-  const [search, setSearch] = useState('');
+  const [search, setSearch] = useState(buscaInicial ?? ''); // quem digitou uma commodity no campo de ações chega com a busca preenchida
   const [notFound, setNotFound] = useState(false);
   const normalize = value => value.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
-
-  // quem digitou uma commodity no campo de ações é trazido para cá com a busca preenchida
-  useEffect(() => {
-    const receber = e => { setSearch(String(e.detail || '')); setNotFound(false); };
-    window.addEventListener(EVENTO_BUSCAR_COMMODITY, receber);
-    return () => window.removeEventListener(EVENTO_BUSCAR_COMMODITY, receber);
-  }, []);
 
   const addFirstMatch = () => {
     const term = search.trim();
@@ -176,8 +164,8 @@ export function CommodityQuotes({ refresh, onViewChart, adicionar }) {
   };
 
   return <section id="consultar-commodity" className="rounded-xl border bg-white p-3 shadow-sm" style={{ scrollMarginTop: 90 }}>
-    <h2 className="text-sm font-bold text-green-800">Consultar commodity</h2>
-    <p className="text-xs text-slate-600 mt-1">Digite o nome (ex.: soja, café, boi) e aperte Enter ou clique em Adicionar para ver o valor. Também dá pra escolher direto na lista abaixo. São os indicadores de preço do Brasil; os preços por região do Paraná estão em Cotações Cooperativas e os de Chicago e Nova Iorque, na aba Bolsas.</p>
+    <h2 className="text-sm font-bold text-green-800">Indicadores de preço do Brasil</h2>
+    <p className="text-xs text-slate-600 mt-1">Digite o nome (ex.: soja, café, boi) e aperte Enter ou clique em Adicionar para ver o valor. Também dá pra escolher direto na lista abaixo. São indicadores nacionais, como os do CEPEA: servem de comparação para os preços por região do Paraná, acima. Chicago e Nova Iorque estão na aba Bolsas.</p>
     <div className="flex gap-2 mt-3">
       <label className="flex-1 min-w-0 text-xs">Nome da commodity
         <input

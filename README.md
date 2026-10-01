@@ -5,10 +5,9 @@
 Painel educacional gratuito do **C.E.E.P.A. Fernando Costa** (Santa Mariana, PR) para alunos e produtores acompanharem o mercado agrícola:
 
 - **Busca no topo:** digite um produto, moeda, termo ou dúvida (ex.: "soja", "porco", "dólar", "o que é hedge") e vá direto à cotação, ao gráfico, ao glossário, às notícias ou ao Castor.
-- **Início:** resumo do dia, com dólar, soja em Chicago, preços da região, diesel, tempo, andamento da safra, manchetes e atalhos para as atividades.
-- **Painel:** todas as moedas, ações da B3, indicadores de preço do Brasil (CEPEA), indicadores do Banco Central (Selic, IPCA, INPC, IGP-M, CDI, poupança) e preço dos combustíveis no Paraná (ANP).
-- **Bolsas:** os 17 contratos agrícolas de Chicago (CBOT e CME) e de Nova Iorque (ICE) em tabelas, com variação do dia, próximos vencimentos e o valor convertido para saca, arroba, tonelada ou kg, em dólares e em reais.
-- **Cotações Cooperativas:** cotação diária do Paraná (DERAL/SEAB), por região, com mapa de onde está mais caro e mais barato.
+- **Início:** resumo do dia, com dólar, soja em Chicago, preços da região, diesel, tempo, andamento da safra, manchetes, atalhos para as atividades, todas as moedas e os indicadores do Banco Central (Selic, IPCA, INPC, IGP-M, CDI, poupança).
+- **Bolsas:** os 17 contratos agrícolas de Chicago (CBOT e CME) e de Nova Iorque (ICE) em tabelas, com variação do dia, próximos vencimentos e o valor convertido para saca, arroba, tonelada ou kg, em dólares e em reais; e a consulta de ações e fundos da B3.
+- **Cotações Cooperativas:** cotação diária do Paraná (DERAL/SEAB), por região, com mapa de onde se paga mais e menos; indicadores de preço do Brasil (CEPEA) e preço dos combustíveis no Paraná (ANP).
 - **Safra:** produção, área e rendimento por safra no Paraná e na região de Cornélio Procópio, andamento de plantio e colheita, calendário agrícola (DERAL), produção de Santa Mariana e safra do Brasil (IBGE).
 - **Exportações:** volume, valor e preço médio dos principais produtos do agro, mês a mês, no Brasil e no Paraná, com países de destino e estados de origem (Comex Stat).
 - **Clima:** chuva dos últimos 30 dias e prevista para 15, água no solo e avisos de geada, calor e chuva forte (Open-Meteo).

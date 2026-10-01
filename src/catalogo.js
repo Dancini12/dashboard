@@ -1,6 +1,6 @@
 // Listas de produtos usadas pelas abas e pela busca do topo do site.
 
-// Indicadores de preço do Painel (widgets do Notícias Agrícolas): [id do widget, nome, mercado]. Ficam aqui só os que
+// Indicadores de preço do Brasil, mostrados na aba Cotações Cooperativas (widgets do Notícias Agrícolas): [id do widget, nome, mercado]. Ficam aqui só os que
 // não existem em outra aba: os preços do Paraná estão em Cotações Cooperativas e as bolsas, em Bolsas.
 export const COMMODITIES = [
   ['121', 'Soja · Paranaguá', 'Brasil'],

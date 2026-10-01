@@ -101,7 +101,7 @@ function MapaDePrecos({ regioes, precos, onVerRegiao }) {
   );
 }
 
-export default function CotacoesCooperativas({ produtoInicial = "Soja" }) {
+export default function CotacoesCooperativas({ produtoInicial = "Soja", children }) {
   const [cotacao, setCotacao] = useState(null);
   const [erro, setErro] = useState(false);
   const [escolhido, setEscolhido] = useState(produtoInicial);
@@ -286,6 +286,8 @@ export default function CotacoesCooperativas({ produtoInicial = "Soja" }) {
         <a className="underline" href={PAGINA_DERAL} target="_blank" rel="noopener noreferrer">Boletins do DERAL</a>.
         Valores de referência para estudo; o preço de cada negócio depende do comprador, da qualidade e do prazo.
       </p>
+
+      {children}
     </div>
   );
 }

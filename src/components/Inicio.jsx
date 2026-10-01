@@ -7,7 +7,7 @@ import { operacoesEmAndamento, precoNaRegiao } from "../inicio";
 
 // Aba "Início": o resumo do dia. Poucos números, cada um levando à aba onde está o detalhe:
 // mercado (dólar, Chicago, preços da região, diesel), campo (clima e safra), atalhos para a aula,
-// manchetes e indicadores. Cada parte carrega sozinha e, se a fonte falhar, avisa sem travar o resto.
+// manchetes e, no fim, os cartões de moedas e de indicadores da economia (children). Cada parte carrega sozinha e, se a fonte falhar, avisa sem travar o resto.
 const REGIAO = "Cornélio Procópio";
 const UNIDADES = { "sc 60 kg": "saca", arroba: "arroba", kg: "kg", tonelada: "tonelada" };
 const SOJA_EM_CHICAGO = CHICAGO.find(item => item.key === "soja");
@@ -62,7 +62,7 @@ const VerMais = ({ onClick, children }) => (
   <button type="button" onClick={onClick} className="mt-2 inline-flex items-center gap-0.5 text-xs font-bold text-green-800">{children}<ChevronRight size={13} aria-hidden="true" /></button>
 );
 
-export default function Inicio({ dolar, variacaoDoDolar, indicadores, onIr, onCastor }) {
+export default function Inicio({ dolar, variacaoDoDolar, onIr, onCastor, children }) {
   const chicago = useConsulta("/api/market?type=bolsas");
   const parana = useConsulta("/api/market?type=pr");
   const combustiveis = useConsulta("/api/market?type=combustiveis");
@@ -93,7 +93,7 @@ export default function Inicio({ dolar, variacaoDoDolar, indicadores, onIr, onCa
       <section>
         <Titulo>Hoje no mercado</Titulo>
         <div className="grid grid-cols-2 md:grid-cols-3 gap-2 mt-2">
-          <Quadro rotulo="Dólar comercial" valor={dolar ? reais(dolar) : null} estado={dolar === null ? "erro" : "carregando"} onClick={() => onIr({ aba: "painel", ancora: "card-moedas" })}>
+          <Quadro rotulo="Dólar comercial" valor={dolar ? reais(dolar) : null} estado={dolar === null ? "erro" : "carregando"} onClick={() => onIr({ aba: "inicio", ancora: "card-moedas" })}>
             <Variacao valor={variacaoDoDolar} sufixo=" hoje" />
           </Quadro>
           <Quadro rotulo="Soja em Chicago" valor={sojaEmReais != null ? reais(sojaEmReais) : sojaNaBolsa ? decimal(sojaNaBolsa.value, 2) : null} unidade={sojaEmReais != null ? "saca" : sojaNaBolsa ? "bushel (US¢)" : null}
@@ -106,7 +106,7 @@ export default function Inicio({ dolar, variacaoDoDolar, indicadores, onIr, onCa
               {preco && <>{preco.daRegiao && preco.mediaEstado != null && <>Paraná: {reais(preco.mediaEstado)} · </>}<Variacao valor={preco.variacaoPct} sufixo={preco.daRegiao ? " no estado" : " sobre ontem"} /></>}
             </Quadro>
           ))}
-          <Quadro rotulo="Diesel S10 no Paraná" valor={diesel ? reais(diesel.parana.medio) : null} unidade={diesel ? "litro" : null} estado={combustiveis.dados ? "erro" : estadoDe(combustiveis)} onClick={() => onIr({ aba: "painel", ancora: "card-combustiveis" })}>
+          <Quadro rotulo="Diesel S10 no Paraná" valor={diesel ? reais(diesel.parana.medio) : null} unidade={diesel ? "litro" : null} estado={combustiveis.dados ? "erro" : estadoDe(combustiveis)} onClick={() => onIr({ aba: "cooperativas", ancora: "card-combustiveis" })}>
             {diesel?.semanaAnterior && <Variacao valor={(diesel.parana.medio - diesel.semanaAnterior) / diesel.semanaAnterior * 100} sufixo=" na semana" altaERuim />}
           </Quadro>
         </div>
@@ -188,20 +188,13 @@ export default function Inicio({ dolar, variacaoDoDolar, indicadores, onIr, onCa
       </section>
 
       <section>
-        <Titulo>Indicadores da economia</Titulo>
-        <div className="grid grid-cols-3 md:grid-cols-6 gap-2 mt-2">
-          {indicadores.map(ind => (
-            <button key={ind.nome} type="button" onClick={() => onIr({ aba: "painel", ancora: "card-indicadores" })} className="rounded-lg border bg-white px-2 py-1.5 text-center shadow-sm" style={{ borderColor: "rgba(0,0,0,0.08)" }}>
-              <span className="block text-xs text-slate-500">{ind.nome}</span>
-              <span className="block text-sm font-bold" style={{ color: "#6b21a8" }}>{ind.valor}</span>
-            </button>
-          ))}
-        </div>
+        <Titulo>Moedas e indicadores da economia</Titulo>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mt-2">{children}</div>
       </section>
 
       <p className="text-xs text-slate-500">
         Fontes: AwesomeAPI (dólar), Yahoo Finance (Chicago, com atraso), DERAL/SEAB-PR (preços e safra), ANP (diesel), Open-Meteo (tempo), Google Notícias e Banco Central.
-        Todas as moedas, as ações e os combustíveis estão na aba Painel.
+        As ações da B3 estão na aba Bolsas; os combustíveis e os indicadores de preço do Brasil, em Cotações Cooperativas.
       </p>
     </div>
   );

@@ -38,7 +38,7 @@ function Variacao({ valor }) {
   return <span className="font-bold whitespace-nowrap" style={{ color: cor }}>{valor > 0 ? "▲ +" : valor < 0 ? "▼ " : ""}{numero(valor, 2)}%</span>;
 }
 
-export default function Bolsas({ dolar, inicial }) {
+export default function Bolsas({ dolar, inicial, children }) {
   const [quadro, setQuadro] = useState(null);
   const [erro, setErro] = useState(false);
   const [escolhido, setEscolhido] = useState(() => (FUTURES.some(item => item.key === inicial) ? inicial : null));
@@ -95,7 +95,8 @@ export default function Bolsas({ dolar, inicial }) {
         <p className="text-xs text-slate-600 mt-1">
           Chicago é a referência mundial para soja, milho, trigo e carnes; Nova Iorque, para café, açúcar, algodão, cacau e suco de laranja.
           Esses preços influenciam o que o produtor recebe aqui. A tabela mostra o contrato mais próximo de cada produto, na unidade da
-          bolsa e convertido para a unidade usada no Brasil. Clique em um produto para ver os próximos vencimentos.
+          bolsa e convertido para a unidade usada no Brasil. Clique em um produto para ver os próximos vencimentos. As ações da bolsa
+          brasileira (B3) estão no fim da página.
         </p>
         <label className="block text-xs text-slate-600 mt-3">Procurar pelo nome
           <input value={busca} onChange={e => setBusca(e.target.value)} placeholder="Ex.: soja, porco, laranja, gado…"
@@ -124,7 +125,7 @@ export default function Bolsas({ dolar, inicial }) {
             <li><strong>Vencimento:</strong> o mês em que o contrato termina. Cada mês tem o seu preço; "soja nov/26" é a soja para entrega em novembro de 2026.</li>
             <li><strong>Unidade da bolsa:</strong> grãos em centavos de dólar por bushel (27,2 kg de soja ou trigo; 25,4 kg de milho), farelo em dólares por tonelada curta (907 kg), cacau em dólares por tonelada, e óleo, carnes, café, açúcar, algodão e suco em centavos de dólar por libra-peso (0,454 kg).</li>
             <li><strong>Variação:</strong> diferença do último preço para o fechamento do pregão anterior.</li>
-            <li><strong>Valor em reais:</strong> o preço da bolsa convertido para saca, arroba, tonelada, kg ou litro e multiplicado pelo dólar comercial do Painel. É só a conversão: o preço no Brasil ainda depende do prêmio no porto, do frete e da região.</li>
+            <li><strong>Valor em reais:</strong> o preço da bolsa convertido para saca, arroba, tonelada, kg ou litro e multiplicado pelo dólar comercial da página inicial. É só a conversão: o preço no Brasil ainda depende do prêmio no porto, do frete e da região.</li>
           </ul>
         </details>
       </section>
@@ -257,9 +258,11 @@ export default function Bolsas({ dolar, inicial }) {
       </div>
 
       <p className="text-xs text-slate-500">
-        Fonte: {quadro?.source ?? "Yahoo Finance · cotação indicativa"}, contratos da CBOT e da CME (Chicago) e da ICE (Nova Iorque); dólar comercial da AwesomeAPI.
+        Fonte das cotações acima: {quadro?.source ?? "Yahoo Finance · cotação indicativa"}, contratos da CBOT e da CME (Chicago) e da ICE (Nova Iorque); dólar comercial da AwesomeAPI.
         Valores de referência para estudo, com atraso; não servem para fechar negócio.
       </p>
+
+      {children}
     </div>
   );
 }

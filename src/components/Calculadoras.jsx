@@ -79,7 +79,7 @@ function SacaPorChicago({ dolar }) {
           ajuda={digitado[produto] != null ? "Valor digitado por você." : deChicago != null ? "Cotação de agora, da aba Bolsas. Pode trocar." : cotacoes ? "Cotação indisponível agora: digite o valor." : "Buscando a cotação…"} />
         <Campo rotulo="Prêmio no porto" valor={premio} onChange={setPremio} sufixo="US¢/bushel" ajuda="Quanto o comprador paga acima (ou abaixo, com sinal de menos) de Chicago em Paranaguá. Varia todo dia." />
         <Campo rotulo="Dólar" valor={cambio} onChange={v => setDigitado(d => ({ ...d, dolar: v }))} sufixo="R$"
-          ajuda={digitado.dolar != null ? "Valor digitado por você." : dolar ? "Dólar comercial de agora, do Painel. Pode trocar." : "Dólar indisponível agora: digite o valor."} />
+          ajuda={digitado.dolar != null ? "Valor digitado por você." : dolar ? "Dólar comercial de agora, da página inicial. Pode trocar." : "Dólar indisponível agora: digite o valor."} />
         <Campo rotulo="Frete e custos até o porto" valor={frete} onChange={setFrete} sufixo="R$/saca" ajuda="Frete, armazenagem e taxas descontados do produtor." />
       </div>
       {pronto ? (

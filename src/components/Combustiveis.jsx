@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Fuel } from "lucide-react";
 
-// Card "Combustíveis no Paraná" do Painel: preço médio da semana nos postos, pelo levantamento
+// Card "Combustíveis no Paraná", no fim da aba Cotações Cooperativas: preço médio da semana nos postos, pelo levantamento
 // da ANP (/api/market?type=combustiveis). O diesel é um dos maiores custos da lavoura.
 const CIDADE_DA_REGIAO = "Cornélio Procópio";
 const reais = v => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });

@@ -4,7 +4,7 @@ import { buscar } from "../busca";
 import { TICKER_RE } from "./MarketQuotes";
 
 const CORES = {
-  Cooperativas: ["#dcfce7", "#166534"], Painel: ["#dbeafe", "#1e40af"], Bolsas: ["#ccfbf1", "#115e59"],
+  Cooperativas: ["#dcfce7", "#166534"], "Início": ["#dbeafe", "#1e40af"], Bolsas: ["#ccfbf1", "#115e59"],
   "Evolução": ["#ecfccb", "#3f6212"], Calculadoras: ["#fae8ff", "#86198f"], Clima: ["#e0f2fe", "#075985"], Safra: ["#dcfce7", "#14532d"], "Exportações": ["#e0e7ff", "#3730a3"], Aprender: ["#ffe4e6", "#9f1239"], "Glossário": ["#fef3c7", "#92400e"], Abas: ["#f1f5f9", "#334155"],
   "Notícias": ["#ffedd5", "#9a3412"], "Ações": ["#e0f2fe", "#075985"], Castor: ["#fde68a", "#78350f"],
 };
@@ -22,7 +22,7 @@ export default function BuscaAgro({ itens, onEscolher, comCastor }) {
   const achados = pesquisa ? buscar(itens, termo, 10) : [];
   const ehCodigo = TICKER_RE.test(termo.toUpperCase());
   const ehPergunta = termo.includes("?") || /^(como|qual|quais|quanto|quando|onde|por ?que|o que|pra que|para que)\b/i.test(termo);
-  const acoes = { titulo: `Procurar "${termo}" nas ações da B3`, detalhe: "Empresas e fundos da Bolsa", grupo: "Ações", acao: { aba: "painel", acao: termo, ancora: "consultar-acao" } };
+  const acoes = { titulo: `Procurar "${termo}" nas ações da B3`, detalhe: "Empresas e fundos da Bolsa", grupo: "Ações", acao: { aba: "bolsas", acao: termo, ancora: "consultar-acao" } };
   const opcoes = !pesquisa ? [] : [
     ...(ehCodigo ? [acoes] : []),
     ...achados,
@@ -57,7 +57,7 @@ export default function BuscaAgro({ itens, onEscolher, comCastor }) {
         <div id="busca-resultados" role="listbox" className="absolute left-3 right-3 sm:left-0 sm:right-0 mt-1 overflow-auto rounded-xl border bg-white shadow-lg"
           style={{ maxHeight: "70vh", borderColor: "#d1e7dd" }}>
           {!pesquisa && <p className="px-3 py-2.5 text-xs text-slate-600">Digite um produto (soja, boi, café), uma moeda (dólar), um termo (hedge) ou a sua dúvida.</p>}
-          {pesquisa && !achados.length && <p className="px-3 pt-2.5 pb-1 text-xs text-slate-500">Nada no painel com esse nome. Veja outras opções:</p>}
+          {pesquisa && !achados.length && <p className="px-3 pt-2.5 pb-1 text-xs text-slate-500">Nada no site com esse nome. Veja outras opções:</p>}
           {opcoes.map((o, i) => {
             const [fundo, cor] = CORES[o.grupo] ?? CORES.Abas;
             return (

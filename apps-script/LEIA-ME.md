@@ -207,7 +207,7 @@ O balão é o componente `src/components/AssistenteAgro.jsx` (estilos em
       ? moedas.map(m => ({ nome: m.nome, valorReais: m.valor, variacaoPct: m.var, fonte: "AwesomeAPI" }))
       : "indisponíveis no momento",
     selic: selic.value != null ? { metaPctAoAno: selic.value, data: selic.date, fonte: selic.source } : "indisponível",
-    indicadoresDeReferencia: INDICADORES.filter(i => i.nome !== "Selic").map(i => ({ nome: i.nome, valor: i.valor, descricao: i.desc })),
+    indicadores: indicadores.filter(i => i.nome !== "Selic").map(i => ({ nome: i.nome, valor: i.valor, periodo: i.periodo, descricao: i.desc, fonte: "Banco Central" })),
     historicoAnual: { descricao: "Tabela Histórico 2020–2026 do painel (CEPEA/ESALQ, Farmnews; R$ nominais)", linhas: HISTORICO },
   }}
 />

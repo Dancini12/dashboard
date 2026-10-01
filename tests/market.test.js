@@ -154,3 +154,23 @@ test('chicago: sem nenhuma cotação, avisa em vez de inventar', async t => {
   assert.equal((await call({ type: 'chicago' })).code, 502);
   assert.equal((await call({ type: 'chicago', symbol: 'ZC=F' })).code, 502);
 });
+test('indicadores: último valor de cada série do Banco Central, tentando de novo a que vier vazia', async t => {
+  const pedidos = {};
+  t.mock.method(globalThis, 'fetch', async url => {
+    const codigo = url.match(/sgs\.(\d+)\//)[1];
+    pedidos[codigo] = (pedidos[codigo] ?? 0) + 1;
+    if (codigo === '188') return { ok: true, json: async () => { throw new SyntaxError('resposta vazia'); } }; // INPC fora do ar
+    if (codigo === '189' && pedidos[codigo] === 1) return { ok: true, json: async () => [] }; // IGP-M só responde na 2ª vez
+    return { ok: true, json: async () => [{ data: '01/08/2026', valor: codigo === '433' ? '-0.32' : '4.22' }] };
+  });
+  const res = await call({ type: 'indicadores' });
+  assert.equal(res.code, 200);
+  assert.deepEqual(res.data.indicadores.ipca, { valor: -0.32, data: '01/08/2026' });
+  assert.equal(res.data.indicadores.inpc, null);
+  assert.equal(res.data.indicadores.igpm.valor, 4.22);
+  assert.equal(pedidos['188'], 2);
+});
+test('indicadores: sem nenhuma série, avisa em vez de mostrar número antigo', async t => {
+  t.mock.method(globalThis, 'fetch', async () => ({ ok: false, status: 503 }));
+  assert.equal((await call({ type: 'indicadores' })).code, 502);
+});

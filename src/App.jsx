@@ -4,12 +4,16 @@ import useMascote from "./components/useMascote";
 import CotacoesCooperativas from "./components/CotacoesCooperativas";
 import BolsaChicago from "./components/BolsaChicago";
 import CompararHistorico from "./components/CompararHistorico";
+import ClimaAgricola from "./components/ClimaAgricola";
+import Calculadoras from "./components/Calculadoras";
+import Aprender from "./components/Aprender";
+import { getWmo, WEEK } from "./clima";
 import { StockQuotes, CommodityQuotes, FuturesQuotes, TICKER_RE } from "./components/MarketQuotes";
-import { COMMODITIES, FUTURES, CHICAGO, APELIDOS_FUTUROS, PRODUTOS_PARANA } from "./catalogo";
+import { COMMODITIES, FUTURES, CHICAGO, CALCULADORAS, APELIDOS_FUTUROS, PRODUTOS_PARANA } from "./catalogo";
 import BuscaAgro from "./components/BuscaAgro";
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
-import { RefreshCw, BookOpen, BarChart3, Clock, Wheat, DollarSign, Activity, ChevronDown, ChevronUp, Timer, ArrowRight, Pause, Play, Newspaper, ExternalLink, Search, MapPin, Warehouse, TrendingUp, Landmark } from "lucide-react";
+import { RefreshCw, BookOpen, BarChart3, Clock, Wheat, DollarSign, Activity, ChevronDown, ChevronUp, Timer, ArrowRight, Pause, Play, Newspaper, ExternalLink, Search, MapPin, Warehouse, TrendingUp, Landmark, CloudRain, Calculator, GraduationCap } from "lucide-react";
 
 const UPDATE_SEC = 60;
 const DOCENTE = "Marcel Dancini Rodrigues";
@@ -18,9 +22,9 @@ const ALUNOS_PARTICIPANTES = ["Pietra Sanguini"]; // para incluir mais alunos, a
 const ASSISTENTE_URL = import.meta.env.VITE_ASSISTENTE_URL
   || "https://script.google.com/macros/s/AKfycbyDYcrR3XX5bqo0rKCp1c1ZgDHf4GCHsJv7jesNPo5PEtJT6qYMLCyUV6OGmB1ur-jrBA/exec";
 const API_MOEDAS_URL = "https://economia.awesomeapi.com.br/json/last/USD-BRL,EUR-BRL,GBP-BRL,ARS-BRL";
-const TABS = ["painel", "futuros", "chicago", "cooperativas", "noticias", "historico", "graficos", "glossario"];
-const TAB_LABELS = { painel: "Painel", futuros: "Futuros", chicago: "Chicago", cooperativas: "Cotações Cooperativas", noticias: "Notícias", historico: "Histórico", graficos: "Gráficos", glossario: "Glossário" };
-const TAB_ICONS = { painel: Activity, futuros: TrendingUp, chicago: Landmark, cooperativas: Warehouse, noticias: Newspaper, historico: Clock, graficos: BarChart3, glossario: BookOpen };
+const TABS = ["painel", "futuros", "chicago", "cooperativas", "clima", "calculadoras", "aprender", "noticias", "historico", "graficos", "glossario"];
+const TAB_LABELS = { painel: "Painel", futuros: "Futuros", chicago: "Chicago", cooperativas: "Cotações Cooperativas", clima: "Clima", calculadoras: "Calculadoras", aprender: "Aprender", noticias: "Notícias", historico: "Histórico", graficos: "Gráficos", glossario: "Glossário" };
+const TAB_ICONS = { painel: Activity, futuros: TrendingUp, chicago: Landmark, cooperativas: Warehouse, clima: CloudRain, calculadoras: Calculator, aprender: GraduationCap, noticias: Newspaper, historico: Clock, graficos: BarChart3, glossario: BookOpen };
 
 const INIT_MOEDAS = [
   { id: "usd", nome: "Dólar Comercial", emoji: "💵", valor: 4.912, var: -1.12 },
@@ -29,14 +33,33 @@ const INIT_MOEDAS = [
   { id: "gbp", nome: "Libra Esterlina", emoji: "💷", valor: 6.698, var: -0.38 },
   { id: "ars", nome: "Peso Argentino", emoji: "💴", valor: 0.004, var: 0.12 },
 ];
+// Indicadores do Painel. "chave" liga cada um à série do Banco Central em /api/market?type=indicadores;
+// a Selic tem consulta própria.
 const INDICADORES = [
-  { nome: "IPCA", periodo: "", valor: "+0,70%", desc: "Inflação oficial (IBGE)" },
-  { nome: "INPC", periodo: "", valor: "+0,56%", desc: "Cesta básica (IBGE)" },
-  { nome: "IGP-M", periodo: "", valor: "-0,73%", desc: "Aluguéis (FGV)" },
-  { nome: "Selic", periodo: "", valor: "Carregando…", desc: "Meta BC" },
-  { nome: "CDI", periodo: "", valor: "14,65% a.a.", desc: "Referência renda fixa" },
-  { nome: "Poupança", periodo: "", valor: "0,67% a.m.", desc: "0,50% + TR" },
+  { nome: "IPCA", chave: "ipca", sufixo: "%", sinal: true, desc: "Inflação oficial (IBGE)" },
+  { nome: "INPC", chave: "inpc", sufixo: "%", sinal: true, desc: "Cesta básica (IBGE)" },
+  { nome: "IGP-M", chave: "igpm", sufixo: "%", sinal: true, desc: "Aluguéis (FGV)" },
+  { nome: "Selic", desc: "Meta BC" },
+  { nome: "CDI", chave: "cdi", sufixo: "% a.a.", desc: "Referência renda fixa" },
+  { nome: "Poupança", chave: "poupanca", sufixo: "% a.m.", desc: "0,50% + TR" },
 ];
+const MESES_CURTOS = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"];
+// "01/08/2026" → "ago/26" nos índices mensais; nas taxas diárias, a própria data
+const periodoDe = (data, mensal) => (mensal ? `${MESES_CURTOS[Number(data.slice(3, 5)) - 1]}/${data.slice(-2)}` : data.slice(0, 5));
+
+// Junta a lista acima com o que chegou do Banco Central (bcb.dados) e com a Selic.
+function indicadoresAtuais(bcb, selic) {
+  return INDICADORES.map(ind => {
+    if (ind.nome === "Selic") return {
+      ...ind, valor: selic.value != null ? `${fmt(selic.value)}% a.a.` : selic.error ? "Indisponível" : "Carregando…",
+      periodo: selic.date, desc: selic.error ? (selic.value != null ? "Falha na atualização; última taxa recebida" : "Banco Central indisponível; nova tentativa automática") : "Meta BC · atualização automática",
+    };
+    const dado = bcb.dados?.[ind.chave];
+    if (!dado) return { ...ind, periodo: "", valor: bcb.dados || bcb.erro ? "Indisponível" : "Carregando…" };
+    const em12Meses = ind.chave === "ipca" && bcb.dados.ipca12 ? ` · 12 meses: ${fmt(bcb.dados.ipca12.valor)}%` : "";
+    return { ...ind, periodo: periodoDe(dado.data, ind.sinal), valor: `${ind.sinal && dado.valor > 0 ? "+" : ""}${fmt(dado.valor)}${ind.sufixo}`, desc: `${ind.desc}${em12Meses}` };
+  });
+}
 const HISTORICO = [
   { ano: "2020", boi: 220, soja: 105, milho: 52, cafe: 530, trigo: 1050, feijao: 180, cana: 78, leite: 1.50 },
   { ano: "2021", boi: 297, soja: 165, milho: 85, cafe: 950, trigo: 1500, feijao: 200, cana: 100, leite: 2.05 },
@@ -56,31 +79,6 @@ const GLOSSARIO = [
   { termo: "Hedge", def: "Proteção contra variação de preço. Produtor trava preço futuro na bolsa.", icon: "🛡️" },
   { termo: "Volatilidade", def: "Grau de oscilação dos preços. Café arábica é muito volátil.", icon: "⚡" },
 ];
-const WMO = {
-  0:  { label: "Céu limpo",            emoji: "☀️"  },
-  1:  { label: "Principalmente limpo", emoji: "🌤️"  },
-  2:  { label: "Parcialmente nublado", emoji: "⛅"  },
-  3:  { label: "Nublado",              emoji: "☁️"  },
-  45: { label: "Névoa",                emoji: "🌫️"  },
-  48: { label: "Névoa com geada",      emoji: "🌫️"  },
-  51: { label: "Garoa leve",           emoji: "🌦️"  },
-  53: { label: "Garoa moderada",       emoji: "🌦️"  },
-  55: { label: "Garoa intensa",        emoji: "🌦️"  },
-  61: { label: "Chuva leve",           emoji: "🌧️"  },
-  63: { label: "Chuva moderada",       emoji: "🌧️"  },
-  65: { label: "Chuva forte",          emoji: "🌧️"  },
-  71: { label: "Neve leve",            emoji: "🌨️"  },
-  73: { label: "Neve moderada",        emoji: "🌨️"  },
-  75: { label: "Neve forte",           emoji: "🌨️"  },
-  80: { label: "Pancadas leves",       emoji: "🌦️"  },
-  81: { label: "Pancadas moderadas",   emoji: "🌧️"  },
-  82: { label: "Pancadas violentas",   emoji: "⛈️"  },
-  95: { label: "Trovoada",             emoji: "⛈️"  },
-  96: { label: "Trovoada c/ granizo",  emoji: "⛈️"  },
-  99: { label: "Trovoada forte",       emoji: "⛈️"  },
-};
-const getWmo = (code) => WMO[code] || { label: "Variável", emoji: "🌡️" };
-const WEEK = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
 
 const fmt = (v, d = 2) => v.toLocaleString("pt-BR", { minimumFractionDigits: d, maximumFractionDigits: d });
 const fmtInt = (v) => v.toLocaleString("pt-BR");
@@ -252,11 +250,7 @@ function WeatherWidget() {
   );
 }
 
-function PainelTab({ moedas, pm, flash, selic, refresh, onViewChart, alvo }) {
-  const indicadores = INDICADORES.map(ind => ind.nome === 'Selic' ? {
-    ...ind, valor: selic.value != null ? `${fmt(selic.value)}% a.a.` : selic.error ? 'Indisponível' : 'Carregando…',
-    periodo: selic.date, desc: selic.error ? (selic.value != null ? 'Falha na atualização; última taxa recebida' : 'Banco Central indisponível; nova tentativa automática') : 'Meta BC · atualização automática',
-  } : ind);
+function PainelTab({ moedas, pm, flash, indicadores, refresh, onViewChart, alvo }) {
   return (
     <div className="space-y-4">
       <WeatherWidget />
@@ -265,8 +259,8 @@ function PainelTab({ moedas, pm, flash, selic, refresh, onViewChart, alvo }) {
         <StockQuotes key={alvo?.acao ? alvo.n : "acoes"} buscaInicial={alvo?.acao} refresh={refresh} onViewChart={onViewChart} />
       </div>
       <CommodityQuotes key={alvo?.commodity ? alvo.n : "commodities"} adicionar={alvo?.commodity} refresh={refresh} onViewChart={onViewChart} />
-      <Card id="card-indicadores" className="p-3"><SecTitle icon={BarChart3} title="Indicadores Econômicos" color="#6b21a8" /><div className="grid grid-cols-2 md:grid-cols-3 gap-2">{indicadores.map((ind, i) => (<div key={i} className="rounded-lg p-2 text-center" style={{ background: i % 2 === 0 ? "#faf5ff" : "#f5f3ff" }}><div className="text-xs font-semibold opacity-60">{ind.nome} {ind.periodo && `(${ind.periodo})`}</div><div className="text-base font-bold" style={{ color: "#6b21a8" }}>{ind.valor}</div><div className="text-xs opacity-40">{ind.desc}</div></div>))}</div><div className="mt-2 text-xs opacity-25 text-right">Fonte: BCB / IBGE / FGV</div></Card>
-      <div className="text-xs opacity-25 text-center">📌 Selic: Banco Central (SGS 432) • Demais indicadores: valores de referência fixos. Moedas podem conter estimativas ou simulação quando a fonte falha.</div>
+      <Card id="card-indicadores" className="p-3"><SecTitle icon={BarChart3} title="Indicadores Econômicos" color="#6b21a8" /><div className="grid grid-cols-2 md:grid-cols-3 gap-2">{indicadores.map((ind, i) => (<div key={i} className="rounded-lg p-2 text-center" style={{ background: i % 2 === 0 ? "#faf5ff" : "#f5f3ff" }}><div className="text-xs font-semibold opacity-60">{ind.nome} {ind.periodo && `(${ind.periodo})`}</div><div className="text-base font-bold" style={{ color: "#6b21a8" }}>{ind.valor}</div><div className="text-xs opacity-40">{ind.desc}</div></div>))}</div><div className="mt-2 text-xs opacity-25 text-right">Fonte: Banco Central (SGS), com dados do IBGE e da FGV · atualização automática</div></Card>
+      <div className="text-xs opacity-25 text-center">📌 Indicadores: último valor publicado pelo Banco Central. Moedas podem conter estimativas ou simulação quando a fonte falha.</div>
     </div>
   );
 }
@@ -625,6 +619,8 @@ const SINONIMOS_PARANA = { "Suíno": "porco", Boi: "gado arroba", Vaca: "gado ar
 const DESCRICAO_ABA = {
   painel: "Moedas, ações, commodities, indicadores e previsão do tempo", futuros: "Contratos agrícolas nas bolsas internacionais",
   chicago: "Soja, milho, trigo e boi na Bolsa de Chicago, com vencimentos e valor em reais",
+  clima: "Chuva que caiu e que vai cair, água no solo e risco de geada", calculadoras: "Preço da saca, conversor de unidades, relação de troca, ponto de equilíbrio e financiamento",
+  aprender: "Simulador de hedge e quiz do mercado",
   cooperativas: "Preço pago ao produtor nas regiões do Paraná", noticias: "Agronegócio, mercado e mercado internacional",
   historico: "Comparação de qual item subiu mais e tabela de preços de 2020 a 2026", graficos: "Evolução dos preços em gráficos", glossario: "Significado dos termos do mercado",
 };
@@ -643,6 +639,11 @@ const INDICE_BUSCA = [
   ...GLOSSARIO.map((g, i) => ({ titulo: g.termo, detalhe: g.def, grupo: "Glossário", termos: `${g.def} significado`, acao: { aba: "glossario", termo: i, ancora: `glossario-${i}` } })),
   ...INIT_MOEDAS.map(m => ({ titulo: m.nome, detalhe: "Cotação em reais · Painel", grupo: "Painel", termos: "moeda", acao: { aba: "painel", ancora: "card-moedas" } })),
   ...INDICADORES.map(ind => ({ titulo: ind.nome, detalhe: ind.desc, grupo: "Painel", termos: "indicador economia juros", acao: { aba: "painel", ancora: "card-indicadores" } })),
+  ...CALCULADORAS.map(c => ({ titulo: `Calculadora: ${c.nome}`, detalhe: "Faça a conta com os seus números · Calculadoras", grupo: "Calculadoras",
+    termos: `calcular conta ${c.termos}`, acao: { aba: "calculadoras", calculadora: c.id, ancora: "calculadora" } })),
+  { titulo: "Chuva e clima para a lavoura", detalhe: DESCRICAO_ABA.clima, grupo: "Clima", termos: "clima geada solo umidade previsao 15 dias seca estiagem", acao: { aba: "clima" } },
+  { titulo: "Simulador de hedge", detalhe: "Trave um preço e veja o resultado se o mercado subir ou cair · Aprender", grupo: "Aprender", termos: "protecao travar preco futuro simular", acao: { aba: "aprender", ancora: "simulador-hedge" } },
+  { titulo: "Quiz do mercado agrícola", detalhe: "Teste o que você sabe · Aprender", grupo: "Aprender", termos: "perguntas jogo teste atividade", acao: { aba: "aprender", ancora: "quiz" } },
   { titulo: "Comparar qual subiu mais", detalhe: "Chicago, commodities, futuros e ações no mesmo gráfico · Histórico", grupo: "Histórico",
     termos: "comparacao valorizou alta queda grafico historico", acao: { aba: "historico", ancora: "comparar-historico" } },
   { titulo: "Previsão do tempo", detalhe: "Temperatura e chuva dos próximos 5 dias", grupo: "Painel", termos: "temperatura", acao: { aba: "painel", ancora: "card-tempo" } },
@@ -659,6 +660,7 @@ export default function App() {
   const [last, setLast] = useState(null);
   const [flash, setFlash] = useState(new Set());
   const [selic, setSelic] = useState({});
+  const [bcb, setBcb] = useState({}); // IPCA, INPC, IGP-M, CDI e poupança
   const [dataSource, setDataSource] = useState("aguardando");
   const [mascote, setMascote] = useMascote();
 
@@ -683,6 +685,19 @@ export default function App() {
     const t = setTimeout(() => document.getElementById(alvo.ancora ?? "conteudo")?.scrollIntoView({ behavior: "smooth", block: "start" }), 150);
     return () => clearTimeout(t);
   }, [alvo]);
+
+  // os índices saem uma vez por mês e as taxas uma vez por dia: conferir a cada meia hora basta
+  useEffect(() => {
+    let ativo = true;
+    const carregar = () => fetch("/api/market?type=indicadores", { signal: AbortSignal.timeout(30000) })
+      .then(r => (r.ok ? r.json() : Promise.reject(new Error("indisponível"))))
+      .then(d => { if (ativo) setBcb({ dados: d.indicadores }); })
+      .catch(() => { if (ativo) setBcb(anterior => ({ ...anterior, erro: true })); });
+    carregar();
+    const t = setInterval(carregar, 30 * 60 * 1000);
+    return () => { ativo = false; clearInterval(t); };
+  }, []);
+  const indicadores = indicadoresAtuais(bcb, selic);
 
   const updating = useRef(false);
   const moedasRef = useRef(moedas);
@@ -782,14 +797,17 @@ export default function App() {
               <BotaoMascote visivel={mascote} onClick={() => mostrarMascote(!mascote)} />
             </div>
           </div>
-          <div className="-mb-px overflow-x-auto"><div className="flex gap-0.5 w-max sm:mx-auto">{TABS.map(t => { const I = TAB_ICONS[t]; return (<button key={t} onClick={() => trocarAba(t)} className="flex items-center gap-1 px-2.5 py-2 text-xs font-semibold rounded-t-lg whitespace-nowrap" style={{ background: tab === t ? "#fff" : "transparent", color: tab === t ? "#166534" : "#94a3b8", borderBottom: tab === t ? "2px solid #166534" : "2px solid transparent" }}><I size={12} />{TAB_LABELS[t]}</button>); })}</div></div>
+          <div className="-mb-px overflow-x-auto"><div className="flex gap-0.5 w-max sm:w-auto sm:flex-wrap sm:justify-center">{TABS.map(t => { const I = TAB_ICONS[t]; return (<button key={t} onClick={() => trocarAba(t)} className="flex items-center gap-1 px-2.5 py-2 text-xs font-semibold rounded-t-lg whitespace-nowrap" style={{ background: tab === t ? "#fff" : "transparent", color: tab === t ? "#166534" : "#94a3b8", borderBottom: tab === t ? "2px solid #166534" : "2px solid transparent" }}><I size={12} />{TAB_LABELS[t]}</button>); })}</div></div>
         </div>
       </div>
       <div id="conteudo" className="max-w-4xl mx-auto px-3 py-4" style={{ scrollMarginTop: 100 }}>
         {tab === "painel" && <CountdownBar sec={cd} total={UPDATE_SEC} paused={paused} onToggle={() => setPaused(p => !p)} onRefresh={doUpdate} count={count} last={last} source={dataSource} />}
-        {tab === "painel" && <PainelTab moedas={moedas} pm={pm} flash={flash} selic={selic} refresh={count} onViewChart={viewChart} alvo={alvo} />}
+        {tab === "painel" && <PainelTab moedas={moedas} pm={pm} flash={flash} indicadores={indicadores} refresh={count} onViewChart={viewChart} alvo={alvo} />}
         {tab === "futuros" && <FuturesQuotes key={alvo?.futuro ? alvo.n : "futuros"} inicial={alvo?.futuro} />}
         {tab === "chicago" && <BolsaChicago key={alvo?.chicago ? alvo.n : "chicago"} inicial={alvo?.chicago} dolar={dataSource === "real" ? moedas.find(m => m.id === "usd")?.valor : null} />}
+        {tab === "clima" && <ClimaAgricola />}
+        {tab === "calculadoras" && <Calculadoras key={alvo?.calculadora ? alvo.n : "calculadoras"} inicial={alvo?.calculadora} dolar={dataSource === "real" ? moedas.find(m => m.id === "usd")?.valor : null} />}
+        {tab === "aprender" && <Aprender onPerguntar={ASSISTENTE_URL ? (texto => irPara({ castor: texto })) : null} />}
         {tab === "cooperativas" && <CotacoesCooperativas key={alvo?.produto ? alvo.n : "pr"} produtoInicial={alvo?.produto} />}
         {tab === "noticias" && <NoticiasTab key={alvo?.busca ? alvo.n : "noticias"} busca={alvo?.busca} />}
         {tab === "historico" && <HistoricoTab />}
@@ -802,7 +820,7 @@ export default function App() {
           ? moedas.map(m => ({ nome: m.nome, valorReais: m.valor, variacaoPct: m.var, fonte: "AwesomeAPI" }))
           : "indisponíveis no momento",
         selic: selic.value != null ? { metaPctAoAno: selic.value, data: selic.date, fonte: selic.source } : "indisponível",
-        indicadoresDeReferencia: INDICADORES.filter(i => i.nome !== "Selic").map(i => ({ nome: i.nome, valor: i.valor, descricao: i.desc })),
+        indicadores: indicadores.filter(i => i.nome !== "Selic").map(i => ({ nome: i.nome, valor: i.valor, periodo: i.periodo, descricao: i.desc, fonte: "Banco Central" })),
         historicoAnual: { descricao: "Tabela Histórico 2020–2026 do painel (CEPEA/ESALQ, Farmnews; R$ nominais)", linhas: HISTORICO },
       }} />}
       <VisitorCounter presencaUrl={ASSISTENTE_URL} />

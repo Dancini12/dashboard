@@ -72,3 +72,12 @@ export const APELIDOS_PARANA = [
   [/^su[íi]no/i, "Suíno"], [/^erva/i, "Erva-mate"],
 ];
 export const PRODUTOS_PARANA = APELIDOS_PARANA.map(([, nome]) => nome);
+
+// Calculadoras da aba "Calculadoras", na ordem dos botões.
+export const CALCULADORAS = [
+  { id: 'saca', nome: 'Saca a partir de Chicago', termos: 'paridade exportacao premio porto preco soja milho trigo dolar' },
+  { id: 'conversor', nome: 'Conversor de unidades', termos: 'bushel saca arroba tonelada hectare alqueire converter' },
+  { id: 'troca', nome: 'Relação de troca', termos: 'adubo fertilizante insumo diesel bezerro sacas' },
+  { id: 'equilibrio', nome: 'Ponto de equilíbrio', termos: 'custo producao lucro prejuizo margem lavoura produtividade' },
+  { id: 'financiamento', nome: 'Financiamento', termos: 'credito rural custeio juros pronaf pronamp plano safra emprestimo' },
+];

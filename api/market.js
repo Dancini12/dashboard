@@ -60,6 +60,25 @@ async function historicoFuturo(symbol) {
   return { symbol, name: result.meta?.shortName || symbol, currency: result.meta?.currency ?? 'USD', points, source: 'Yahoo Finance' };
 }
 
+// Séries do Banco Central (SGS) dos indicadores do Painel: variação mensal em % (IPCA, INPC, IGP-M),
+// IPCA acumulado em 12 meses, CDI em % ao ano e rendimento mensal da poupança.
+const SERIES_BCB = { ipca: 433, ipca12: 13522, inpc: 188, igpm: 189, cdi: 4389, poupanca: 195 };
+
+// Último valor de uma série. O serviço às vezes devolve resposta vazia: tenta mais uma vez.
+async function serieDoBancoCentral(codigo) {
+  for (let tentativa = 0; ; tentativa++) {
+    try {
+      const response = await fetch(`https://api.bcb.gov.br/dados/serie/bcdata.sgs.${codigo}/dados/ultimos/1?formato=json`, { signal: AbortSignal.timeout(8000) });
+      const linha = response.ok ? (await response.json())?.at?.(-1) : null;
+      const valor = Number(linha?.valor);
+      if (!linha?.data || linha.valor === '' || !Number.isFinite(valor)) throw new Error('série vazia');
+      return { valor, data: linha.data };
+    } catch (erro) {
+      if (tentativa >= 1) throw erro;
+    }
+  }
+}
+
 // O contrato contínuo traz o vencimento no nome ("Soybean Futures,Nov-2026"). Quando o ano
 // vem cortado ("…,Dec-2"), vale o próximo mês com esse nome a partir de hoje.
 function vencimentoDoNome(nome, hoje) {
@@ -127,6 +146,15 @@ export default async function handler(req, res) {
     } catch {
       return res.status(502).json({ error: 'Cotações de Chicago temporariamente indisponíveis. Tente novamente em alguns minutos.' });
     }
+  }
+
+  if (type === 'indicadores') {
+    const respostas = await Promise.allSettled(Object.values(SERIES_BCB).map(serieDoBancoCentral));
+    const indicadores = Object.fromEntries(Object.keys(SERIES_BCB).map((nome, i) => [nome, respostas[i].status === 'fulfilled' ? respostas[i].value : null]));
+    if (!Object.values(indicadores).some(Boolean)) return res.status(502).json({ error: 'Indicadores do Banco Central indisponíveis no momento.' });
+    // completo: vale por 6 horas; faltando algum, tenta de novo em 5 minutos
+    res.setHeader('Cache-Control', Object.values(indicadores).every(Boolean) ? 's-maxage=21600, stale-while-revalidate=86400' : 's-maxage=300');
+    return res.status(200).json({ indicadores, source: 'Banco Central · SGS' });
   }
 
   if (type === 'pr') {

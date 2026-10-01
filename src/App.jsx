@@ -9,6 +9,7 @@ import Calculadoras from "./components/Calculadoras";
 import Aprender from "./components/Aprender";
 import SafraTab from "./components/SafraTab";
 import Exportacoes from "./components/Exportacoes";
+import Combustiveis from "./components/Combustiveis";
 import { getWmo, WEEK } from "./clima";
 import { StockQuotes, CommodityQuotes, FuturesQuotes, TICKER_RE } from "./components/MarketQuotes";
 import { COMMODITIES, FUTURES, CHICAGO, CALCULADORAS, APELIDOS_FUTUROS, PRODUTOS_PARANA } from "./catalogo";
@@ -262,6 +263,7 @@ function PainelTab({ moedas, pm, flash, indicadores, refresh, onViewChart, alvo 
       </div>
       <CommodityQuotes key={alvo?.commodity ? alvo.n : "commodities"} adicionar={alvo?.commodity} refresh={refresh} onViewChart={onViewChart} />
       <Card id="card-indicadores" className="p-3"><SecTitle icon={BarChart3} title="Indicadores Econômicos" color="#6b21a8" /><div className="grid grid-cols-2 md:grid-cols-3 gap-2">{indicadores.map((ind, i) => (<div key={i} className="rounded-lg p-2 text-center" style={{ background: i % 2 === 0 ? "#faf5ff" : "#f5f3ff" }}><div className="text-xs font-semibold opacity-60">{ind.nome} {ind.periodo && `(${ind.periodo})`}</div><div className="text-base font-bold" style={{ color: "#6b21a8" }}>{ind.valor}</div><div className="text-xs opacity-40">{ind.desc}</div></div>))}</div><div className="mt-2 text-xs opacity-25 text-right">Fonte: Banco Central (SGS), com dados do IBGE e da FGV · atualização automática</div></Card>
+      <Combustiveis />
       <div className="text-xs opacity-25 text-center">📌 Indicadores: último valor publicado pelo Banco Central. Moedas podem conter estimativas ou simulação quando a fonte falha.</div>
     </div>
   );
@@ -619,13 +621,13 @@ function GlossarioTab({ inicial }) {
 // Tudo o que a busca do topo encontra: título, onde fica (grupo e detalhe), palavras extras e o destino.
 const SINONIMOS_PARANA = { "Suíno": "porco", Boi: "gado arroba", Vaca: "gado arroba", "Erva-mate": "chimarrão", Mandioca: "aipim macaxeira", "Café em coco": "café", "Café beneficiado": "café" };
 const DESCRICAO_ABA = {
-  painel: "Moedas, ações, commodities, indicadores e previsão do tempo", futuros: "Contratos agrícolas nas bolsas internacionais",
+  painel: "Moedas, ações, commodities, indicadores, combustíveis e previsão do tempo", futuros: "Contratos agrícolas nas bolsas internacionais",
   chicago: "Soja, milho, trigo e boi na Bolsa de Chicago, com vencimentos e valor em reais",
   safra: "Produção do Paraná, da região e de Santa Mariana, andamento do plantio e calendário agrícola",
   exportacoes: "Quanto o Brasil e o Paraná exportam de soja, milho, carnes e outros, e para quais países",
   clima: "Chuva que caiu e que vai cair, água no solo e risco de geada", calculadoras: "Preço da saca, conversor de unidades, relação de troca, ponto de equilíbrio e financiamento",
   aprender: "Simulador de hedge e quiz do mercado",
-  cooperativas: "Preço pago ao produtor nas regiões do Paraná", noticias: "Agronegócio, mercado e mercado internacional",
+  cooperativas: "Preço pago ao produtor nas regiões do Paraná, com mapa de onde está mais caro", noticias: "Agronegócio, mercado e mercado internacional",
   historico: "Comparação de qual item subiu mais e tabela de preços de 2020 a 2026", graficos: "Evolução dos preços em gráficos", glossario: "Significado dos termos do mercado",
 };
 const INDICE_BUSCA = [
@@ -653,6 +655,7 @@ const INDICE_BUSCA = [
   { titulo: "Quiz do mercado agrícola", detalhe: "Teste o que você sabe · Aprender", grupo: "Aprender", termos: "perguntas jogo teste atividade", acao: { aba: "aprender", ancora: "quiz" } },
   { titulo: "Comparar qual subiu mais", detalhe: "Chicago, commodities, futuros e ações no mesmo gráfico · Histórico", grupo: "Histórico",
     termos: "comparacao valorizou alta queda grafico historico", acao: { aba: "historico", ancora: "comparar-historico" } },
+  { titulo: "Diesel e combustíveis no Paraná", detalhe: "Preço médio da semana nos postos (ANP) · Painel", grupo: "Painel", termos: "gasolina etanol alcool oleo diesel posto litro custo", acao: { aba: "painel", ancora: "card-combustiveis" } },
   { titulo: "Previsão do tempo", detalhe: "Temperatura e chuva dos próximos 5 dias", grupo: "Painel", termos: "temperatura", acao: { aba: "painel", ancora: "card-tempo" } },
   { titulo: "Ações e fundos da B3", detalhe: "Consultar empresas da Bolsa · Painel", grupo: "Painel", termos: "acoes bolsa empresa etf investimento", acao: { aba: "painel", ancora: "consultar-acao" } },
   ...TABS.map(t => ({ titulo: `Aba ${TAB_LABELS[t]}`, detalhe: DESCRICAO_ABA[t], grupo: "Abas", termos: DESCRICAO_ABA[t], acao: { aba: t } })),

@@ -153,10 +153,11 @@ const UNIDADE_DERAL = { "sc 60 kg": "saca", arroba: "arroba", kg: "kg", t: "tone
 
 function RelacaoDeTroca() {
   const [parana, setParana] = useState(null);
+  const [diesel, setDiesel] = useState(null); // preço médio do diesel S10 no Paraná (ANP)
   const [produto, setProduto] = useState("Soja");
   const [precoDigitado, setPrecoDigitado] = useState({});
   const [insumo, setInsumo] = useState(0);
-  const [precoDoInsumo, setPrecoDoInsumo] = useState("");
+  const [insumoDigitado, setInsumoDigitado] = useState({});
 
   useEffect(() => {
     let ativo = true;
@@ -164,6 +165,10 @@ function RelacaoDeTroca() {
       .then(r => (r.ok ? r.json() : Promise.reject(new Error("indisponível"))))
       .then(d => { if (ativo) setParana(d); })
       .catch(() => { if (ativo) setParana({ produtos: [] }); });
+    fetch("/api/market?type=combustiveis", { signal: AbortSignal.timeout(45000) })
+      .then(r => (r.ok ? r.json() : Promise.reject(new Error("indisponível"))))
+      .then(d => { if (ativo) setDiesel(d.produtos.find(p => p.nome === "Diesel S10")?.parana.medio ?? null); })
+      .catch(() => { /* sem o preço da ANP, o visitante digita */ });
     return () => { ativo = false; };
   }, []);
 
@@ -175,6 +180,8 @@ function RelacaoDeTroca() {
   const unidade = UNIDADE_DERAL[referencia?.unidade.toLowerCase()] ?? referencia?.unidade.toLowerCase() ?? (produto === "Boi" ? "arroba" : produto === "Suíno" ? "kg" : "saca");
   const preco = precoDigitado[produto] ?? (referencia ? paraCampo(referencia.mediaEstado) : "");
   const [nomeDoInsumo, unidadeDoInsumo] = INSUMOS[insumo];
+  const dieselDaAnp = nomeDoInsumo === "Diesel" && diesel != null;
+  const precoDoInsumo = insumoDigitado[insumo] ?? (dieselDaAnp ? paraCampo(diesel) : "");
   const troca = relacaoDeTroca(numero(precoDoInsumo), numero(preco));
   const pronto = Number.isFinite(troca) && numero(preco) > 0;
 
@@ -186,7 +193,8 @@ function RelacaoDeTroca() {
         <Campo rotulo={`Preço do meu produto`} valor={preco} onChange={v => setPrecoDigitado(d => ({ ...d, [produto]: v }))} sufixo={`R$/${unidade}`}
           ajuda={precoDigitado[produto] != null ? "Valor digitado por você." : referencia ? `Média do Paraná em ${parana.data} (DERAL). Pode trocar pelo preço da sua região.` : parana ? "Sem preço do DERAL agora: digite o valor." : "Buscando o preço médio do Paraná…"} />
         <Seletor rotulo="Insumo que quero comprar" valor={insumo} onChange={v => setInsumo(Number(v))}>{INSUMOS.map(([nome, un], i) => <option key={nome} value={i}>{nome} ({un})</option>)}</Seletor>
-        <Campo rotulo={`Preço do insumo`} valor={precoDoInsumo} onChange={setPrecoDoInsumo} sufixo={`R$/${unidadeDoInsumo}`} ajuda="Digite o preço do orçamento ou da loja: o site não tem fonte aberta de preço de insumos." />
+        <Campo rotulo={`Preço do insumo`} valor={precoDoInsumo} onChange={v => setInsumoDigitado(d => ({ ...d, [insumo]: v }))} sufixo={`R$/${unidadeDoInsumo}`}
+          ajuda={insumoDigitado[insumo] != null ? "Valor digitado por você." : dieselDaAnp ? "Preço médio do diesel S10 no Paraná nesta semana (ANP). Pode trocar pelo do seu posto." : "Digite o preço do orçamento ou da loja: o site não tem fonte aberta de preço para este insumo."} />
       </div>
       {pronto ? (
         <div className="mt-3"><Resultado destaque rotulo={`Para pagar 1 ${unidadeDoInsumo} de ${nomeDoInsumo.toLowerCase()}`}

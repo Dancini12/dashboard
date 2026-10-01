@@ -1,6 +1,7 @@
 /* global process, Buffer */
 import lerPlanilha from 'read-excel-file/node';
 import { dadosDeSafra } from '../server/safra.js';
+import { combustiveisDoParana } from '../server/combustiveis.js';
 import { exportacoesPorProduto, destinosDasExportacoes, LimiteDePedidos } from '../server/exportacoes.js';
 
 // Ativos liberados sem chave na BRAPI; com BRAPI_TOKEN no servidor, o plano define o resto.
@@ -169,6 +170,16 @@ export default async function handler(req, res) {
       // a fonte aceita um pedido a cada 10 segundos: o site tenta de novo sozinho
       if (erro instanceof LimiteDePedidos) return res.status(503).json({ error: 'A fonte das exportações pediu para aguardar alguns segundos.', tentarEm: 11 });
       return res.status(502).json({ error: 'Dados de exportação indisponíveis no momento.' });
+    }
+  }
+
+  if (type === 'combustiveis') {
+    try {
+      const combustiveis = await combustiveisDoParana();
+      res.setHeader('Cache-Control', 's-maxage=21600, stale-while-revalidate=86400'); // a ANP publica uma vez por semana
+      return res.status(200).json(combustiveis);
+    } catch {
+      return res.status(502).json({ error: 'Preços da ANP indisponíveis no momento.' });
     }
   }
 

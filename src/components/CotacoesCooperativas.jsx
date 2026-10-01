@@ -36,6 +36,49 @@ const COOPERATIVAS_PR = [
   { nome: "Integrada", sede: "Londrina", regiao: "Londrina", produtos: "soja, milho, trigo, café e laranja", site: "https://www.integrada.coop.br/" },
 ];
 
+// Mapa esquemático do estado: cada região do DERAL em um quadro, na posição aproximada
+// (coluna de oeste para leste, linha de norte para sul), com o nome curto que cabe no celular.
+const MAPA = {
+  "Paranavaí": [1, 0], "Maringá": [2, 0], "Londrina": [3, 0], "Cornélio Procópio": [4, 0, "C. Procópio"], "Jacarezinho": [5, 0],
+  "Umuarama": [0, 1], "Campo Mourão": [1, 1, "C. Mourão"], "Ivaiporã": [2, 1], "Apucarana": [3, 1],
+  "Toledo": [0, 2], "Cascavel": [1, 2], "Pitanga": [2, 2], "Ponta Grossa": [4, 2, "P. Grossa"],
+  "Laranjeiras do Sul": [1, 3, "L. do Sul"], "Guarapuava": [2, 3], "Irati": [3, 3], "Curitiba": [5, 3],
+  "Francisco Beltrão": [0, 4, "F. Beltrão"], "Pato Branco": [1, 4, "P. Branco"], "União da Vitória": [3, 4, "U. Vitória"],
+};
+// um só tom, do claro (preço menor) ao escuro (preço maior); a cor do texto acompanha o fundo
+const TONS = [["#b7d3f6", "#0f172a"], ["#86b6ef", "#0f172a"], ["#5598e7", "#0f172a"], ["#2a78d6", "#fff"], ["#184f95", "#fff"]];
+
+function MapaDePrecos({ regioes, precos, onVerRegiao }) {
+  const valores = precos.map(p => p.comum).filter(v => typeof v === "number");
+  if (valores.length < 2 || !regioes.every(r => MAPA[r])) return null; // região nova no boletim: fica só a tabela
+  const menor = Math.min(...valores), maior = Math.max(...valores);
+  const tomDe = v => TONS[maior === menor ? 2 : Math.min(TONS.length - 1, Math.floor((v - menor) / (maior - menor) * TONS.length))];
+  return (
+    <div className="mt-3">
+      <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-slate-600">
+        <strong className="text-slate-700">Onde está mais caro e mais barato</strong>
+        <span className="flex items-center gap-1.5">{reais(menor)}<span className="flex">{TONS.map(([fundo]) => <span key={fundo} style={{ width: 16, height: 10, background: fundo }} />)}</span>{reais(maior)}</span>
+      </div>
+      <div className="grid gap-0.5 mt-1.5" style={{ gridTemplateColumns: "repeat(6, minmax(0, 1fr))" }} role="group" aria-label="Mapa de preços por região">
+        {regioes.map((regiao, i) => {
+          const [coluna, linha, curto] = MAPA[regiao];
+          const valor = precos[i].comum;
+          const temPreco = typeof valor === "number";
+          const [fundo, cor] = temPreco ? tomDe(valor) : ["#f1f5f9", "#64748b"];
+          return (
+            <button key={regiao} type="button" onClick={() => onVerRegiao(regiao)} title={`${regiao}: ${valorDa(valor)}`} className="rounded-md px-0.5 py-1.5 text-center leading-tight"
+              style={{ gridColumn: coluna + 1, gridRow: linha + 1, background: fundo, color: cor, outline: regiao === REGIAO_DA_ESCOLA ? "2px solid #f59e0b" : "none", outlineOffset: -2 }}>
+              <span className="block truncate" style={{ fontSize: "clamp(8.5px, 2.3vw, 10px)" }}>{curto ?? regiao}</span>
+              <span className="block font-bold" style={{ fontSize: 11 }}>{temPreco ? valor.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "—"}</span>
+            </button>
+          );
+        })}
+      </div>
+      <p className="text-xs text-slate-500 mt-1.5">Mapa esquemático: oeste à esquerda, norte em cima. Preço mais comum do dia; o contorno amarelo é a região de Santa Mariana. Toque em uma região para achá-la na tabela.</p>
+    </div>
+  );
+}
+
 export default function CotacoesCooperativas({ produtoInicial = "Soja" }) {
   const [cotacao, setCotacao] = useState(null);
   const [erro, setErro] = useState(false);
@@ -146,6 +189,7 @@ export default function CotacoesCooperativas({ produtoInicial = "Soja" }) {
             {maior && <div className="rounded-lg p-2" style={{ background: "#f8fafc" }}><div className="text-slate-500">Maior preço</div><div className="font-bold">{reais(maior[1])}</div><div className="text-slate-500">{maior[0]}</div></div>}
             {menor && <div className="rounded-lg p-2" style={{ background: "#f8fafc" }}><div className="text-slate-500">Menor preço</div><div className="font-bold">{reais(menor[1])}</div><div className="text-slate-500">{menor[0]}</div></div>}
           </div>
+          <MapaDePrecos regioes={cotacao.regioes} precos={produto.precos} onVerRegiao={verRegiao} />
           <div className="mt-3 overflow-x-auto">
             <table className="w-full text-xs">
               <thead>

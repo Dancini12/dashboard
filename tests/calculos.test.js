@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { UNIDADES, converter, sacaPorChicago, relacaoDeTroca, pontoDeEquilibrio, financiamento, hedge } from '../src/calculos.js';
+import { UNIDADES, converter, sacaPorChicago, relacaoDeTroca, pontoDeEquilibrio, financiamento, hedge, faixaDePreco } from '../src/calculos.js';
 
 const u = (grupo, id) => UNIDADES[grupo].find(x => x.id === id);
 const perto = (a, b, casas = 2) => assert.equal(a.toFixed(casas), b.toFixed(casas));
@@ -41,4 +41,11 @@ test('hedge: com o preço travado a receita não muda, suba ou caia o mercado', 
   assert.equal(subiu.semHedge, 160000);
   assert.equal(subiu.comHedge, 130000, 'quem travou não ganha a alta');
   assert.equal(subiu.ajusteDaBolsa, -30000);
+});
+test('mapa de preços: terço de baixo é barato, terço de cima é caro, o resto fica no meio', () => {
+  const faixas = valores => valores.map(v => faixaDePreco(v, Math.min(...valores), Math.max(...valores)));
+  assert.deepEqual(faixas([138, 139, 140, 140.3, 141, 141.2]), ['barato', 'barato', 'meio', 'caro', 'caro', 'caro']);
+  assert.deepEqual(faixas([100, 110, 120, 130]), ['barato', 'meio', 'meio', 'caro']);
+  assert.deepEqual(faixas([139, 139, 139]), ['meio', 'meio', 'meio'], 'todos iguais: ninguém é mais caro nem mais barato');
+  assert.deepEqual(faixas([7.5, 9]), ['barato', 'caro']);
 });

@@ -66,3 +66,11 @@ export function hedge({ sacas, travado, naColheita, custoPorSaca = 0 }) {
   const custo = sacas * custoPorSaca;
   return { semHedge: fisico, comHedge: fisico + ajusteDaBolsa, fisico, ajusteDaBolsa, lucroSemHedge: fisico - custo, lucroComHedge: fisico + ajusteDaBolsa - custo };
 }
+
+// Faixa de um preço entre o menor e o maior do dia: o terço de baixo é "barato", o de cima é
+// "caro" e o resto fica no "meio". Com todos os preços iguais, todos ficam no meio.
+export function faixaDePreco(valor, menor, maior) {
+  if (maior <= menor) return 'meio';
+  const posicao = (valor - menor) / (maior - menor);
+  return posicao < 1 / 3 ? 'barato' : posicao > 2 / 3 ? 'caro' : 'meio';
+}

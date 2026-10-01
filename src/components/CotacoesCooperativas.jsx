@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Clock, ExternalLink } from "lucide-react";
 import { APELIDOS_PARANA as APELIDOS } from "../catalogo";
+import { faixaDePreco } from "../calculos";
 
 // Aba "Cotações Cooperativas", por enquanto só com o Paraná: cotação diária do SIMA
 // (DERAL/SEAB-PR), o preço de compra pago pelos atacadistas (cooperativas, cerealistas
@@ -45,36 +46,56 @@ const MAPA = {
   "Laranjeiras do Sul": [1, 3, "L. do Sul"], "Guarapuava": [2, 3], "Irati": [3, 3], "Curitiba": [5, 3],
   "Francisco Beltrão": [0, 4, "F. Beltrão"], "Pato Branco": [1, 4, "P. Branco"], "União da Vitória": [3, 4, "U. Vitória"],
 };
-// um só tom, do claro (preço menor) ao escuro (preço maior); a cor do texto acompanha o fundo
-const TONS = [["#b7d3f6", "#0f172a"], ["#86b6ef", "#0f172a"], ["#5598e7", "#0f172a"], ["#2a78d6", "#fff"], ["#184f95", "#fff"]];
+// Semáforo do preço: verde nas regiões mais baratas, amarelo nas do meio e vermelho nas mais caras.
+// Cada faixa leva também um sinal (▼ ◆ ▲), para não depender só da cor.
+const FAIXAS = {
+  barato: { nome: "Mais baratas", sinal: "▼", fundo: "#15803d", cor: "#fff" },
+  meio: { nome: "No meio", sinal: "◆", fundo: "#facc15", cor: "#422006" },
+  caro: { nome: "Mais caras", sinal: "▲", fundo: "#dc2626", cor: "#fff" },
+};
+const duasCasas = v => v.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
 function MapaDePrecos({ regioes, precos, onVerRegiao }) {
   const valores = precos.map(p => p.comum).filter(v => typeof v === "number");
   if (valores.length < 2 || !regioes.every(r => MAPA[r])) return null; // região nova no boletim: fica só a tabela
   const menor = Math.min(...valores), maior = Math.max(...valores);
-  const tomDe = v => TONS[maior === menor ? 2 : Math.min(TONS.length - 1, Math.floor((v - menor) / (maior - menor) * TONS.length))];
+  const faixaDe = v => faixaDePreco(v, menor, maior);
   return (
     <div className="mt-3">
-      <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-slate-600">
-        <strong className="text-slate-700">Onde está mais caro e mais barato</strong>
-        <span className="flex items-center gap-1.5">{reais(menor)}<span className="flex">{TONS.map(([fundo]) => <span key={fundo} style={{ width: 16, height: 10, background: fundo }} />)}</span>{reais(maior)}</span>
-      </div>
+      <strong className="block text-xs text-slate-700">Onde está mais caro e mais barato</strong>
+      {maior === menor
+        ? <p className="text-xs text-slate-600 mt-1">Hoje todas as regiões pesquisadas têm o mesmo preço: {reais(menor)}.</p>
+        : <ul className="flex flex-wrap gap-x-3 gap-y-1 mt-1 text-xs text-slate-700">
+            {Object.entries(FAIXAS).map(([faixa, f]) => {
+              const daFaixa = valores.filter(v => faixaDe(v) === faixa);
+              if (!daFaixa.length) return null;
+              const de = Math.min(...daFaixa), ate = Math.max(...daFaixa);
+              return (
+                <li key={faixa} className="flex items-center gap-1.5">
+                  <span className="inline-flex items-center justify-center rounded" style={{ width: 16, height: 16, background: f.fundo, color: f.cor, fontSize: 9 }} aria-hidden="true">{f.sinal}</span>
+                  <span><strong>{f.nome}</strong>: {de === ate ? reais(de) : `${reais(de)} a ${reais(ate)}`} · {daFaixa.length} {daFaixa.length === 1 ? "região" : "regiões"}</span>
+                </li>
+              );
+            })}
+          </ul>}
       <div className="grid gap-0.5 mt-1.5" style={{ gridTemplateColumns: "repeat(6, minmax(0, 1fr))" }} role="group" aria-label="Mapa de preços por região">
         {regioes.map((regiao, i) => {
           const [coluna, linha, curto] = MAPA[regiao];
           const valor = precos[i].comum;
-          const temPreco = typeof valor === "number";
-          const [fundo, cor] = temPreco ? tomDe(valor) : ["#f1f5f9", "#64748b"];
+          const faixa = typeof valor === "number" ? FAIXAS[faixaDe(valor)] : null;
           return (
-            <button key={regiao} type="button" onClick={() => onVerRegiao(regiao)} title={`${regiao}: ${valorDa(valor)}`} className="rounded-md px-0.5 py-1.5 text-center leading-tight"
-              style={{ gridColumn: coluna + 1, gridRow: linha + 1, background: fundo, color: cor, outline: regiao === REGIAO_DA_ESCOLA ? "2px solid #f59e0b" : "none", outlineOffset: -2 }}>
+            <button key={regiao} type="button" onClick={() => onVerRegiao(regiao)} title={`${regiao}: ${valorDa(valor)}${faixa ? ` (${faixa.nome.toLowerCase()})` : ""}`} className="rounded-md px-0.5 py-1.5 text-center leading-tight"
+              style={{ gridColumn: coluna + 1, gridRow: linha + 1, background: faixa?.fundo ?? "#f1f5f9", color: faixa?.cor ?? "#64748b", outline: regiao === REGIAO_DA_ESCOLA ? "3px solid #0f172a" : "none", outlineOffset: -3 }}>
               <span className="block truncate" style={{ fontSize: "clamp(8.5px, 2.3vw, 10px)" }}>{curto ?? regiao}</span>
-              <span className="block font-bold" style={{ fontSize: 11 }}>{temPreco ? valor.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "—"}</span>
+              <span className="block font-bold whitespace-nowrap" style={{ fontSize: 11 }}>{faixa ? <><span aria-hidden="true" style={{ fontSize: 8 }}>{faixa.sinal} </span>{duasCasas(valor)}</> : "—"}</span>
             </button>
           );
         })}
       </div>
-      <p className="text-xs text-slate-500 mt-1.5">Mapa esquemático: oeste à esquerda, norte em cima. Preço mais comum do dia; o contorno amarelo é a região de Santa Mariana. Toque em uma região para achá-la na tabela.</p>
+      <p className="text-xs text-slate-500 mt-1.5">
+        Mapa esquemático: oeste à esquerda, norte em cima. As cores dividem em três partes a distância entre o menor e o maior preço do dia e mudam sozinhas a cada
+        boletim novo do DERAL. O contorno escuro é a região de Santa Mariana. Toque em uma região para achá-la na tabela.
+      </p>
     </div>
   );
 }

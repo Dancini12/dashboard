@@ -270,6 +270,8 @@ function PainelTab({ moedas, pm, flash, selic, refresh, onViewChart }) {
 const NEWS_FEEDS = {
   agro:    { label: "🌾 Agronegócio", cor: "#166534", bg: "#f0fdf4" },
   mercado: { label: "💰 Mercado",      cor: "#1a5276", bg: "#f0f7ff" },
+  internacional: { label: "🌎 Mercado internacional", cor: "#0f766e", bg: "#f0fdfa",
+    desc: "O que acontece nos maiores mercados do mundo (Bolsa de Chicago, USDA, China, Estados Unidos, Argentina, Europa e Índia) e mexe com o preço do produto aqui no Brasil." },
 };
 
 function stripHtml(html = "") {
@@ -321,7 +323,7 @@ const NEWS_INTERVAL = 5 * 60;
 
 function NoticiasTab() {
   const [feed, setFeed] = useState("agro");
-  const [news, setNews] = useState({ agro: [], mercado: [] });
+  const [news, setNews] = useState({ agro: [], mercado: [], internacional: [] });
   const [loading, setLoading] = useState(true);
   const [lastUpdate, setLastUpdate] = useState(null);
   const [hasError, setHasError] = useState(false);
@@ -331,14 +333,10 @@ function NoticiasTab() {
     setLoading(true);
     setHasError(false);
     try {
-      const [aRes, mRes] = await Promise.allSettled([
-        fetch("/api/news?feed=agro").then(r => r.json()),
-        fetch("/api/news?feed=mercado").then(r => r.json()),
-      ]);
-      setNews({
-        agro:    aRes.status === "fulfilled" && aRes.value?.status === "ok" ? aRes.value.items : [],
-        mercado: mRes.status === "fulfilled" && mRes.value?.status === "ok" ? mRes.value.items : [],
-      });
+      const feeds = Object.keys(NEWS_FEEDS);
+      const results = await Promise.allSettled(feeds.map(k => fetch(`/api/news?feed=${k}`).then(r => r.json())));
+      setNews(Object.fromEntries(feeds.map((k, i) => [k,
+        results[i].status === "fulfilled" && results[i].value?.status === "ok" ? results[i].value.items : []])));
       setLastUpdate(new Date());
     } catch { setHasError(true); }
     setLoading(false);
@@ -381,8 +379,8 @@ function NoticiasTab() {
             <RefreshCw size={12} style={{ animation: loading ? "spin 1s linear infinite" : "none" }} />
           </button>
         </div>
-        <div className="flex items-center justify-between">
-          <div className="flex gap-2">
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex flex-wrap gap-2">
             {Object.entries(NEWS_FEEDS).map(([k, v]) => (
               <button key={k} onClick={() => setFeed(k)}
                 className="px-3 py-1.5 rounded-full text-xs font-bold transition-colors"
@@ -397,6 +395,7 @@ function NoticiasTab() {
             </span>
           )}
         </div>
+        {cfg.desc && <p className="text-xs mt-2" style={{ color: cfg.cor }}>{cfg.desc}</p>}
       </Card>
 
       {loading && items.length === 0 ? (

@@ -1,6 +1,8 @@
 const FEEDS = {
   agro:    "https://news.google.com/rss/search?q=agroneg%C3%B3cio+OR+soja+OR+milho+OR+boi+gordo+brasil+when%3A7d&hl=pt-BR&gl=BR&ceid=BR:pt-419",
   mercado: "https://news.google.com/rss/search?q=economia+brasil+OR+d%C3%B3lar+OR+selic+OR+bolsa+when%3A7d&hl=pt-BR&gl=BR&ceid=BR:pt-419",
+  // Chicago, USDA e os grandes compradores/concorrentes (China, EUA, Argentina, Europa, Índia), em português
+  internacional: "https://news.google.com/rss/search?q=%28Chicago%20OR%20USDA%20OR%20China%20OR%20%22Estados%20Unidos%22%20OR%20Argentina%20OR%20%22Uni%C3%A3o%20Europeia%22%20OR%20Europa%20OR%20%C3%8Dndia%20OR%20%22mercado%20internacional%22%29%20%28soja%20OR%20milho%20OR%20trigo%20OR%20caf%C3%A9%20OR%20carne%20OR%20a%C3%A7%C3%BAcar%20OR%20algod%C3%A3o%29%20when%3A7d&hl=pt-BR&gl=BR&ceid=BR:pt-419",
 };
 
 function getTag(xml, tag) {

@@ -626,7 +626,7 @@ const DESCRICAO_ABA = {
   safra: "Produção do Paraná, da região e de Santa Mariana, andamento do plantio e calendário agrícola",
   exportacoes: "Quanto o Brasil e o Paraná exportam de soja, milho, carnes e outros, e para quais países",
   clima: "Chuva que caiu e que vai cair, água no solo e risco de geada", calculadoras: "Preço da saca, conversor de unidades, relação de troca, ponto de equilíbrio e financiamento",
-  aprender: "Simulador de hedge e quiz do mercado",
+  aprender: "Simulação de uma safra com decisões do produtor e simulador de hedge",
   cooperativas: "Preço pago ao produtor nas regiões do Paraná, com mapa de onde está mais caro", noticias: "Agronegócio, mercado e mercado internacional",
   historico: "Comparação de qual item subiu mais e tabela de preços de 2020 a 2026", graficos: "Evolução dos preços em gráficos", glossario: "Significado dos termos do mercado",
 };
@@ -652,7 +652,7 @@ const INDICE_BUSCA = [
   { titulo: "Exportações do agro", detalhe: DESCRICAO_ABA.exportacoes, grupo: "Exportações", termos: "exportacao embarque china destino comercio exterior porto paranagua vendas externas", acao: { aba: "exportacoes" } },
   { titulo: "Chuva e clima para a lavoura", detalhe: DESCRICAO_ABA.clima, grupo: "Clima", termos: "clima geada solo umidade previsao 15 dias seca estiagem", acao: { aba: "clima" } },
   { titulo: "Simulador de hedge", detalhe: "Trave um preço e veja o resultado se o mercado subir ou cair · Aprender", grupo: "Aprender", termos: "protecao travar preco futuro simular", acao: { aba: "aprender", ancora: "simulador-hedge" } },
-  { titulo: "Quiz do mercado agrícola", detalhe: "Teste o que você sabe · Aprender", grupo: "Aprender", termos: "perguntas jogo teste atividade", acao: { aba: "aprender", ancora: "quiz" } },
+  { titulo: "Simulação: uma safra na prática", detalhe: "Decida como um produtor, da semente à venda · Aprender", grupo: "Aprender", termos: "jogo atividade simulador decisao bolsa produtor quiz", acao: { aba: "aprender", ancora: "simulacao-safra" } },
   { titulo: "Comparar qual subiu mais", detalhe: "Chicago, commodities, futuros e ações no mesmo gráfico · Histórico", grupo: "Histórico",
     termos: "comparacao valorizou alta queda grafico historico", acao: { aba: "historico", ancora: "comparar-historico" } },
   { titulo: "Diesel e combustíveis no Paraná", detalhe: "Preço médio da semana nos postos (ANP) · Painel", grupo: "Painel", termos: "gasolina etanol alcool oleo diesel posto litro custo", acao: { aba: "painel", ancora: "card-combustiveis" } },

@@ -1,13 +1,19 @@
 import { useState } from "react";
 import { CartesianGrid, Line, LineChart, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { hedge } from "../calculos";
-import { PERGUNTAS } from "../quiz";
+import { ETAPAS, contas, resultado, sortear } from "../simulacao";
 
-// Aba "Aprender": o simulador de hedge (o aluno trava um preço e vê o que acontece se o
-// mercado subir ou cair) e o quiz dos termos do mercado.
+// Aba "Aprender": a simulação de uma safra (o aluno decide, situação por situação, como um
+// produtor) e o simulador de hedge (trava um preço e vê o que acontece se o mercado subir ou cair).
 const COR_SEM_HEDGE = "#2a78d6";
 const COR_COM_HEDGE = "#eb6834";
-const PERGUNTAS_POR_RODADA = 10;
+const NIVEIS = {
+  boa: { rotulo: "Boa prática", marca: "✓", fundo: "#f0fdf4", borda: "#86efac", cor: "#14532d" },
+  aceitavel: { rotulo: "Dá para melhorar", marca: "≈", fundo: "#fffbeb", borda: "#fde68a", cor: "#78350f" },
+  arriscada: { rotulo: "Decisão arriscada", marca: "!", fundo: "#fef2f2", borda: "#fecaca", cor: "#7f1d1d" },
+};
+const CLIMA = { normal: "choveu na hora certa", seca: "houve um veranico em dezembro" };
+const MERCADO = { queda: "o preço caiu até a colheita", alta: "o preço subiu até a colheita" };
 
 const numero = texto => {
   const limpo = String(texto ?? "").trim();
@@ -124,55 +130,159 @@ function SimuladorDeHedge() {
   );
 }
 
-function Quiz({ onPerguntar }) {
-  const [rodada, setRodada] = useState(null); // { ordem, atual, escolhida, acertos }
+function Marca({ nivel }) {
+  const n = NIVEIS[nivel];
+  return <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-bold whitespace-nowrap" style={{ background: n.fundo, border: `1px solid ${n.borda}`, color: n.cor }}><span aria-hidden="true">{n.marca}</span>{n.rotulo}</span>;
+}
+
+function SimulacaoDaSafra({ onPerguntar }) {
+  const [partida, setPartida] = useState(null); // { sorteio, escolhas, etapa, respondida }
   const comecar = () => {
-    const ordem = PERGUNTAS.map((_, i) => i).sort(() => Math.random() - 0.5).slice(0, PERGUNTAS_POR_RODADA);
-    setRodada({ ordem, atual: 0, escolhida: null, acertos: 0 });
+    setPartida({ sorteio: sortear(), escolhas: {}, etapa: 0, respondida: false });
+    requestAnimationFrame(() => document.getElementById("simulacao-safra")?.scrollIntoView({ behavior: "smooth", block: "start" }));
   };
-  const fim = rodada && rodada.atual >= rodada.ordem.length;
-  const p = rodada && !fim ? PERGUNTAS[rodada.ordem[rodada.atual]] : null;
-  const responder = i => setRodada(r => (r.escolhida != null ? r : { ...r, escolhida: i, acertos: r.acertos + (i === p.certa ? 1 : 0) }));
+  const avancar = () => {
+    setPartida(p => ({ ...p, etapa: p.etapa + 1, respondida: false }));
+    requestAnimationFrame(() => document.getElementById("simulacao-safra")?.scrollIntoView({ behavior: "smooth", block: "start" }));
+  };
+
+  const etapa = partida && ETAPAS[partida.etapa];
+  const c = partida && contas(partida.escolhas, partida.sorteio);
+  const feito = id => partida.escolhas[id] != null;
+  const final = partida && !etapa ? resultado(partida.escolhas, partida.sorteio) : null;
 
   return (
-    <section id="quiz" className="rounded-xl border bg-white p-3 shadow-sm" style={{ scrollMarginTop: 100 }}>
-      <h3 className="text-sm font-bold" style={{ color: "#14532d" }}>Quiz do mercado agrícola</h3>
-      {!rodada && <>
-        <p className="text-xs text-slate-600 mt-1">{PERGUNTAS_POR_RODADA} perguntas sobre unidades, bolsa, câmbio e os termos do Glossário. A cada resposta você vê a explicação.</p>
-        <button type="button" onClick={comecar} className="rounded-lg px-4 py-2 mt-3 text-sm font-bold text-white" style={{ background: "#166534" }}>Começar o quiz</button>
+    <section id="simulacao-safra" className="rounded-xl border bg-white p-3 shadow-sm" style={{ scrollMarginTop: 100 }}>
+      <h3 className="text-sm font-bold" style={{ color: "#14532d" }}>Simulação: uma safra na prática</h3>
+
+      {!partida && <>
+        <p className="text-xs text-slate-600 mt-1">
+          Você é produtor de soja em Santa Mariana, com 50 alqueires e R$ 300.000 em caixa. Do pedido da semente à venda da colheita, são {ETAPAS.length} situações
+          em que é você quem decide: comprar, financiar, negociar o preço, travar na bolsa, vender ou guardar. Cada decisão mexe no seu resultado.
+        </p>
+        <p className="text-xs text-slate-600 mt-1">O clima e o mercado são sorteados a cada partida: a mesma decisão pode dar resultados diferentes, como na vida real.</p>
+        <button type="button" onClick={comecar} className="rounded-lg px-4 py-2 mt-3 text-sm font-bold text-white" style={{ background: "#166534" }}>Começar a safra</button>
       </>}
-      {p && <>
-        <div className="flex items-center justify-between text-xs text-slate-500 mt-1"><span>Pergunta {rodada.atual + 1} de {rodada.ordem.length}</span><span>{rodada.acertos} certa{rodada.acertos === 1 ? "" : "s"} até agora</span></div>
-        <p className="text-sm font-semibold text-slate-900 mt-2">{p.pergunta}</p>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2">
-          {p.opcoes.map((opcao, i) => {
-            const respondida = rodada.escolhida != null;
-            const certa = respondida && i === p.certa;
-            const errada = respondida && i === rodada.escolhida && i !== p.certa;
-            return (
-              <button key={opcao} type="button" onClick={() => responder(i)} disabled={respondida} className="rounded-lg border p-2.5 text-left text-sm"
-                style={certa ? { background: "#dcfce7", borderColor: "#16a34a", color: "#14532d", fontWeight: 700 } : errada ? { background: "#fee2e2", borderColor: "#dc2626", color: "#7f1d1d" } : { background: "#f8fafc", borderColor: "#e2e8f0", color: "#0f172a" }}>
-                {certa ? "✓ " : errada ? "✗ " : ""}{opcao}
-              </button>
-            );
-          })}
-        </div>
-        {rodada.escolhida != null && <>
-          <p className="rounded-lg p-2.5 mt-2 text-xs" style={{ background: "#fffbeb", border: "1px solid #fde68a", color: "#78350f" }}>
-            <strong>{rodada.escolhida === p.certa ? "Certo!" : "Não foi dessa vez."}</strong> {p.explicacao}
-          </p>
-          <div className="flex flex-wrap gap-2 mt-2">
-            <button type="button" onClick={() => setRodada(r => ({ ...r, atual: r.atual + 1, escolhida: null }))} className="rounded-lg px-4 py-2 text-sm font-bold text-white" style={{ background: "#166534" }}>
-              {rodada.atual + 1 < rodada.ordem.length ? "Próxima pergunta" : "Ver o resultado"}
-            </button>
-            {onPerguntar && <button type="button" onClick={() => onPerguntar(`Explique melhor: ${p.pergunta}`)} className="rounded-lg border px-3 py-2 text-xs font-bold" style={{ borderColor: "#fde68a", background: "#fffbeb", color: "#78350f" }}>Pedir ao Castor para explicar melhor</button>}
+
+      {etapa && (() => {
+        const situacao = etapa.situacao(c, partida.sorteio);
+        const retorno = partida.respondida ? etapa.retorno(c, partida.sorteio) : null;
+        const escolhida = partida.escolhas[etapa.id];
+        return <>
+          <div className="flex items-center gap-2 mt-2" aria-label={`Situação ${partida.etapa + 1} de ${ETAPAS.length}`}>
+            {ETAPAS.map((e, i) => <span key={e.id} className="h-1.5 flex-1 rounded-full" style={{ background: i < partida.etapa || (i === partida.etapa && partida.respondida) ? "#166534" : i === partida.etapa ? "#86efac" : "#e2e8f0" }} />)}
           </div>
-        </>}
-      </>}
-      {fim && <>
-        <p className="text-2xl font-black mt-2" style={{ color: "#166534" }}>{rodada.acertos} de {rodada.ordem.length}</p>
-        <p className="text-sm text-slate-600">{rodada.acertos === rodada.ordem.length ? "Gabaritou! Você domina os termos do mercado." : rodada.acertos >= rodada.ordem.length * 0.7 ? "Muito bem! Faltou pouco para gabaritar." : "Vale revisar o Glossário e tentar de novo: as perguntas mudam a cada rodada."}</p>
-        <button type="button" onClick={comecar} className="rounded-lg px-4 py-2 mt-3 text-sm font-bold text-white" style={{ background: "#166534" }}>Jogar de novo</button>
+          <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 mt-2 text-xs text-slate-500">
+            <span>Situação {partida.etapa + 1} de {ETAPAS.length} · {etapa.quando}</span>
+            <span className="flex flex-wrap gap-x-3">
+              {feito("custeio") && <span>Lavoura: <strong className="text-slate-700">{Math.round(c.area)} ha</strong></span>}
+              {feito("custeio") && <span>Dívida: <strong className="text-slate-700">{c.divida > 0 ? reais(c.divida) : "nenhuma"}</strong></span>}
+              {feito("trava") && <span>Travado: <strong className="text-slate-700">{Math.round(c.travadas).toLocaleString("pt-BR")} sacas a {reais(c.precoTravado)}</strong></span>}
+            </span>
+          </div>
+          <h4 className="text-base font-bold text-slate-900 mt-2">{etapa.titulo}</h4>
+          <p className="text-sm text-slate-700 mt-1 leading-relaxed">{situacao.texto}</p>
+          <dl className="grid grid-cols-2 gap-2 mt-3">
+            {situacao.dados.map(([rotulo, valor]) => (
+              <div key={rotulo} className="rounded-lg p-2" style={{ background: "#f8fafc" }}><dt className="text-xs text-slate-500">{rotulo}</dt><dd className="text-sm font-bold text-slate-900">{valor}</dd></div>
+            ))}
+          </dl>
+          <p className="text-xs font-bold uppercase tracking-wider text-slate-500 mt-4">O que você faz?</p>
+          <div className="grid grid-cols-1 gap-2 mt-1.5">
+            {etapa.opcoes(c, partida.sorteio).map(([id, texto]) => {
+              const esta = partida.respondida && id === escolhida;
+              return (
+                <button key={id} type="button" disabled={partida.respondida} aria-pressed={esta}
+                  onClick={() => setPartida(p => ({ ...p, escolhas: { ...p.escolhas, [etapa.id]: id }, respondida: true }))}
+                  className="rounded-lg border p-2.5 text-left text-sm"
+                  style={esta ? { background: "#14532d", borderColor: "#14532d", color: "#fff", fontWeight: 700 } : { background: "#f8fafc", borderColor: "#e2e8f0", color: partida.respondida ? "#94a3b8" : "#0f172a" }}>
+                  {texto}
+                </button>
+              );
+            })}
+          </div>
+          {retorno && <>
+            <div className="rounded-lg p-3 mt-3 text-sm" style={{ background: NIVEIS[retorno.nivel].fundo, border: `1px solid ${NIVEIS[retorno.nivel].borda}`, color: NIVEIS[retorno.nivel].cor }} role="status">
+              <div className="flex flex-wrap items-center gap-2"><Marca nivel={retorno.nivel} /><strong>{retorno.titulo}</strong></div>
+              <p className="mt-1.5 leading-relaxed">{retorno.texto}</p>
+              <p className="mt-1.5 text-xs"><strong>O que fica de lição:</strong> {etapa.licao}</p>
+            </div>
+            <div className="flex flex-wrap gap-2 mt-2">
+              <button type="button" onClick={avancar} className="rounded-lg px-4 py-2 text-sm font-bold text-white" style={{ background: "#166534" }}>
+                {partida.etapa + 1 < ETAPAS.length ? "Próxima situação" : "Ver o resultado da safra"}
+              </button>
+              {onPerguntar && <button type="button" onClick={() => onPerguntar(`Explique melhor para um aluno: ${etapa.licao}`)} className="rounded-lg border px-3 py-2 text-xs font-bold" style={{ borderColor: "#fde68a", background: "#fffbeb", color: "#78350f" }}>Pedir ao Castor para explicar melhor</button>}
+            </div>
+          </>}
+        </>;
+      })()}
+
+      {final && <>
+        <p className="text-xs text-slate-500 mt-2">Resultado da safra</p>
+        <p className="text-3xl font-black" style={{ color: final.lucro >= 0 ? "#166534" : "#b91c1c" }}>{final.lucro >= 0 ? "Lucro" : "Prejuízo"} de {reais(Math.abs(final.lucro))}</p>
+        <p className="text-sm text-slate-600">{reais(Math.abs(final.lucroPorAlqueire))} de {final.lucro >= 0 ? "lucro" : "prejuízo"} por alqueire · {final.boas} de {ETAPAS.length} decisões seguiram a boa prática</p>
+        <p className="rounded-lg p-2.5 mt-2 text-xs" style={{ background: "#eff6ff", border: "1px solid #bfdbfe", color: "#1e3a8a" }}>
+          Nesta safra {CLIMA[partida.sorteio.clima]} e {MERCADO[partida.sorteio.mercado]}. Isso foi sorteado: decisão boa não garante resultado bom, mas protege quando a sorte não ajuda.
+        </p>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-3">
+          <div>
+            <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500">As contas da safra</h4>
+            <table className="w-full text-xs mt-1.5">
+              <tbody>
+                {final.linhas.map(([nome, valor], i) => (
+                  <tr key={nome} style={{ background: i % 2 ? "#fff" : "#f8fafc" }}><td className="py-1 px-2">{nome}</td><td className="py-1 px-2 text-right font-mono" style={{ color: valor < 0 ? "#b91c1c" : "#0f172a" }}>{valor < 0 ? "−" : "+"} {reais(Math.abs(valor))}</td></tr>
+                ))}
+                <tr style={{ borderTop: "2px solid #166534" }}><td className="py-1.5 px-2 font-bold">{final.lucro >= 0 ? "Lucro" : "Prejuízo"}</td><td className="py-1.5 px-2 text-right font-mono font-bold">{reais(Math.abs(final.lucro))}</td></tr>
+              </tbody>
+            </table>
+            <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500 mt-3">E se a trava fosse outra?</h4>
+            <table className="w-full text-xs mt-1.5">
+              <tbody>{final.comparacao.map((linha, i) => (
+                <tr key={linha.trava} style={{ background: linha.trava === final.e.trava ? "#fef9c3" : i % 2 ? "#fff" : "#f8fafc" }}>
+                  <td className="py-1 px-2">{linha.nome}{linha.trava === final.e.trava && <span className="text-amber-800"> · a sua escolha</span>}</td>
+                  <td className="py-1 px-2 text-right font-mono font-bold" style={{ color: linha.lucro < 0 ? "#b91c1c" : "#0f172a" }}>{linha.lucro < 0 ? "−" : ""}{reais(Math.abs(linha.lucro))}</td>
+                </tr>
+              ))}</tbody>
+            </table>
+            <p className="text-xs text-slate-500 mt-1">Com as mesmas outras decisões, no mesmo clima e no mesmo mercado.</p>
+            <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500 mt-3">Sorte ou boa decisão?</h4>
+            <table className="w-full text-xs mt-1.5">
+              <tbody>
+                {[[`As suas decisões, se o preço tivesse ${partida.sorteio.mercado === "alta" ? "caído" : "subido"}`, final.comOMercadoAoContrario],
+                  ["As sete boas práticas, neste mesmo clima e mercado", final.comBoasPraticas]].map(([nome, valor], i) => (
+                  <tr key={nome} style={{ background: i % 2 ? "#fff" : "#f8fafc" }}>
+                    <td className="py-1 px-2">{nome}</td>
+                    <td className="py-1 px-2 text-right font-mono font-bold whitespace-nowrap" style={{ color: valor < 0 ? "#b91c1c" : "#0f172a" }}>{valor < 0 ? "−" : ""}{reais(Math.abs(valor))}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            <p className="text-xs text-slate-500 mt-1">
+              {final.boas === ETAPAS.length ? "Você seguiu todas as boas práticas."
+                : final.lucro > final.comBoasPraticas ? "Você ficou acima das boas práticas porque arriscou e o mercado ajudou. Veja na primeira linha como a conta muda com o mercado ao contrário."
+                  : `Seguindo as boas práticas, o resultado seria ${reais(final.comBoasPraticas - final.lucro)} melhor.`}
+            </p>
+          </div>
+          <div>
+            <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500">As suas decisões</h4>
+            <ol className="mt-1.5 space-y-1.5">
+              {ETAPAS.map(e => {
+                const retorno = e.retorno(final, partida.sorteio);
+                const [, texto] = e.opcoes(final, partida.sorteio).find(([id]) => id === final.e[e.id]);
+                return (
+                  <li key={e.id} className="rounded-lg p-2 text-xs" style={{ background: "#f8fafc" }}>
+                    <div className="flex flex-wrap items-center justify-between gap-1"><strong className="text-slate-800">{e.titulo}</strong><Marca nivel={retorno.nivel} /></div>
+                    <div className="text-slate-600 mt-0.5">{texto}</div>
+                    {retorno.nivel !== "boa" && <div className="text-slate-500 mt-0.5">{e.licao}</div>}
+                  </li>
+                );
+              })}
+            </ol>
+          </div>
+        </div>
+        <button type="button" onClick={comecar} className="rounded-lg px-4 py-2 mt-3 text-sm font-bold text-white" style={{ background: "#166534" }}>Plantar outra safra</button>
+        <p className="text-xs text-slate-500 mt-2">Valores, juros e custos de exemplo, para estudo; seguro agrícola e impostos não entram na conta. O sorteio muda a cada partida: experimente decisões diferentes e compare.</p>
       </>}
     </section>
   );
@@ -183,10 +293,10 @@ export default function Aprender({ onPerguntar }) {
     <div className="space-y-4">
       <section className="rounded-xl border bg-white p-3 shadow-sm">
         <h2 className="text-sm font-bold text-green-800">Aprender na prática</h2>
-        <p className="text-xs text-slate-600 mt-1">Duas atividades para a sala de aula: simular a proteção de preço de uma safra e testar o que você sabe sobre o mercado.</p>
+        <p className="text-xs text-slate-600 mt-1">Duas atividades para a sala de aula: tocar uma safra inteira tomando as decisões do produtor e, abaixo, treinar só a proteção de preço.</p>
       </section>
+      <SimulacaoDaSafra onPerguntar={onPerguntar} />
       <SimuladorDeHedge />
-      <Quiz onPerguntar={onPerguntar} />
     </div>
   );
 }

@@ -42,12 +42,3 @@ test('hedge: com o preço travado a receita não muda, suba ou caia o mercado', 
   assert.equal(subiu.comHedge, 130000, 'quem travou não ganha a alta');
   assert.equal(subiu.ajusteDaBolsa, -30000);
 });
-test('quiz: toda pergunta tem 4 opções diferentes, uma resposta válida e explicação', async () => {
-  const { PERGUNTAS } = await import('../src/quiz.js');
-  assert.ok(PERGUNTAS.length >= 10);
-  for (const p of PERGUNTAS) {
-    assert.equal(new Set(p.opcoes).size, 4, p.pergunta);
-    assert.ok(Number.isInteger(p.certa) && p.certa >= 0 && p.certa < 4, p.pergunta);
-    assert.ok(p.explicacao.length > 20, p.pergunta);
-  }
-});

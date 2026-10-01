@@ -13,7 +13,7 @@ Painel educacional gratuito do **C.E.E.P.A. Fernando Costa** (Santa Mariana, PR)
 - **Exportações:** volume, valor e preço médio dos principais produtos do agro, mês a mês, no Brasil e no Paraná, com países de destino e estados de origem (Comex Stat).
 - **Clima:** chuva dos últimos 30 dias e prevista para 15, água no solo e avisos de geada, calor e chuva forte (Open-Meteo).
 - **Calculadoras:** saca a partir de Chicago, conversor de unidades, relação de troca, ponto de equilíbrio e financiamento.
-- **Aprender:** simulador de hedge e quiz do mercado.
+- **Aprender:** simulação de uma safra, em que o aluno decide como um produtor (comprar insumos, financiar, negociar o preço, travar na bolsa, vender ou guardar), e simulador de hedge.
 - **Notícias:** agronegócio, mercado e mercado internacional.
 - **Histórico:** comparação de qual item subiu mais (o visitante escolhe em cascata entre Chicago, commodities, futuros e ações da Bolsa, e inclui quantos campos quiser, até 6) e a tabela de preços de 2020 a 2026.
 - **Gráficos e Glossário** para estudar a evolução dos preços e os termos do mercado.

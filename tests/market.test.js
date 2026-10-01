@@ -107,8 +107,8 @@ test('futuros: na troca de vencimento vale a variação informada pela fonte', a
   }] } }) }));
   assert.equal((await call({ type: 'future', symbol: 'HE=F' })).data.change, -1.116);
 });
-test('chicago: quadro com todos os contratos, tolerando falha de um deles', async t => {
-  const { CHICAGO } = await import('../src/catalogo.js');
+test('bolsas: quadro com todos os contratos, tolerando falha de um deles', async t => {
+  const { FUTURES: CHICAGO } = await import('../src/catalogo.js');
   t.mock.timers.enable({ apis: ['Date'], now: new Date('2026-10-01T17:00:00Z') });
   const pedidos = [];
   t.mock.method(globalThis, 'fetch', async url => {
@@ -121,7 +121,7 @@ test('chicago: quadro com todos os contratos, tolerando falha de um deles', asyn
       indicators: { quote: [{ close: [1288.25, 1297.75, 1293, 1275.5] }] },
     }] } }) };
   });
-  const res = await call({ type: 'chicago' });
+  const res = await call({ type: 'bolsas' });
   assert.equal(res.code, 200);
   assert.deepEqual(pedidos.sort(), CHICAGO.map(item => item.symbol).sort(), 'a API consulta os mesmos contratos da aba');
   assert.equal(res.data.contratos.length, CHICAGO.length - 1);
@@ -132,8 +132,8 @@ test('chicago: quadro com todos os contratos, tolerando falha de um deles', asyn
   // ano cortado no nome: março já passou em outubro de 2026, então é março de 2027
   assert.deepEqual(res.data.contratos.find(c => c.symbol === 'ZW=F').vencimento, { mes: 3, ano: 2027 });
 });
-test('chicago: próximos vencimentos do produto, pulando contrato que já saiu da fonte', async t => {
-  assert.equal((await call({ type: 'chicago', symbol: 'KC=F' })).code, 400, 'café é de Nova Iorque');
+test('bolsas: próximos vencimentos do produto, pulando contrato que já saiu da fonte', async t => {
+  assert.equal((await call({ type: 'bolsas', symbol: 'AAPL' })).code, 400, 'só contratos agrícolas da lista');
   t.mock.timers.enable({ apis: ['Date'], now: new Date('2026-10-01T17:00:00Z') });
   const pedidos = [];
   t.mock.method(globalThis, 'fetch', async url => {
@@ -149,10 +149,27 @@ test('chicago: próximos vencimentos do produto, pulando contrato que já saiu d
   assert.deepEqual(pedidos, ['ZSX26.CBT', 'ZSF27.CBT', 'ZSH27.CBT', 'ZSK27.CBT', 'ZSN27.CBT']);
   assert.deepEqual(res.data.vencimentos.map(v => [v.contrato, v.mes, v.ano]), [['ZSF27', 1, 2027], ['ZSH27', 3, 2027], ['ZSK27', 5, 2027], ['ZSN27', 7, 2027]]);
 });
+test('bolsas: Nova Iorque usa o sufixo próprio, o açúcar pula o mês atual e contrato parado fica de fora', async t => {
+  t.mock.timers.enable({ apis: ['Date'], now: new Date('2026-10-01T17:00:00Z') });
+  const pedidos = [];
+  t.mock.method(globalThis, 'fetch', async url => {
+    const simbolo = decodeURIComponent(url.match(/chart\/([^?]+)/)[1]);
+    pedidos.push(simbolo);
+    // algodão de outubro: último negócio há 8 dias
+    return { ok: true, json: async () => ({ chart: { result: [{ meta: { regularMarketPrice: 77.79, regularMarketTime: simbolo === 'CTV26.NYB' ? 1790155980 : 1790878740, regularMarketChangePercent: -0.93 } }] } }) };
+  });
+  const acucar = await call({ type: 'bolsas', symbol: 'SB=F' });
+  assert.deepEqual(pedidos, ['SBH27.NYB', 'SBK27.NYB', 'SBN27.NYB', 'SBV27.NYB', 'SBH28.NYB'], 'o açúcar de outubro vence em setembro');
+  assert.equal(acucar.data.vencimentos.length, 4);
+  pedidos.length = 0;
+  const algodao = await call({ type: 'chicago', symbol: 'CT=F' }); // nome antigo da rota continua valendo
+  assert.equal(pedidos[0], 'CTV26.NYB');
+  assert.deepEqual(algodao.data.vencimentos.map(v => v.contrato), ['CTZ26', 'CTH27', 'CTK27', 'CTN27']);
+});
 test('chicago: sem nenhuma cotação, avisa em vez de inventar', async t => {
   t.mock.method(globalThis, 'fetch', async () => ({ ok: false, status: 500 }));
-  assert.equal((await call({ type: 'chicago' })).code, 502);
-  assert.equal((await call({ type: 'chicago', symbol: 'ZC=F' })).code, 502);
+  assert.equal((await call({ type: 'bolsas' })).code, 502);
+  assert.equal((await call({ type: 'bolsas', symbol: 'ZC=F' })).code, 502);
 });
 test('indicadores: último valor de cada série do Banco Central, tentando de novo a que vier vazia', async t => {
   const pedidos = {};

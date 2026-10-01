@@ -5,7 +5,7 @@ import { ACOES_LIVRES, CHICAGO, FUTURES } from "../catalogo";
 import { mediasAnuais, ranking, variacaoDesde } from "../comparar";
 
 // Comparação "qual subiu mais" da aba Histórico: o visitante escolhe em cascata onde procurar
-// (Chicago, commodities, futuros ou bolsa) e qual item, e pode incluir mais campos, um abaixo
+// (Chicago, Nova Iorque, commodities do Brasil ou ações) e qual item, e pode incluir mais campos, um abaixo
 // do outro. Como cada item tem a sua unidade e moeda, compara-se a variação em % da média de
 // cada ano contra a média do ano inicial.
 const CORES = ["#2a78d6", "#eb6834", "#1baf7a", "#eda100", "#e87ba4", "#008300"]; // ordem fixa, conferida para daltonismo
@@ -17,10 +17,10 @@ const ERRO_GENERICO = "Não foi possível buscar o histórico agora.";
 const pct = v => `${v > 0 ? "+" : v < 0 ? "−" : ""}${Math.abs(v).toLocaleString("pt-BR", { minimumFractionDigits: 1, maximumFractionDigits: 1 })}%`;
 // "2020" → 2020; "Mar/26" → 2026
 const anoDe = texto => Number(texto) || 2000 + Number(texto.slice(-2));
-const futuro = (f, comLocal) => ({
+const futuro = f => ({
   chave: `f:${f.symbol}`, simbolo: f.symbol,
   nome: f.name.includes("(") ? `${f.emoji} ${f.name}` : `${f.emoji} ${f.name} · ${LOCAL[f.exchange]}`,
-  opcao: comLocal ? `${f.emoji} ${f.name} · ${LOCAL[f.exchange]}` : `${f.emoji} ${f.name}`,
+  opcao: `${f.emoji} ${f.name}`,
 });
 
 function Dica({ active, payload, label, base }) {
@@ -48,12 +48,12 @@ export default function CompararHistorico({ historico, nomes }) {
   const pedidos = useRef(new Set());
 
   const tipos = [
-    { id: "chicago", nome: "Chicago", itens: CHICAGO.map(f => futuro(f, false)) },
+    { id: "chicago", nome: "Chicago", itens: CHICAGO.map(futuro) },
+    { id: "novaiorque", nome: "Nova Iorque", itens: FUTURES.filter(f => !CHICAGO.includes(f)).map(futuro) },
     { id: "commodities", nome: "Commodities (Brasil)", itens: Object.keys(nomes).map(k => ({
       chave: `c:${k}`, nome: `${nomes[k]} · Brasil`, opcao: nomes[k], valores: Object.fromEntries(historico.map(h => [anoDe(h.ano), h[k]])),
     })) },
-    { id: "futuros", nome: "Futuros", itens: FUTURES.map(f => futuro(f, true)) },
-    { id: "bolsa", nome: "Bolsa (ações da B3)", itens: ACOES_LIVRES.map(([codigo, empresa]) => ({ chave: `a:${codigo}`, simbolo: codigo, nome: `${codigo} · ${empresa}`, opcao: `${codigo} · ${empresa}` })) },
+    { id: "bolsa", nome: "Ações da B3", itens: ACOES_LIVRES.map(([codigo, empresa]) => ({ chave: `a:${codigo}`, simbolo: codigo, nome: `${codigo} · ${empresa}`, opcao: `${codigo} · ${empresa}` })) },
   ];
   const itemDe = campo => tipos.find(t => t.id === campo.tipo)?.itens.find(i => i.chave === campo.item);
 
@@ -241,7 +241,7 @@ export default function CompararHistorico({ historico, nomes }) {
       )}
 
       <p className="text-xs text-slate-500 mt-3">
-        Como a conta é feita: a média dos preços de cada ano é comparada com a média do ano inicial. Chicago e futuros
+        Como a conta é feita: a média dos preços de cada ano é comparada com a média do ano inicial. Chicago e Nova Iorque
         estão em dólar; commodities do Brasil e ações, em reais. Por isso a comparação é da variação em %, não do preço.
         O ponto de {ultimoAno} é a média do ano até agora (nas commodities do Brasil, o último valor da tabela abaixo).
         Fontes: Yahoo Finance (contratos), BRAPI (ações), CEPEA/ESALQ e Farmnews (commodities do Brasil).

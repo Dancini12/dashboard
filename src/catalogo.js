@@ -1,17 +1,16 @@
 // Listas de produtos usadas pelas abas e pela busca do topo do site.
 
-// Cotações do Painel (widgets do Notícias Agrícolas): [id do widget, nome, mercado].
+// Indicadores de preço do Painel (widgets do Notícias Agrícolas): [id do widget, nome, mercado]. Ficam aqui só os que
+// não existem em outra aba: os preços do Paraná estão em Cotações Cooperativas e as bolsas, em Bolsas.
 export const COMMODITIES = [
-  ['26', 'Soja · Paraná', 'Brasil'], ['121', 'Soja · Paranaguá', 'Brasil'],
+  ['121', 'Soja · Paranaguá', 'Brasil'],
   ['91', 'Milho · ESALQ/B3', 'Brasil'], ['12', 'Boi gordo · ESALQ/B3', 'Brasil'],
   ['29', 'Café arábica · CEPEA', 'Brasil'], ['31', 'Café robusta · CEPEA', 'Brasil'],
   ['211', 'Trigo · CEPEA', 'Brasil'], ['210', 'Suíno vivo · CEPEA', 'Brasil'],
   ['155', 'Leite · produtor', 'Brasil'], ['84', 'Algodão · CEPEA', 'Brasil'],
   ['288', 'Feijão carioca · CEPEA/CNA', 'Brasil'], ['201', 'Laranja · indústria', 'Brasil'],
-  ['23', 'Soja · Chicago', 'Internacional'], ['10', 'Milho · Chicago', 'Internacional'],
-  ['78', 'Trigo · Chicago', 'Internacional'], ['4', 'Café · Nova Iorque', 'Internacional'],
-  ['5', 'Café · Londres', 'Internacional'], ['55', 'Algodão · Nova Iorque', 'Internacional'],
-  ['53', 'Cacau · Nova Iorque', 'Internacional'], ['13', 'Suco de laranja · Nova Iorque', 'Internacional'],
+  // dos internacionais ficou só o café de Londres (robusta): os outros estão na aba Bolsas
+  ['5', 'Café · Londres', 'Internacional'],
 ];
 
 // kg = quanto pesa a unidade de cotação; serve para converter o preço em US$ por tonelada e por kg.
@@ -44,20 +43,22 @@ export const APELIDOS_FUTUROS = {
   suino: 'porco carne suína', leite: 'queijo laticínio',
 };
 
-// Aba "Chicago": os contratos da lista acima negociados na Bolsa de Chicago (CBOT e CME).
-// A lista CHICAGO do api/market.js deve acompanhar esta.
+// Os contratos da lista acima negociados na Bolsa de Chicago (CBOT e CME). A lista BOLSAS do
+// api/market.js deve acompanhar a lista FUTURES inteira.
 export const CHICAGO = FUTURES.filter(item => item.exchange === 'CBOT' || item.exchange === 'CME');
 
-// Unidade usada no Brasil para cada produto de Chicago e quanto ela pesa em kg; serve para
+// Unidade usada no Brasil para cada contrato das bolsas e quanto ela pesa em kg; serve para
 // converter o preço da bolsa em dólares e em reais. Boi e suíno ficam por kg porque a arroba
 // brasileira é de carcaça e o contrato do boi americano é de peso vivo.
 const SACA_60 = { nome: 'saca de 60 kg', curto: 'sc', kg: 60 };
 const TONELADA = { nome: 'tonelada', curto: 't', kg: 1000 };
 const KG = { nome: 'kg', curto: 'kg', kg: 1 };
+const ARROBA = { nome: 'arroba (15 kg)', curto: '@', kg: 15 };
 export const UNIDADE_BRASIL = {
   milho: SACA_60, soja: SACA_60, trigo: SACA_60, 'trigo-hrw': SACA_60, aveia: SACA_60,
   arroz: { nome: 'saca de 50 kg', curto: 'sc', kg: 50 }, farelo: TONELADA, oleo: TONELADA,
   boi: KG, 'boi-reposicao': KG, suino: KG, leite: { nome: 'litro', curto: 'litro', kg: 1.032 },
+  cafe: SACA_60, acucar: { nome: 'saca de 50 kg', curto: 'sc', kg: 50 }, algodao: ARROBA, cacau: ARROBA, suco: TONELADA,
 };
 
 // Ações com histórico liberado sem chave na fonte da Bolsa (mesma lista ATIVOS_LIVRES do api/market.js).

@@ -1,13 +1,15 @@
 import { useEffect, useRef, useState } from "react";
 import { Clock } from "lucide-react";
-import { CHICAGO, UNIDADE_BRASIL } from "../catalogo";
+import { APELIDOS_FUTUROS, FUTURES, UNIDADE_BRASIL } from "../catalogo";
 
-// Aba "Chicago": todos os contratos agrícolas da Bolsa de Chicago (CBOT e CME) de uma vez,
-// com o valor convertido para a unidade usada no Brasil e os próximos vencimentos do produto
-// escolhido. Cotações em /api/market?type=chicago (Yahoo Finance, com atraso).
+// Aba "Bolsas": todos os contratos agrícolas das bolsas de Chicago (CBOT e CME) e de Nova Iorque (ICE)
+// de uma vez, com o valor convertido para a unidade usada no Brasil e os próximos vencimentos do
+// produto escolhido. Cotações em /api/market?type=bolsas (Yahoo Finance, com atraso).
 const ATUALIZAR_MS = 2 * 60 * 1000; // mesmo tempo que o servidor guarda a resposta
-const GRUPOS = [...new Set(CHICAGO.map(item => item.group))];
-const BOLSA_DO_GRUPO = Object.fromEntries(CHICAGO.map(item => [item.group, item.exchange]));
+const GRUPOS = [...new Set(FUTURES.map(item => item.group))];
+const NOME_DA_BOLSA = { CBOT: "Chicago (CBOT)", CME: "Chicago (CME)", "ICE US": "Nova Iorque (ICE)" };
+const BOLSA_DO_GRUPO = Object.fromEntries(FUTURES.map(item => [item.group, NOME_DA_BOLSA[item.exchange]]));
+const semAcento = texto => texto.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
 const MESES = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"];
 
 const numero = (v, casas = 3) => v.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: casas });
@@ -21,11 +23,12 @@ const quando = segundos => {
   const hora = d.toLocaleTimeString("pt-BR", { timeZone: "America/Sao_Paulo", hour: "2-digit", minute: "2-digit" });
   return `${dia} às ${hora}`;
 };
-// preço da bolsa → dólares por unidade brasileira (saca, tonelada, kg ou litro)
-const naUnidadeBrasil = (item, valor) => (item.unit.startsWith("US¢") ? valor / 100 : valor) / item.kg * UNIDADE_BRASIL[item.key].kg;
+// preço da bolsa → dólares por kg e por unidade brasileira (saca, arroba, tonelada, kg ou litro)
+const porKg = (item, valor) => (item.unit.startsWith("US¢") ? valor / 100 : valor) / item.kg;
+const naUnidadeBrasil = (item, valor) => porKg(item, valor) * UNIDADE_BRASIL[item.key].kg;
 
 async function consultar(symbol) {
-  const response = await fetch(`/api/market?${new URLSearchParams(symbol ? { type: "chicago", symbol } : { type: "chicago" })}`, { signal: AbortSignal.timeout(30000) });
+  const response = await fetch(`/api/market?${new URLSearchParams(symbol ? { type: "bolsas", symbol } : { type: "bolsas" })}`, { signal: AbortSignal.timeout(30000) });
   if (!response.ok) throw new Error("indisponível");
   return response.json();
 }
@@ -35,10 +38,11 @@ function Variacao({ valor }) {
   return <span className="font-bold whitespace-nowrap" style={{ color: cor }}>{valor > 0 ? "▲ +" : valor < 0 ? "▼ " : ""}{numero(valor, 2)}%</span>;
 }
 
-export default function BolsaChicago({ dolar, inicial }) {
+export default function Bolsas({ dolar, inicial }) {
   const [quadro, setQuadro] = useState(null);
   const [erro, setErro] = useState(false);
-  const [escolhido, setEscolhido] = useState(() => (CHICAGO.some(item => item.key === inicial) ? inicial : null));
+  const [escolhido, setEscolhido] = useState(() => (FUTURES.some(item => item.key === inicial) ? inicial : null));
+  const [busca, setBusca] = useState("");
   const [detalhe, setDetalhe] = useState(null); // vencimentos do produto escolhido
 
   useEffect(() => {
@@ -56,10 +60,10 @@ export default function BolsaChicago({ dolar, inicial }) {
   useEffect(() => {
     if (!quadro || !levarAoDetalhe.current) return;
     levarAoDetalhe.current = false;
-    document.getElementById("chicago-detalhe")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    document.getElementById("bolsa-detalhe")?.scrollIntoView({ behavior: "smooth", block: "start" });
   }, [quadro]);
 
-  const produto = CHICAGO.find(item => item.key === escolhido);
+  const produto = FUTURES.find(item => item.key === escolhido);
   const atualizadoEm = quadro?.consultadoEm;
   useEffect(() => {
     if (!produto) return;
@@ -72,7 +76,7 @@ export default function BolsaChicago({ dolar, inicial }) {
 
   const escolher = (key) => {
     setEscolhido(key);
-    requestAnimationFrame(() => document.getElementById("chicago-detalhe")?.scrollIntoView({ behavior: "smooth", block: "start" }));
+    requestAnimationFrame(() => document.getElementById("bolsa-detalhe")?.scrollIntoView({ behavior: "smooth", block: "start" }));
   };
 
   const cotacaoDe = item => quadro?.contratos.find(c => c.symbol === item.symbol);
@@ -81,16 +85,23 @@ export default function BolsaChicago({ dolar, inicial }) {
   const unidade = produto && UNIDADE_BRASIL[produto.key];
   const vencimentos = detalhe?.key === escolhido ? detalhe.vencimentos : null;
   const semVencimentos = detalhe?.key === escolhido && detalhe.erro;
+  const termo = semAcento(busca);
+  const visiveis = FUTURES.filter(item => semAcento(`${item.name} ${item.key} ${APELIDOS_FUTUROS[item.key] ?? ""}`).includes(termo));
 
   return (
     <div className="space-y-4">
       <section className="rounded-xl border bg-white p-3 shadow-sm">
-        <h2 className="text-sm font-bold text-green-800">Bolsa de Chicago · CBOT e CME</h2>
+        <h2 className="text-sm font-bold text-green-800">Bolsas internacionais · Chicago e Nova Iorque</h2>
         <p className="text-xs text-slate-600 mt-1">
-          Os preços de Chicago são a referência mundial para soja, milho e trigo e influenciam o que o produtor recebe
-          aqui. A tabela mostra o contrato mais próximo de cada produto, na unidade da bolsa e convertido para a
-          unidade usada no Brasil. Clique em um produto para ver os próximos vencimentos.
+          Chicago é a referência mundial para soja, milho, trigo e carnes; Nova Iorque, para café, açúcar, algodão, cacau e suco de laranja.
+          Esses preços influenciam o que o produtor recebe aqui. A tabela mostra o contrato mais próximo de cada produto, na unidade da
+          bolsa e convertido para a unidade usada no Brasil. Clique em um produto para ver os próximos vencimentos.
         </p>
+        <label className="block text-xs text-slate-600 mt-3">Procurar pelo nome
+          <input value={busca} onChange={e => setBusca(e.target.value)} placeholder="Ex.: soja, porco, laranja, gado…"
+            onKeyDown={e => { if (e.key === "Enter" && visiveis.length) { e.preventDefault(); escolher(visiveis[0].key); } }}
+            className="block w-full rounded-lg border bg-white p-2 mt-1 text-sm text-slate-900" />
+        </label>
         {quadro && (
           <div className="mt-3 flex gap-2 rounded-lg p-2.5 text-xs" style={{ background: "#eff6ff", border: "1px solid #bfdbfe", color: "#1e3a8a" }}>
             <Clock size={15} className="shrink-0 mt-0.5" aria-hidden="true" />
@@ -109,23 +120,24 @@ export default function BolsaChicago({ dolar, inicial }) {
         <details className="mt-2 text-xs text-slate-600">
           <summary className="cursor-pointer font-semibold text-green-800">Como ler estas cotações</summary>
           <ul className="mt-2 space-y-1 pl-5" style={{ listStyle: "disc" }}>
-            <li><strong>As bolsas:</strong> a CBOT (Chicago Board of Trade) negocia grãos e derivados; a CME (Chicago Mercantile Exchange), boi, suíno e leite. As duas ficam em Chicago e pertencem ao mesmo grupo.</li>
+            <li><strong>As bolsas:</strong> em Chicago, a CBOT (Chicago Board of Trade) negocia grãos e derivados e a CME (Chicago Mercantile Exchange), boi, suíno e leite. Em Nova Iorque, a ICE negocia café, açúcar, algodão, cacau e suco de laranja.</li>
             <li><strong>Vencimento:</strong> o mês em que o contrato termina. Cada mês tem o seu preço; "soja nov/26" é a soja para entrega em novembro de 2026.</li>
-            <li><strong>Unidade da bolsa:</strong> grãos em centavos de dólar por bushel (27,2 kg de soja ou trigo; 25,4 kg de milho), farelo em dólares por tonelada curta (907 kg), óleo e carnes em centavos de dólar por libra-peso (0,454 kg).</li>
+            <li><strong>Unidade da bolsa:</strong> grãos em centavos de dólar por bushel (27,2 kg de soja ou trigo; 25,4 kg de milho), farelo em dólares por tonelada curta (907 kg), cacau em dólares por tonelada, e óleo, carnes, café, açúcar, algodão e suco em centavos de dólar por libra-peso (0,454 kg).</li>
             <li><strong>Variação:</strong> diferença do último preço para o fechamento do pregão anterior.</li>
-            <li><strong>Valor em reais:</strong> o preço de Chicago convertido para saca, tonelada, kg ou litro e multiplicado pelo dólar comercial do Painel. É só a conversão: o preço no Brasil ainda depende do prêmio no porto, do frete e da região.</li>
+            <li><strong>Valor em reais:</strong> o preço da bolsa convertido para saca, arroba, tonelada, kg ou litro e multiplicado pelo dólar comercial do Painel. É só a conversão: o preço no Brasil ainda depende do prêmio no porto, do frete e da região.</li>
           </ul>
         </details>
       </section>
 
-      {!quadro && !erro && <p className="text-sm text-slate-500">Carregando as cotações de Chicago…</p>}
+      {!quadro && !erro && <p className="text-sm text-slate-500">Carregando as cotações das bolsas…</p>}
       {erro && (
         <p role="alert" className="rounded-xl border p-3 text-sm text-amber-800 bg-amber-50">
-          {quadro ? "Não foi possível atualizar agora; a tabela mostra a última cotação recebida." : "As cotações de Chicago não estão disponíveis agora. Tente novamente em alguns minutos."}
+          {quadro ? "Não foi possível atualizar agora; a tabela mostra a última cotação recebida." : "As cotações das bolsas não estão disponíveis agora. Tente novamente em alguns minutos."}
         </p>
       )}
 
-      {quadro && GRUPOS.map(grupo => (
+      {quadro && !visiveis.length && <p className="text-sm text-slate-600">Nenhum produto com esse nome. <button type="button" onClick={() => setBusca("")} className="font-bold text-green-800 underline">Ver a lista completa</button></p>}
+      {quadro && GRUPOS.filter(grupo => visiveis.some(item => item.group === grupo)).map(grupo => (
         <section key={grupo} className="rounded-xl border bg-white p-3 shadow-sm">
           <h3 className="text-sm font-bold" style={{ color: "#14532d" }}>{grupo} <span className="text-xs font-normal text-slate-500">· {BOLSA_DO_GRUPO[grupo]}</span></h3>
           <div className="mt-2 overflow-x-auto">
@@ -140,7 +152,7 @@ export default function BolsaChicago({ dolar, inicial }) {
                 </tr>
               </thead>
               <tbody>
-                {CHICAGO.filter(item => item.group === grupo).map((item, i) => {
+                {visiveis.filter(item => item.group === grupo).map((item, i) => {
                   const c = cotacaoDe(item);
                   const ativo = item.key === escolhido;
                   const u = UNIDADE_BRASIL[item.key];
@@ -169,13 +181,14 @@ export default function BolsaChicago({ dolar, inicial }) {
         </section>
       ))}
 
-      <div id="chicago-detalhe" style={{ scrollMarginTop: 100 }}>
+      <div id="bolsa-detalhe" style={{ scrollMarginTop: 100 }}>
         {quadro && !produto && <p className="rounded-xl border border-dashed p-4 text-sm text-slate-600 text-center">Clique em um produto da tabela para ver os próximos vencimentos.</p>}
         {produto && (
           <section className="rounded-xl border bg-white p-3 shadow-sm">
             <h3 className="text-sm font-bold" style={{ color: "#14532d" }}>
-              {produto.emoji} {produto.name} <span className="text-xs font-normal text-slate-500">· {produto.exchange} · cotado em {produto.cotacao}</span>
+              {produto.emoji} {produto.name} <span className="text-xs font-normal text-slate-500">· {NOME_DA_BOLSA[produto.exchange]} · cotado em {produto.cotacao}</span>
             </h3>
+            {cotacao && <p className="text-xs text-slate-600 mt-1">Equivale a {produto.kg !== 1000 && <><strong>{dolares(porKg(produto, cotacao.value) * 1000)}</strong> por tonelada e </>}<strong>{dolares(porKg(produto, cotacao.value))}</strong> por kg.</p>}
             {cotacao && (
               <div className="mt-2 grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
                 <div className="rounded-lg p-2" style={{ background: "#f0fdf4" }}>
@@ -238,8 +251,13 @@ export default function BolsaChicago({ dolar, inicial }) {
         )}
       </div>
 
+      <div className="rounded-xl border bg-amber-50 border-amber-200 p-3">
+        <h3 className="font-bold text-amber-900 text-sm">Do preço da bolsa ao preço do produtor</h3>
+        <p className="text-xs text-amber-800 mt-1"><strong>Bolsa ± base da região − frete − armazenagem e descontos.</strong> A bolsa não diz quanto a cooperativa vai pagar: compare com a aba Cotações Cooperativas e faça a conta na aba Calculadoras.</p>
+      </div>
+
       <p className="text-xs text-slate-500">
-        Fonte: {quadro?.source ?? "Yahoo Finance · cotação indicativa"}, contratos da CBOT e da CME (CME Group); dólar comercial da AwesomeAPI.
+        Fonte: {quadro?.source ?? "Yahoo Finance · cotação indicativa"}, contratos da CBOT e da CME (Chicago) e da ICE (Nova Iorque); dólar comercial da AwesomeAPI.
         Valores de referência para estudo, com atraso; não servem para fechar negócio.
       </p>
     </div>

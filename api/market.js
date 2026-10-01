@@ -8,22 +8,25 @@ import { exportacoesPorProduto, destinosDasExportacoes, LimiteDePedidos } from '
 const ATIVOS_LIVRES = ['PETR4', 'VALE3', 'ITUB4', 'MGLU3'];
 const MSG_ATIVO_RESTRITO = 'Este ativo não está liberado no plano gratuito da nossa fonte de cotações da Bolsa (BRAPI). '
   + 'Sem chave, dá para consultar PETR4, VALE3, ITUB4 e MGLU3.';
-const FUTUROS_AGRO = new Set(['ZC=F', 'ZS=F', 'ZM=F', 'ZL=F', 'ZW=F', 'KE=F', 'ZO=F', 'ZR=F',
-  'KC=F', 'SB=F', 'CT=F', 'CC=F', 'OJ=F', 'LE=F', 'GF=F', 'HE=F', 'DC=F']);
-
 const FONTE_FUTUROS = 'Yahoo Finance · cotação indicativa';
 
-// Bolsa de Chicago (CBOT e CME): contrato contínuo → raiz do código, sufixo da bolsa no Yahoo
-// e letras dos meses em que há vencimento. Deve acompanhar a lista CHICAGO do src/catalogo.js.
+// Contratos agrícolas das bolsas de Chicago (CBOT e CME) e de Nova Iorque (ICE): contrato contínuo →
+// raiz do código, sufixo da bolsa no Yahoo, letras dos meses em que há vencimento e, quando o
+// contrato termina antes de o mês começar (açúcar), quantos meses pular. Deve acompanhar a lista
+// FUTURES do src/catalogo.js.
 const LETRAS_DOS_MESES = 'FGHJKMNQUVXZ'; // janeiro a dezembro
-const CHICAGO = {
+const BOLSAS = {
   'ZS=F': ['ZS', 'CBT', 'FHKNQUX'], 'ZC=F': ['ZC', 'CBT', 'HKNUZ'], 'ZW=F': ['ZW', 'CBT', 'HKNUZ'],
   'KE=F': ['KE', 'CBT', 'HKNUZ'], 'ZM=F': ['ZM', 'CBT', 'FHKNQUVZ'], 'ZL=F': ['ZL', 'CBT', 'FHKNQUVZ'],
   'ZO=F': ['ZO', 'CBT', 'HKNUZ'], 'ZR=F': ['ZR', 'CBT', 'FHKNUX'],
+  'KC=F': ['KC', 'NYB', 'HKNUZ'], 'SB=F': ['SB', 'NYB', 'HKNV', 1], 'CT=F': ['CT', 'NYB', 'HKNVZ'],
+  'CC=F': ['CC', 'NYB', 'HKNUZ'], 'OJ=F': ['OJ', 'NYB', 'FHKNUX'],
   'LE=F': ['LE', 'CME', 'GJMQVZ'], 'GF=F': ['GF', 'CME', 'FHJKQUVX'], 'HE=F': ['HE', 'CME', 'GJKMNQVZ'],
   'DC=F': ['DC', 'CME', LETRAS_DOS_MESES],
 };
+const FUTUROS_AGRO = new Set(Object.keys(BOLSAS));
 const VENCIMENTOS_EXIBIDOS = 4;
+const DIAS_SEM_NEGOCIO = 3; // vencimento parado há mais tempo que isso (em relação ao mais recente) fica de fora
 const MESES_EM_INGLES = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
 
 // Último preço de um contrato no Yahoo, com a variação contra o pregão anterior.
@@ -92,9 +95,9 @@ function vencimentoDoNome(nome, hoje) {
 }
 
 // Próximos meses de vencimento de um produto, a partir do mês atual.
-function proximosVencimentos([raiz, bolsa, letras], hoje, quantos) {
+function proximosVencimentos([raiz, bolsa, letras, pular = 0], hoje, quantos) {
   const lista = [];
-  for (let i = 0; lista.length < quantos && i < 36; i++) {
+  for (let i = pular; lista.length < quantos && i < 36; i++) {
     const data = new Date(Date.UTC(hoje.getUTCFullYear(), hoje.getUTCMonth() + i, 1));
     const letra = LETRAS_DOS_MESES[data.getUTCMonth()];
     if (!letras.includes(letra)) continue;
@@ -104,22 +107,24 @@ function proximosVencimentos([raiz, bolsa, letras], hoje, quantos) {
   return lista;
 }
 
-async function bolsaDeChicago(symbol) {
+async function cotacoesDasBolsas(symbol) {
   const hoje = new Date();
   if (symbol) {
     // um candidato a mais: o contrato do mês atual pode já ter vencido e sumido da fonte
-    const candidatos = proximosVencimentos(CHICAGO[symbol], hoje, VENCIMENTOS_EXIBIDOS + 1);
+    const candidatos = proximosVencimentos(BOLSAS[symbol], hoje, VENCIMENTOS_EXIBIDOS + 1);
     const respostas = await Promise.allSettled(candidatos.map(c => cotacaoFutura(c.simbolo)));
-    const vencimentos = candidatos
+    const comCotacao = candidatos
       .map(({ contrato, mes, ano }, i) => (respostas[i].status === 'fulfilled'
         ? { contrato, mes, ano, value: respostas[i].value.value, change: respostas[i].value.change, date: respostas[i].value.date }
         : null))
-      .filter(Boolean)
-      .slice(0, VENCIMENTOS_EXIBIDOS);
+      .filter(Boolean);
+    // contrato em fim de vida, sem negócio há dias, traz preço velho: fica de fora
+    const maisRecente = Math.max(...comCotacao.map(v => v.date));
+    const vencimentos = comCotacao.filter(v => maisRecente - v.date <= DIAS_SEM_NEGOCIO * 86400).slice(0, VENCIMENTOS_EXIBIDOS);
     if (!vencimentos.length) throw new Error('sem vencimentos');
     return { symbol, vencimentos, source: FONTE_FUTUROS };
   }
-  const respostas = await Promise.allSettled(Object.keys(CHICAGO).map(cotacaoFutura));
+  const respostas = await Promise.allSettled(Object.keys(BOLSAS).map(cotacaoFutura));
   const contratos = respostas.filter(r => r.status === 'fulfilled')
     .map(({ value: { symbol, value, change, date, high, low, nome } }) => ({ symbol, value, change, date, high, low, vencimento: vencimentoDoNome(nome, hoje) }));
   if (!contratos.length) throw new Error('sem cotações');
@@ -140,14 +145,14 @@ export default async function handler(req, res) {
     }
   }
 
-  if (type === 'chicago') {
-    if (symbol && !Object.hasOwn(CHICAGO, symbol)) return res.status(400).json({ error: 'Produto não negociado na Bolsa de Chicago.' });
+  if (type === 'bolsas' || type === 'chicago') { // "chicago": nome antigo, de páginas ainda abertas
+    if (symbol && !FUTUROS_AGRO.has(symbol)) return res.status(400).json({ error: 'Contrato futuro não reconhecido.' });
     try {
-      const cotacoes = await bolsaDeChicago(symbol);
+      const cotacoes = await cotacoesDasBolsas(symbol);
       res.setHeader('Cache-Control', 's-maxage=120, stale-while-revalidate=300');
       return res.status(200).json(cotacoes);
     } catch {
-      return res.status(502).json({ error: 'Cotações de Chicago temporariamente indisponíveis. Tente novamente em alguns minutos.' });
+      return res.status(502).json({ error: 'Cotações das bolsas temporariamente indisponíveis. Tente novamente em alguns minutos.' });
     }
   }
 

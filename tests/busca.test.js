@@ -1,16 +1,15 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { buscar } from '../src/busca.js';
-import { COMMODITIES, FUTURES, CHICAGO, APELIDOS_FUTUROS, PRODUTOS_PARANA } from '../src/catalogo.js';
+import { COMMODITIES, FUTURES, APELIDOS_FUTUROS, PRODUTOS_PARANA } from '../src/catalogo.js';
 import handler from '../api/news.js';
 
 // Mesmo formato do índice montado no App.jsx.
 const itens = [
-  { titulo: 'Chicago · cotações da bolsa (CBOT e CME)', grupo: 'Chicago', termos: 'indices internacional vencimento' },
+  { titulo: 'Chicago e Nova Iorque · cotações das bolsas', grupo: 'Bolsas', termos: 'indices internacional vencimento cbot cme ice mercado futuro futuros contratos' },
   ...PRODUTOS_PARANA.map(nome => ({ titulo: `${nome} · preço por região do PR`, grupo: 'Cooperativas', termos: `cooperativa produtor ${nome === 'Suíno' ? 'porco' : ''}` })),
   ...COMMODITIES.map(([, nome]) => ({ titulo: nome, grupo: 'Painel' })),
-  ...FUTURES.map(f => ({ titulo: `${f.name} · mercado futuro`, grupo: 'Futuros', termos: `${f.key} ${APELIDOS_FUTUROS[f.key] ?? ''}` })),
-  ...CHICAGO.map(f => ({ titulo: `${f.name} · Bolsa de Chicago`, grupo: 'Chicago', termos: `${f.key} ${APELIDOS_FUTUROS[f.key] ?? ''} ${f.exchange} vencimento` })),
+  ...FUTURES.map(f => ({ titulo: `${f.name} · ${f.exchange === 'ICE US' ? 'Bolsa de Nova Iorque' : 'Bolsa de Chicago'}`, grupo: 'Bolsas', termos: `${f.key} ${APELIDOS_FUTUROS[f.key] ?? ''} ${f.exchange} contrato internacional mercado futuro vencimento` })),
   { titulo: 'Hedge', grupo: 'Glossário', termos: 'Proteção contra variação de preço' },
   { titulo: 'Selic', grupo: 'Glossário', termos: 'Taxa básica de juros' },
   { titulo: 'Dólar Comercial', grupo: 'Painel', termos: 'moeda' },
@@ -32,8 +31,10 @@ test('busca: aceita acento, maiúscula, sinônimos e plural', () => {
   assert.ok(titulos('bois').some(t => /Boi/.test(t)));
 });
 test('busca: "chicago" leva primeiro à aba da bolsa e o produto acha a cotação de Chicago', () => {
-  assert.match(titulos('chicago')[0], /^Chicago · cotações da bolsa/);
-  assert.match(titulos('índices da bolsa de chicago')[0], /^Chicago · cotações da bolsa/);
+  assert.match(titulos('chicago')[0], /^Chicago e Nova Iorque · cotações das bolsas/);
+  assert.match(titulos('índices da bolsa de chicago')[0], /^Chicago e Nova Iorque · cotações das bolsas/);
+  assert.match(titulos('mercado futuro')[0], /^Chicago e Nova Iorque/, 'quem procura "futuros" chega à aba Bolsas');
+  assert.ok(titulos('café').includes('Café arábica · Bolsa de Nova Iorque'));
   assert.ok(titulos('soja').includes('Soja · Bolsa de Chicago'));
   assert.ok(titulos('gado chicago').includes('Boi gordo · Bolsa de Chicago'));
 });

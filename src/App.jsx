@@ -2,7 +2,7 @@ import VisitorCounter from "./components/VisitorCounter";
 import Mascote, { BotaoMascote } from "./components/Mascote";
 import useMascote from "./components/useMascote";
 import CotacoesCooperativas from "./components/CotacoesCooperativas";
-import BolsaChicago from "./components/BolsaChicago";
+import Bolsas from "./components/Bolsas";
 import CompararHistorico from "./components/CompararHistorico";
 import ClimaAgricola from "./components/ClimaAgricola";
 import Calculadoras from "./components/Calculadoras";
@@ -11,13 +11,12 @@ import SafraTab from "./components/SafraTab";
 import Exportacoes from "./components/Exportacoes";
 import Combustiveis from "./components/Combustiveis";
 import Inicio from "./components/Inicio";
-import { getWmo, WEEK } from "./clima";
-import { StockQuotes, CommodityQuotes, FuturesQuotes, TICKER_RE } from "./components/MarketQuotes";
-import { COMMODITIES, FUTURES, CHICAGO, CALCULADORAS, APELIDOS_FUTUROS, PRODUTOS_PARANA } from "./catalogo";
+import { StockQuotes, CommodityQuotes, TICKER_RE } from "./components/MarketQuotes";
+import { COMMODITIES, FUTURES, CALCULADORAS, APELIDOS_FUTUROS, PRODUTOS_PARANA } from "./catalogo";
 import BuscaAgro from "./components/BuscaAgro";
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
-import { RefreshCw, BookOpen, BarChart3, Clock, Wheat, DollarSign, Activity, ChevronDown, ChevronUp, Timer, ArrowRight, Pause, Play, Newspaper, ExternalLink, Search, MapPin, Warehouse, TrendingUp, Landmark, CloudRain, Calculator, GraduationCap, Sprout, Ship, House } from "lucide-react";
+import { RefreshCw, BookOpen, BarChart3, Clock, Wheat, DollarSign, Activity, ChevronDown, ChevronUp, Timer, ArrowRight, Pause, Play, Newspaper, ExternalLink, Warehouse, Landmark, CloudRain, Calculator, GraduationCap, Sprout, Ship, House } from "lucide-react";
 
 const UPDATE_SEC = 60;
 const DOCENTE = "Marcel Dancini Rodrigues";
@@ -26,16 +25,17 @@ const ALUNOS_PARTICIPANTES = ["Pietra Sanguini"]; // para incluir mais alunos, a
 const ASSISTENTE_URL = import.meta.env.VITE_ASSISTENTE_URL
   || "https://script.google.com/macros/s/AKfycbyDYcrR3XX5bqo0rKCp1c1ZgDHf4GCHsJv7jesNPo5PEtJT6qYMLCyUV6OGmB1ur-jrBA/exec";
 const API_MOEDAS_URL = "https://economia.awesomeapi.com.br/json/last/USD-BRL,EUR-BRL,GBP-BRL,ARS-BRL";
-const TABS = ["inicio", "painel", "futuros", "chicago", "cooperativas", "safra", "exportacoes", "clima", "calculadoras", "aprender", "noticias", "historico", "graficos", "glossario"];
-const TAB_LABELS = { inicio: "Início", painel: "Painel", futuros: "Futuros", chicago: "Chicago", cooperativas: "Cotações Cooperativas", safra: "Safra", exportacoes: "Exportações", clima: "Clima", calculadoras: "Calculadoras", aprender: "Aprender", noticias: "Notícias", historico: "Histórico", graficos: "Gráficos", glossario: "Glossário" };
-const TAB_ICONS = { inicio: House, painel: Activity, futuros: TrendingUp, chicago: Landmark, cooperativas: Warehouse, safra: Sprout, exportacoes: Ship, clima: CloudRain, calculadoras: Calculator, aprender: GraduationCap, noticias: Newspaper, historico: Clock, graficos: BarChart3, glossario: BookOpen };
+const TABS = ["inicio", "painel", "bolsas", "cooperativas", "safra", "exportacoes", "clima", "calculadoras", "aprender", "noticias", "evolucao", "glossario"];
+const TAB_LABELS = { inicio: "Início", painel: "Painel", bolsas: "Bolsas", cooperativas: "Cotações Cooperativas", safra: "Safra", exportacoes: "Exportações", clima: "Clima", calculadoras: "Calculadoras", aprender: "Aprender", noticias: "Notícias", evolucao: "Evolução", glossario: "Glossário" };
+const TAB_ICONS = { inicio: House, painel: Activity, bolsas: Landmark, cooperativas: Warehouse, safra: Sprout, exportacoes: Ship, clima: CloudRain, calculadoras: Calculator, aprender: GraduationCap, noticias: Newspaper, evolucao: BarChart3, glossario: BookOpen };
 
 const INIT_MOEDAS = [
-  { id: "usd", nome: "Dólar Comercial", emoji: "💵", valor: 4.912, var: -1.12 },
-  { id: "usd_t", nome: "Dólar Turismo", emoji: "💵", valor: 5.080, var: -1.05 },
-  { id: "eur", nome: "Euro", emoji: "💶", valor: 5.786, var: -0.45 },
-  { id: "gbp", nome: "Libra Esterlina", emoji: "💷", valor: 6.698, var: -0.38 },
-  { id: "ars", nome: "Peso Argentino", emoji: "💴", valor: 0.004, var: 0.12 },
+  // valor e variação só existem depois que a fonte responde: nada de número inventado
+  { id: "usd", nome: "Dólar Comercial", emoji: "💵", valor: null, var: null },
+  { id: "usd_t", nome: "Dólar Turismo", emoji: "💵", valor: null, var: null },
+  { id: "eur", nome: "Euro", emoji: "💶", valor: null, var: null },
+  { id: "gbp", nome: "Libra Esterlina", emoji: "💷", valor: null, var: null },
+  { id: "ars", nome: "Peso Argentino", emoji: "💴", valor: null, var: null },
 ];
 // Indicadores do Painel. "chave" liga cada um à série do Banco Central em /api/market?type=indicadores;
 // a Selic tem consulta própria.
@@ -86,7 +86,6 @@ const GLOSSARIO = [
 
 const fmt = (v, d = 2) => v.toLocaleString("pt-BR", { minimumFractionDigits: d, maximumFractionDigits: d });
 const fmtInt = (v) => v.toLocaleString("pt-BR");
-const simVar = (val, pct = 0.4) => parseFloat((val + val * (Math.random() * pct * 2 - pct) / 100).toFixed(val < 1 ? 4 : 2));
 
 function VarBadge({ val }) {
   const p = val >= 0;
@@ -99,7 +98,13 @@ function SecTitle({ icon: I, title, color = "#1a3a5c" }) {
   return <div className="flex items-center gap-2 mb-3"><div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: color }}><I size={13} color="#fff" /></div><h2 className="text-sm font-bold" style={{ color }}>{title}</h2></div>;
 }
 
-function PriceRow({ emoji, nome, sub, valor, prev, varPct, unidade, flash, alt }) {
+function PriceRow({ emoji, nome, sub, valor, prev, varPct, unidade, flash, alt, semValor = "…" }) {
+  if (valor == null) return (
+    <div className="flex items-center justify-between py-2 px-3 rounded-lg" style={{ background: alt ? "#f0f7ff" : "transparent" }}>
+      <div className="flex items-center gap-1.5 min-w-0"><span className="text-sm shrink-0">{emoji}</span><span className="text-sm font-semibold truncate">{nome}</span></div>
+      <span className="text-xs opacity-50">{semValor}</span>
+    </div>
+  );
   const diff = prev != null ? valor - prev : 0;
   const up = diff >= 0;
   const changed = prev != null && Math.abs(diff) > 0.0001;
@@ -129,143 +134,22 @@ function CountdownBar({ sec, total, paused, onToggle, onRefresh, count, last, so
         <button aria-label={paused ? "Retomar atualização" : "Pausar atualização"} onClick={onToggle} className="p-1 rounded-md" style={{ background: "#f1f5f9" }}>{paused ? <Play size={12} /> : <Pause size={12} />}</button>
         <button aria-label="Atualizar cotações agora" onClick={onRefresh} className="p-1 rounded-md" style={{ background: "#f1f5f9" }}><RefreshCw size={12} /></button>
       </div>
-      <div className="flex justify-between mt-1 text-xs opacity-40"><span>{paused ? "⏸ Pausado" : source === "real" ? "🟢 Consulta automática a cada 60s" : source === "simulado" ? "🟡 Fonte de moedas indisponível — moedas simuladas" : "⏳ Buscando cotações..."}</span><span>Ciclos: {count}{last ? ` • ${last}` : ""}</span></div>
+      <div className="flex justify-between mt-1 text-xs opacity-40"><span>{paused ? "⏸ Pausado" : source === "real" ? "🟢 Consulta automática a cada 60s" : source === "desatualizado" ? "🟡 A fonte das moedas não respondeu: valores da última consulta" : source === "indisponivel" ? "🟡 Fonte das moedas indisponível agora" : "⏳ Buscando cotações..."}</span><span>Ciclos: {count}{last ? ` • ${last}` : ""}</span></div>
     </Card>
   );
 }
 
-function WeatherWidget() {
-  const [input, setInput] = useState("Santa Mariana");
-  const [weather, setWeather] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-
-  const fetchWeather = async (loc) => {
-    if (!loc.trim()) return;
-    setLoading(true);
-    setError(null);
-    try {
-      const geoRes = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(loc)}&count=1&language=pt&format=json`);
-      const geoData = await geoRes.json();
-      if (!geoData.results?.length) throw new Error("Localidade não encontrada");
-      const { latitude, longitude, name, admin1 } = geoData.results[0];
-      const wRes = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,weather_code,wind_speed_10m,relative_humidity_2m&daily=temperature_2m_max,temperature_2m_min,weather_code,precipitation_probability_max&timezone=auto&forecast_days=5&wind_speed_unit=kmh`);
-      const wData = await wRes.json();
-      setWeather({ name: `${name}${admin1 ? `, ${admin1}` : ""}`, current: wData.current, daily: wData.daily });
-    } catch (e) {
-      setError(e.message || "Erro ao buscar previsão");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    const controller = new AbortController();
-    (async () => {
-      try {
-        const geoRes = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent("Santa Mariana")}&count=1&language=pt&format=json`, { signal: controller.signal });
-        const geoData = await geoRes.json();
-        if (!geoData.results?.length) throw new Error("Localidade não encontrada");
-        const { latitude, longitude, name, admin1 } = geoData.results[0];
-        const wRes = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,weather_code,wind_speed_10m,relative_humidity_2m&daily=temperature_2m_max,temperature_2m_min,weather_code,precipitation_probability_max&timezone=auto&forecast_days=5&wind_speed_unit=kmh`, { signal: controller.signal });
-        const wData = await wRes.json();
-        setWeather({ name: `${name}${admin1 ? `, ${admin1}` : ""}`, current: wData.current, daily: wData.daily });
-      } catch (e) {
-        if (!controller.signal.aborted) setError(e.message || "Erro ao buscar previsão");
-      } finally {
-        if (!controller.signal.aborted) setLoading(false);
-      }
-    })();
-    return () => controller.abort();
-  }, []);
-
-  return (
-    <Card id="card-tempo" className="p-3" style={{ borderLeft: "4px solid #1e40af", background: "linear-gradient(135deg,#dbeafe 0%,#eff6ff 100%)" }}>
-      <div className="flex items-center gap-2 mb-2.5">
-        <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0" style={{ background: "#1e40af" }}>
-          <span style={{ fontSize: 15 }}>🌤️</span>
-        </div>
-        <h2 className="text-sm font-bold" style={{ color: "#1e40af" }}>Previsão do Tempo</h2>
-      </div>
-
-      <div className="flex gap-1.5 mb-3">
-        <div className="flex-1 relative">
-          <MapPin size={12} style={{ position: "absolute", left: 8, top: "50%", transform: "translateY(-50%)", color: "#93c5fd" }} />
-          <input
-            value={input}
-            onChange={e => setInput(e.target.value)}
-            onKeyDown={e => e.key === "Enter" && fetchWeather(input)}
-            placeholder="Digite a localidade..."
-            className="w-full rounded-lg border text-sm"
-            style={{ paddingLeft: 26, paddingRight: 10, paddingTop: 6, paddingBottom: 6, borderColor: "#93c5fd", outline: "none", background: "rgba(255,255,255,0.8)", fontSize: 13 }}
-          />
-        </div>
-        <button
-          onClick={() => fetchWeather(input)}
-          disabled={loading}
-          className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold"
-          style={{ background: "#1e40af", color: "#fff", opacity: loading ? 0.7 : 1 }}
-        >
-          <Search size={12} />{loading ? "..." : "Buscar"}
-        </button>
-      </div>
-
-      {error && <div className="text-xs px-2 py-1 rounded-lg mb-2" style={{ background: "#fee2e2", color: "#991b1b" }}>{error}</div>}
-
-      {loading && !weather && (
-        <div className="text-center py-4 text-sm opacity-40">Buscando previsão do tempo...</div>
-      )}
-
-      {weather && (
-        <>
-          <div className="flex items-center gap-3 mb-3 flex-wrap">
-            <div style={{ fontSize: 44, lineHeight: 1 }}>{getWmo(weather.current.weather_code).emoji}</div>
-            <div>
-              <div className="text-3xl font-black" style={{ color: "#1e3a8a", lineHeight: 1 }}>{Math.round(weather.current.temperature_2m)}°C</div>
-              <div className="text-xs font-semibold mt-0.5" style={{ color: "#3b82f6" }}>{getWmo(weather.current.weather_code).label}</div>
-              <div className="text-xs mt-0.5 opacity-50">{weather.name}</div>
-            </div>
-            <div className="ml-auto text-xs space-y-1 text-right shrink-0">
-              <div className="font-semibold" style={{ color: "#1e40af" }}>💨 {Math.round(weather.current.wind_speed_10m)} km/h</div>
-              <div className="font-semibold" style={{ color: "#1e40af" }}>💧 {weather.current.relative_humidity_2m}%</div>
-            </div>
-          </div>
-
-          <div className="grid gap-1" style={{ gridTemplateColumns: "repeat(5,1fr)" }}>
-            {weather.daily.time.slice(0, 5).map((date, i) => {
-              const d = new Date(date + "T12:00:00");
-              const rain = weather.daily.precipitation_probability_max[i];
-              return (
-                <div key={i} className="flex flex-col items-center rounded-xl py-2 px-1" style={{ background: i === 0 ? "rgba(30,64,175,0.12)" : "rgba(255,255,255,0.55)" }}>
-                  <div className="text-xs font-bold mb-1" style={{ color: i === 0 ? "#1e3a8a" : "#64748b" }}>{i === 0 ? "Hoje" : WEEK[d.getDay()]}</div>
-                  <div style={{ fontSize: 22, lineHeight: 1 }}>{getWmo(weather.daily.weather_code[i]).emoji}</div>
-                  <div className="text-xs font-black mt-1" style={{ color: "#1e3a8a" }}>{Math.round(weather.daily.temperature_2m_max[i])}°</div>
-                  <div className="text-xs opacity-40">{Math.round(weather.daily.temperature_2m_min[i])}°</div>
-                  {rain > 20 && <div className="text-xs font-semibold mt-0.5" style={{ color: "#2563eb" }}>☂ {rain}%</div>}
-                </div>
-              );
-            })}
-          </div>
-
-          <div className="mt-2 text-xs opacity-25 text-right">Fonte: Open-Meteo.com (dados gratuitos, sem API key)</div>
-        </>
-      )}
-    </Card>
-  );
-}
-
-function PainelTab({ moedas, pm, flash, indicadores, refresh, onViewChart, alvo }) {
+function PainelTab({ moedas, pm, flash, indicadores, refresh, onViewChart, alvo, moedasIndisponiveis }) {
   return (
     <div className="space-y-4">
-      <WeatherWidget />
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-        <Card id="card-moedas" className="p-3"><SecTitle icon={DollarSign} title="Moedas" color="#1a5276" />{moedas.map((m, i) => <PriceRow key={m.id} emoji={m.emoji} nome={m.nome} valor={m.valor} prev={pm[m.id]} varPct={m.var} flash={flash.has(m.id)} alt={i % 2 === 0} />)}<div className="mt-2 text-xs opacity-25 text-right">Fonte: AwesomeAPI (tempo real)</div></Card>
+        <Card id="card-moedas" className="p-3"><SecTitle icon={DollarSign} title="Moedas" color="#1a5276" />{moedas.map((m, i) => <PriceRow key={m.id} emoji={m.emoji} nome={m.nome} valor={m.valor} prev={pm[m.id]} varPct={m.var} flash={flash.has(m.id)} alt={i % 2 === 0} semValor={moedasIndisponiveis ? "indisponível agora" : "buscando…"} />)}<div className="mt-2 text-xs opacity-25 text-right">Fonte: AwesomeAPI · consulta a cada 60 segundos</div></Card>
         <StockQuotes key={alvo?.acao ? alvo.n : "acoes"} buscaInicial={alvo?.acao} refresh={refresh} onViewChart={onViewChart} />
       </div>
       <CommodityQuotes key={alvo?.commodity ? alvo.n : "commodities"} adicionar={alvo?.commodity} refresh={refresh} onViewChart={onViewChart} />
       <Card id="card-indicadores" className="p-3"><SecTitle icon={BarChart3} title="Indicadores Econômicos" color="#6b21a8" /><div className="grid grid-cols-2 md:grid-cols-3 gap-2">{indicadores.map((ind, i) => (<div key={i} className="rounded-lg p-2 text-center" style={{ background: i % 2 === 0 ? "#faf5ff" : "#f5f3ff" }}><div className="text-xs font-semibold opacity-60">{ind.nome} {ind.periodo && `(${ind.periodo})`}</div><div className="text-base font-bold" style={{ color: "#6b21a8" }}>{ind.valor}</div><div className="text-xs opacity-40">{ind.desc}</div></div>))}</div><div className="mt-2 text-xs opacity-25 text-right">Fonte: Banco Central (SGS), com dados do IBGE e da FGV · atualização automática</div></Card>
       <Combustiveis />
-      <div className="text-xs opacity-25 text-center">📌 Indicadores: último valor publicado pelo Banco Central. Moedas podem conter estimativas ou simulação quando a fonte falha.</div>
+      <div className="text-xs opacity-25 text-center">📌 Indicadores: último valor publicado pelo Banco Central. Se a fonte das moedas falhar, ficam os valores da última consulta, com aviso na barra acima. Previsão do tempo: aba Clima.</div>
     </div>
   );
 }
@@ -438,14 +322,14 @@ function NoticiasTab({ busca }) {
   );
 }
 
-function HistoricoTab() {
-  const cols = ["boi", "soja", "milho", "cafe", "trigo", "feijao", "cana", "leite"];
-  const lb = { boi: "🐂 Boi", soja: "🌱 Soja", milho: "🌽 Milho", cafe: "☕ Café", trigo: "🌾 Trigo", feijao: "🥔 Feijão", cana: "🎋 Cana", leite: "🥛 Leite" };
+const NOMES_DO_HISTORICO = { boi: "🐂 Boi", soja: "🌱 Soja", milho: "🌽 Milho", cafe: "☕ Café", trigo: "🌾 Trigo", feijao: "🥔 Feijão", cana: "🎋 Cana", leite: "🥛 Leite" };
+
+function TabelaDoHistorico() {
+  const cols = Object.keys(NOMES_DO_HISTORICO);
+  const lb = NOMES_DO_HISTORICO;
   return (
-    <div className="space-y-4">
-    <CompararHistorico historico={HISTORICO} nomes={lb} />
     <Card className="p-3 overflow-x-auto">
-      <SecTitle icon={Clock} title="Histórico 2020–2026" color="#166534" />
+      <SecTitle icon={Clock} title="Os números, ano a ano · 2020–2026" color="#166534" />
       <p className="text-xs opacity-40 mb-2">Fonte: CEPEA/ESALQ, Farmnews • R$ nominais</p>
       <table className="w-full text-xs" style={{ minWidth: 550 }}>
         <thead><tr style={{ background: "#166534", color: "#fff" }}><th className="py-1.5 px-1 text-left">Commodity</th>{HISTORICO.map(h => <th key={h.ano} className="py-1.5 px-1 text-center">{h.ano}</th>)}<th className="py-1.5 px-1 text-center">Var%</th></tr></thead>
@@ -453,7 +337,6 @@ function HistoricoTab() {
           <tr key={c} style={{ background: i % 2 === 0 ? "#f0fdf4" : "#fff" }}><td className="py-1 px-1 font-semibold whitespace-nowrap">{lb[c]}</td>{HISTORICO.map(h => <td key={h.ano} className="py-1 px-1 text-center font-mono" style={{ color: h.ano === "Mar/26" ? "#166534" : "#333", fontWeight: h.ano === "Mar/26" ? 700 : 400 }}>{fmt(h[c])}</td>)}<td className="py-1 px-1 text-center"><VarBadge val={parseFloat(pct.toFixed(1))} /></td></tr>); })}</tbody>
       </table>
     </Card>
-    </div>
   );
 }
 
@@ -476,7 +359,7 @@ function GraficosCommoditiesPanel({ target }) {
         <div style={{ height: 300 }}><ResponsiveContainer><LineChart data={HISTORICO} margin={{ top: 5, right: 10, bottom: 5, left: 0 }}><CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" /><XAxis dataKey="ano" tick={{ fontSize: 10 }} /><YAxis tick={{ fontSize: 9 }} /><Tooltip formatter={v => `R$ ${fmt(v)}`} contentStyle={{ borderRadius: 8, fontSize: 11 }} /><Legend wrapperStyle={{ fontSize: 10 }} />{sel.map(k => <Line key={k} type="monotone" dataKey={k} name={CL[k]} stroke={CC[k]} strokeWidth={2.5} dot={{ r: 3 }} />)}</LineChart></ResponsiveContainer></div>
       ) : <p className="text-sm opacity-50 py-8 text-center">Selecione ao menos uma commodity para ver o gráfico.</p>}
       <p className="text-xs opacity-25 mt-2 text-right">Fonte: CEPEA/ESALQ-USP, Farmnews · série anual</p>
-      <p className="text-xs opacity-40 mt-1">Para outras commodities da lista de cotação (algodão, suíno, laranja, contratos internacionais), ainda não há série histórica diária disponível — consulte o valor atual no Painel.</p>
+      <p className="text-xs opacity-40 mt-1">Os contratos de Chicago e de Nova Iorque e as ações têm histórico no comparador acima. Para algodão, suíno e laranja do Brasil ainda não há série histórica: veja o valor atual no Painel.</p>
     </Card>
   );
 }
@@ -596,15 +479,14 @@ function ComoLerGraficoCard() {
   );
 }
 
-function GraficosTab({ target }) {
-  const [mode, setMode] = useState(() => (target?.type === "stock" ? "acoes" : "commodities"));
+// Aba "Evolução": tudo o que mostra preço ao longo do tempo, de 2020 para cá.
+function EvolucaoTab({ target }) {
   return (
     <div className="space-y-4">
-      <div className="flex gap-2">
-        <button onClick={() => setMode("commodities")} className="px-3 py-1.5 rounded-full text-xs font-bold" style={{ background: mode === "commodities" ? "#166534" : "#f1f5f9", color: mode === "commodities" ? "#fff" : "#64748b" }}>🌾 Commodities</button>
-        <button onClick={() => setMode("acoes")} className="px-3 py-1.5 rounded-full text-xs font-bold" style={{ background: mode === "acoes" ? "#1a5276" : "#f1f5f9", color: mode === "acoes" ? "#fff" : "#64748b" }}>📈 Ações / ETFs</button>
-      </div>
-      {mode === "commodities" ? <GraficosCommoditiesPanel key={target?.type === "commodity" ? target.key : "default"} target={target} /> : <GraficosAcoesPanel key={target?.type === "stock" ? target.symbol : "default"} target={target} />}
+      <CompararHistorico historico={HISTORICO} nomes={NOMES_DO_HISTORICO} />
+      <div id="grafico-commodities" style={{ scrollMarginTop: 100 }}><GraficosCommoditiesPanel key={target?.type === "commodity" ? target.key : "default"} target={target} /></div>
+      <TabelaDoHistorico />
+      <div id="grafico-acoes" style={{ scrollMarginTop: 100 }}><GraficosAcoesPanel key={target?.type === "stock" ? target.symbol : "default"} target={target} /></div>
       <ComoLerGraficoCard />
     </div>
   );
@@ -623,27 +505,25 @@ function GlossarioTab({ inicial }) {
 const SINONIMOS_PARANA = { "Suíno": "porco", Boi: "gado arroba", Vaca: "gado arroba", "Erva-mate": "chimarrão", Mandioca: "aipim macaxeira", "Café em coco": "café", "Café beneficiado": "café" };
 const DESCRICAO_ABA = {
   inicio: "Resumo do dia: mercado, clima, safra, notícias e atalhos para a aula",
-  painel: "Moedas, ações, commodities, indicadores, combustíveis e previsão do tempo", futuros: "Contratos agrícolas nas bolsas internacionais",
-  chicago: "Soja, milho, trigo e boi na Bolsa de Chicago, com vencimentos e valor em reais",
+  painel: "Todas as moedas, ações da B3, indicadores de preço do Brasil, indicadores da economia e combustíveis",
+  bolsas: "Soja, milho, café, boi e mais nas bolsas de Chicago e Nova Iorque, com vencimentos e valor em reais",
   safra: "Produção do Paraná, da região e de Santa Mariana, andamento do plantio e calendário agrícola",
   exportacoes: "Quanto o Brasil e o Paraná exportam de soja, milho, carnes e outros, e para quais países",
   clima: "Chuva que caiu e que vai cair, água no solo e risco de geada", calculadoras: "Preço da saca, conversor de unidades, relação de troca, ponto de equilíbrio e financiamento",
   aprender: "Simulação de uma safra com decisões do produtor e simulador de hedge",
   cooperativas: "Preço pago ao produtor nas regiões do Paraná, com mapa de onde se paga mais e menos", noticias: "Agronegócio, mercado e mercado internacional",
-  historico: "Comparação de qual item subiu mais e tabela de preços de 2020 a 2026", graficos: "Evolução dos preços em gráficos", glossario: "Significado dos termos do mercado",
+  evolucao: "Comparação de qual item subiu mais, gráficos e tabela de preços de 2020 a 2026", glossario: "Significado dos termos do mercado",
 };
 const INDICE_BUSCA = [
-  { titulo: "Chicago · cotações da bolsa (CBOT e CME)", detalhe: DESCRICAO_ABA.chicago, grupo: "Chicago", termos: "indices internacional vencimento", acao: { aba: "chicago" } },
+  { titulo: "Chicago e Nova Iorque · cotações das bolsas", detalhe: DESCRICAO_ABA.bolsas, grupo: "Bolsas", termos: "indices internacional vencimento cbot cme ice mercado futuro futuros contratos", acao: { aba: "bolsas" } },
   ...PRODUTOS_PARANA.map(nome => ({ titulo: `${nome} · preço por região do PR`, detalhe: "Quanto cooperativas e cerealistas pagam ao produtor (DERAL)", grupo: "Cooperativas",
     termos: `cooperativa produtor parana regiao deral ${SINONIMOS_PARANA[nome] ?? ""}`, acao: { aba: "cooperativas", produto: nome } })),
   ...COMMODITIES.map(([id, nome, mercado]) => ({ titulo: nome, detalhe: mercado === "Brasil" ? "Cotação no Brasil · Painel" : "Cotação internacional · Painel", grupo: "Painel",
     termos: mercado === "Brasil" ? "brasil" : "internacional exterior bolsa", acao: { aba: "painel", commodity: id, ancora: `commodity-${id}` } })),
-  ...FUTURES.map(f => ({ titulo: `${f.name} · mercado futuro`, detalhe: `${f.exchange} · cotado em ${f.unit}`, grupo: "Futuros",
-    termos: `${f.key} ${APELIDOS_FUTUROS[f.key] ?? ""} bolsa contrato internacional`, acao: { aba: "futuros", futuro: f.key, ancora: "cotacao-futuro" } })),
-  ...Object.keys(CL).map(k => ({ titulo: `Gráfico de ${CL[k]}`, detalhe: "Evolução do preço de 2020 a 2026", grupo: "Gráficos",
+  ...FUTURES.map(f => ({ titulo: `${f.name} · ${f.exchange === "ICE US" ? "Bolsa de Nova Iorque" : "Bolsa de Chicago"}`, detalhe: `Cotado em ${f.unit} · preço, vencimentos e valor em reais`, grupo: "Bolsas",
+    termos: `${f.key} ${APELIDOS_FUTUROS[f.key] ?? ""} ${f.exchange} contrato internacional mercado futuro vencimento`, acao: { aba: "bolsas", contrato: f.key, ancora: "bolsa-detalhe" } })),
+  ...Object.keys(CL).map(k => ({ titulo: `Gráfico de ${CL[k]}`, detalhe: "Evolução do preço de 2020 a 2026", grupo: "Evolução",
     termos: `${k} historico evolucao`, acao: { grafico: k } })),
-  ...CHICAGO.map(f => ({ titulo: `${f.name} · Bolsa de Chicago`, detalhe: "Preço, próximos vencimentos e valor em reais", grupo: "Chicago",
-    termos: `${f.key} ${APELIDOS_FUTUROS[f.key] ?? ""} ${f.exchange} vencimento`, acao: { aba: "chicago", chicago: f.key, ancora: "chicago-detalhe" } })),
   ...GLOSSARIO.map((g, i) => ({ titulo: g.termo, detalhe: g.def, grupo: "Glossário", termos: `${g.def} significado`, acao: { aba: "glossario", termo: i, ancora: `glossario-${i}` } })),
   ...INIT_MOEDAS.map(m => ({ titulo: m.nome, detalhe: "Cotação em reais · Painel", grupo: "Painel", termos: "moeda", acao: { aba: "painel", ancora: "card-moedas" } })),
   ...INDICADORES.map(ind => ({ titulo: ind.nome, detalhe: ind.desc, grupo: "Painel", termos: "indicador economia juros", acao: { aba: "painel", ancora: "card-indicadores" } })),
@@ -655,10 +535,10 @@ const INDICE_BUSCA = [
   { titulo: "Chuva e clima para a lavoura", detalhe: DESCRICAO_ABA.clima, grupo: "Clima", termos: "clima geada solo umidade previsao 15 dias seca estiagem", acao: { aba: "clima" } },
   { titulo: "Simulador de hedge", detalhe: "Trave um preço e veja o resultado se o mercado subir ou cair · Aprender", grupo: "Aprender", termos: "protecao travar preco futuro simular", acao: { aba: "aprender", ancora: "simulador-hedge" } },
   { titulo: "Simulação: uma safra na prática", detalhe: "Decida como um produtor, da semente à venda · Aprender", grupo: "Aprender", termos: "jogo atividade simulador decisao bolsa produtor quiz", acao: { aba: "aprender", ancora: "simulacao-safra" } },
-  { titulo: "Comparar qual subiu mais", detalhe: "Chicago, commodities, futuros e ações no mesmo gráfico · Histórico", grupo: "Histórico",
-    termos: "comparacao valorizou alta queda grafico historico", acao: { aba: "historico", ancora: "comparar-historico" } },
+  { titulo: "Comparar qual subiu mais", detalhe: "Chicago, Nova Iorque, commodities do Brasil e ações no mesmo gráfico · Evolução", grupo: "Evolução",
+    termos: "comparacao valorizou alta queda grafico historico", acao: { aba: "evolucao", ancora: "comparar-historico" } },
   { titulo: "Diesel e combustíveis no Paraná", detalhe: "Preço médio da semana nos postos (ANP) · Painel", grupo: "Painel", termos: "gasolina etanol alcool oleo diesel posto litro custo", acao: { aba: "painel", ancora: "card-combustiveis" } },
-  { titulo: "Previsão do tempo", detalhe: "Temperatura e chuva dos próximos 5 dias", grupo: "Painel", termos: "temperatura", acao: { aba: "painel", ancora: "card-tempo" } },
+  { titulo: "Previsão do tempo", detalhe: "Tempo de hoje, chuva e previsão de 15 dias · Clima", grupo: "Clima", termos: "temperatura", acao: { aba: "clima" } },
   { titulo: "Ações e fundos da B3", detalhe: "Consultar empresas da Bolsa · Painel", grupo: "Painel", termos: "acoes bolsa empresa etf investimento", acao: { aba: "painel", ancora: "consultar-acao" } },
   ...TABS.map(t => ({ titulo: `Aba ${TAB_LABELS[t]}`, detalhe: DESCRICAO_ABA[t], grupo: "Abas", termos: DESCRICAO_ABA[t], acao: { aba: t } })),
 ];
@@ -679,13 +559,16 @@ export default function App() {
   const [moedas, setMoedas] = useState(INIT_MOEDAS);
   const [pm, setPm] = useState({});
   const [chartTarget, setChartTarget] = useState(null);
-  const viewChart = useCallback((target) => { setChartTarget(target); setTab("graficos"); }, []);
-  const [alvo, setAlvo] = useState(null); // destino escolhido na busca do topo
+  const [alvo, setAlvo] = useState(null); // destino escolhido na busca do topo ou em um atalho
+  const viewChart = useCallback((target) => {
+    setChartTarget(target); setTab("evolucao");
+    setAlvo({ ancora: target.type === "stock" ? "grafico-acoes" : "grafico-commodities", n: Date.now() });
+  }, []);
   const [perguntaCastor, setPerguntaCastor] = useState(null);
   const irPara = (acao) => {
     if (acao.castor) { setMascote(true); setPerguntaCastor({ texto: acao.castor, n: Date.now() }); return; }
-    if (acao.grafico) viewChart({ type: "commodity", key: acao.grafico, name: CL[acao.grafico] });
-    else setTab(acao.aba);
+    if (acao.grafico) { viewChart({ type: "commodity", key: acao.grafico, name: CL[acao.grafico] }); return; }
+    setTab(acao.aba);
     setAlvo({ ...acao, n: Date.now() });
   };
   const trocarAba = (t) => { setTab(t); setAlvo(null); };
@@ -710,6 +593,9 @@ export default function App() {
     return () => { ativo = false; clearInterval(t); };
   }, []);
   const indicadores = indicadoresAtuais(bcb, selic);
+
+  // último dólar comercial recebido da fonte (null enquanto ela não respondeu): usado nas conversões das outras abas
+  const dolar = moedas.find(m => m.id === "usd")?.valor ?? null;
 
   const updating = useRef(false);
   const moedasRef = useRef(moedas);
@@ -746,15 +632,15 @@ export default function App() {
           ars:   d.ARSBRL ? { valor: parseFloat(d.ARSBRL.bid),  var: parseFloat(d.ARSBRL.pctChange)  } : null,
         };
       }
-    } catch { /* fallback para simulação */ }
+    } catch { /* sem resposta: ficam os valores da última consulta, se houver */ }
 
-    setDataSource(realM ? "real" : "simulado");
-
-    setMoedas(curM.map(m => {
-      const r = realM?.[m.id];
-      const nv = r ? r.valor : simVar(m.valor, 0.3);
-      if (Math.abs(nv - m.valor) > 0.0001) fl.add(m.id);
-      return { ...m, valor: nv, var: r ? r.var : parseFloat(((nv - prevM[m.id]) / prevM[m.id] * 100).toFixed(2)) };
+    // "real": acabou de chegar; "desatualizado": a fonte falhou agora, mas já respondeu antes; "indisponivel": nunca respondeu
+    setDataSource(anterior => (realM ? "real" : anterior === "real" || anterior === "desatualizado" ? "desatualizado" : "indisponivel"));
+    if (realM) setMoedas(curM.map(m => {
+      const r = realM[m.id];
+      if (!r) return m;
+      if (m.valor != null && Math.abs(r.valor - m.valor) > 0.0001) fl.add(m.id);
+      return { ...m, valor: r.valor, var: r.var };
     }));
     setFlash(fl);
     setTimeout(() => setFlash(new Set()), 2500);
@@ -811,21 +697,18 @@ export default function App() {
       </div>
       <div id="conteudo" className="max-w-4xl mx-auto px-3 py-4" style={{ scrollMarginTop: 100 }}>
         {tab === "inicio" && <Inicio indicadores={indicadores} onIr={irPara} onCastor={ASSISTENTE_URL ? () => mostrarMascote(true) : null}
-          dolar={dataSource === "real" ? moedas.find(m => m.id === "usd")?.valor : dataSource === "simulado" ? null : undefined}
-          variacaoDoDolar={dataSource === "real" ? moedas.find(m => m.id === "usd")?.var : null} />}
+          dolar={dolar ?? (dataSource === "indisponivel" ? null : undefined)} variacaoDoDolar={dataSource === "real" ? moedas.find(m => m.id === "usd")?.var : null} />}
         {tab === "painel" && <CountdownBar sec={cd} total={UPDATE_SEC} paused={paused} onToggle={() => setPaused(p => !p)} onRefresh={doUpdate} count={count} last={last} source={dataSource} />}
-        {tab === "painel" && <PainelTab moedas={moedas} pm={pm} flash={flash} indicadores={indicadores} refresh={count} onViewChart={viewChart} alvo={alvo} />}
-        {tab === "futuros" && <FuturesQuotes key={alvo?.futuro ? alvo.n : "futuros"} inicial={alvo?.futuro} />}
-        {tab === "chicago" && <BolsaChicago key={alvo?.chicago ? alvo.n : "chicago"} inicial={alvo?.chicago} dolar={dataSource === "real" ? moedas.find(m => m.id === "usd")?.valor : null} />}
+        {tab === "painel" && <PainelTab moedas={moedas} pm={pm} flash={flash} indicadores={indicadores} refresh={count} onViewChart={viewChart} alvo={alvo} moedasIndisponiveis={dataSource === "indisponivel"} />}
+        {tab === "bolsas" && <Bolsas key={alvo?.contrato ? alvo.n : "bolsas"} inicial={alvo?.contrato} dolar={dolar} />}
         {tab === "safra" && <SafraTab />}
         {tab === "exportacoes" && <Exportacoes />}
         {tab === "clima" && <ClimaAgricola />}
-        {tab === "calculadoras" && <Calculadoras key={alvo?.calculadora ? alvo.n : "calculadoras"} inicial={alvo?.calculadora} dolar={dataSource === "real" ? moedas.find(m => m.id === "usd")?.valor : null} />}
+        {tab === "calculadoras" && <Calculadoras key={alvo?.calculadora ? alvo.n : "calculadoras"} inicial={alvo?.calculadora} dolar={dolar} />}
         {tab === "aprender" && <Aprender onPerguntar={ASSISTENTE_URL ? (texto => irPara({ castor: texto })) : null} />}
         {tab === "cooperativas" && <CotacoesCooperativas key={alvo?.produto ? alvo.n : "pr"} produtoInicial={alvo?.produto} />}
         {tab === "noticias" && <NoticiasTab key={alvo?.busca ? alvo.n : "noticias"} busca={alvo?.busca} />}
-        {tab === "historico" && <HistoricoTab />}
-        {tab === "graficos" && <GraficosTab target={chartTarget} />}
+        {tab === "evolucao" && <EvolucaoTab target={chartTarget} />}
         {tab === "glossario" && <GlossarioTab key={alvo?.termo != null ? alvo.n : "glossario"} inicial={alvo?.termo} />}
       </div>
       <div className="text-center py-3 text-xs opacity-20">🎓 C.E.E.P.A. Fernando Costa — Santa Mariana, PR • Docente: {DOCENTE} • {ALUNOS_PARTICIPANTES.length > 1 ? "Estudantes participantes" : "Estudante participante"}: {ALUNOS_PARTICIPANTES.join(", ")}</div>

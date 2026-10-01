@@ -63,7 +63,7 @@ const VerMais = ({ onClick, children }) => (
 );
 
 export default function Inicio({ dolar, variacaoDoDolar, indicadores, onIr, onCastor }) {
-  const chicago = useConsulta("/api/market?type=chicago");
+  const chicago = useConsulta("/api/market?type=bolsas");
   const parana = useConsulta("/api/market?type=pr");
   const combustiveis = useConsulta("/api/market?type=combustiveis");
   const safra = useConsulta("/api/market?type=safra");
@@ -97,7 +97,7 @@ export default function Inicio({ dolar, variacaoDoDolar, indicadores, onIr, onCa
             <Variacao valor={variacaoDoDolar} sufixo=" hoje" />
           </Quadro>
           <Quadro rotulo="Soja em Chicago" valor={sojaEmReais != null ? reais(sojaEmReais) : sojaNaBolsa ? decimal(sojaNaBolsa.value, 2) : null} unidade={sojaEmReais != null ? "saca" : sojaNaBolsa ? "bushel (US¢)" : null}
-            estado={estadoDe(chicago)} onClick={() => onIr({ aba: "chicago", chicago: "soja", ancora: "chicago-detalhe" })}>
+            estado={estadoDe(chicago)} onClick={() => onIr({ aba: "bolsas", contrato: "soja", ancora: "bolsa-detalhe" })}>
             {sojaNaBolsa && <>{sojaEmReais != null && <>{decimal(sojaNaBolsa.value, 2)} US¢/bushel · </>}<Variacao valor={sojaNaBolsa.change} sufixo=" hoje" /></>}
           </Quadro>
           {daRegiao.map(({ produto, preco }) => (
@@ -158,7 +158,7 @@ export default function Inicio({ dolar, variacaoDoDolar, indicadores, onIr, onCa
           {[
             [GraduationCap, "Simulação: uma safra na prática", "Decida como um produtor, da semente à venda.", () => onIr({ aba: "aprender", ancora: "simulacao-safra" })],
             [Calculator, "Calculadoras", "Preço da saca, unidades, relação de troca, custo e crédito.", () => onIr({ aba: "calculadoras" })],
-            [GitCompareArrows, "Comparar: qual subiu mais?", "Chicago, commodities, futuros e ações no mesmo gráfico.", () => onIr({ aba: "historico", ancora: "comparar-historico" })],
+            [GitCompareArrows, "Comparar: qual subiu mais?", "Chicago, Nova Iorque, commodities do Brasil e ações no mesmo gráfico.", () => onIr({ aba: "evolucao", ancora: "comparar-historico" })],
             ...(onCastor ? [[MessageCircleQuestion, "Perguntar ao Castor", "O assistente do AgroInfo tira dúvidas sobre o mercado.", onCastor]] : []),
           ].map(([Icone, nome, descricao, abrir]) => (
             <button key={nome} type="button" onClick={abrir} className="flex items-center gap-3 rounded-xl border bg-white p-3 text-left shadow-sm transition-colors hover:bg-green-50" style={{ borderColor: "rgba(0,0,0,0.08)" }}>
@@ -201,7 +201,7 @@ export default function Inicio({ dolar, variacaoDoDolar, indicadores, onIr, onCa
 
       <p className="text-xs text-slate-500">
         Fontes: AwesomeAPI (dólar), Yahoo Finance (Chicago, com atraso), DERAL/SEAB-PR (preços e safra), ANP (diesel), Open-Meteo (tempo), Google Notícias e Banco Central.
-        O Painel completo, com todas as moedas, ações e cotações, continua na aba ao lado.
+        Todas as moedas, as ações e os combustíveis estão na aba Painel.
       </p>
     </div>
   );

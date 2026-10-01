@@ -5,9 +5,9 @@
 Painel educacional gratuito do **C.E.E.P.A. Fernando Costa** (Santa Mariana, PR) para alunos e produtores acompanharem o mercado agrícola:
 
 - **Busca no topo:** digite um produto, moeda, termo ou dúvida (ex.: "soja", "porco", "dólar", "o que é hedge") e vá direto à cotação, ao gráfico, ao glossário, às notícias ou ao Castor.
-- **Painel:** moedas, indicadores do Banco Central (Selic, IPCA, INPC, IGP-M, CDI, poupança), ações da B3, cotações de commodities, preço dos combustíveis no Paraná (ANP) e previsão do tempo.
-- **Futuros:** os principais contratos agrícolas de Chicago, Nova Iorque e CME, com a unidade em que cada um é cotado e o equivalente em US$ por tonelada e por kg.
-- **Chicago:** todos os contratos agrícolas da Bolsa de Chicago (CBOT e CME) em uma tabela, com variação do dia, próximos vencimentos e o valor convertido para saca, tonelada ou kg em dólares e em reais.
+- **Início:** resumo do dia, com dólar, soja em Chicago, preços da região, diesel, tempo, andamento da safra, manchetes e atalhos para as atividades.
+- **Painel:** todas as moedas, ações da B3, indicadores de preço do Brasil (CEPEA), indicadores do Banco Central (Selic, IPCA, INPC, IGP-M, CDI, poupança) e preço dos combustíveis no Paraná (ANP).
+- **Bolsas:** os 17 contratos agrícolas de Chicago (CBOT e CME) e de Nova Iorque (ICE) em tabelas, com variação do dia, próximos vencimentos e o valor convertido para saca, arroba, tonelada ou kg, em dólares e em reais.
 - **Cotações Cooperativas:** cotação diária do Paraná (DERAL/SEAB), por região, com mapa de onde está mais caro e mais barato.
 - **Safra:** produção, área e rendimento por safra no Paraná e na região de Cornélio Procópio, andamento de plantio e colheita, calendário agrícola (DERAL), produção de Santa Mariana e safra do Brasil (IBGE).
 - **Exportações:** volume, valor e preço médio dos principais produtos do agro, mês a mês, no Brasil e no Paraná, com países de destino e estados de origem (Comex Stat).
@@ -15,8 +15,8 @@ Painel educacional gratuito do **C.E.E.P.A. Fernando Costa** (Santa Mariana, PR)
 - **Calculadoras:** saca a partir de Chicago, conversor de unidades, relação de troca, ponto de equilíbrio e financiamento.
 - **Aprender:** simulação de uma safra, em que o aluno decide como um produtor (comprar insumos, financiar, negociar o preço, travar na bolsa, vender ou guardar), e simulador de hedge.
 - **Notícias:** agronegócio, mercado e mercado internacional.
-- **Histórico:** comparação de qual item subiu mais (o visitante escolhe em cascata entre Chicago, commodities, futuros e ações da Bolsa, e inclui quantos campos quiser, até 6) e a tabela de preços de 2020 a 2026.
-- **Gráficos e Glossário** para estudar a evolução dos preços e os termos do mercado.
+- **Evolução:** comparação de qual item subiu mais (o visitante escolhe em cascata entre Chicago, Nova Iorque, commodities do Brasil e ações, até 6 itens), gráficos e tabela de preços de 2020 a 2026 e histórico de ações.
+- **Glossário** com os termos do mercado.
 - **Castor:** assistente que responde dúvidas dos alunos sobre o mercado.
 
 Docente: Marcel Dancini Rodrigues.

@@ -54,7 +54,7 @@ function SacaPorChicago({ dolar }) {
 
   useEffect(() => {
     let ativo = true;
-    fetch("/api/market?type=chicago", { signal: AbortSignal.timeout(30000) })
+    fetch("/api/market?type=bolsas", { signal: AbortSignal.timeout(30000) })
       .then(r => (r.ok ? r.json() : Promise.reject(new Error("indisponível"))))
       .then(d => { if (ativo) setCotacoes(d.contratos); })
       .catch(() => { if (ativo) setCotacoes([]); });
@@ -76,7 +76,7 @@ function SacaPorChicago({ dolar }) {
           {GRAOS_EM_BUSHEL.map(g => <option key={g.key} value={g.key}>{g.emoji} {g.name}</option>)}
         </Seletor>
         <Campo rotulo="Cotação em Chicago" valor={chicago} onChange={v => setDigitado(d => ({ ...d, [produto]: v }))} sufixo="US¢/bushel"
-          ajuda={digitado[produto] != null ? "Valor digitado por você." : deChicago != null ? "Cotação de agora, da aba Chicago. Pode trocar." : cotacoes ? "Cotação indisponível agora: digite o valor." : "Buscando a cotação…"} />
+          ajuda={digitado[produto] != null ? "Valor digitado por você." : deChicago != null ? "Cotação de agora, da aba Bolsas. Pode trocar." : cotacoes ? "Cotação indisponível agora: digite o valor." : "Buscando a cotação…"} />
         <Campo rotulo="Prêmio no porto" valor={premio} onChange={setPremio} sufixo="US¢/bushel" ajuda="Quanto o comprador paga acima (ou abaixo, com sinal de menos) de Chicago em Paranaguá. Varia todo dia." />
         <Campo rotulo="Dólar" valor={cambio} onChange={v => setDigitado(d => ({ ...d, dolar: v }))} sufixo="R$"
           ajuda={digitado.dolar != null ? "Valor digitado por você." : dolar ? "Dólar comercial de agora, do Painel. Pode trocar." : "Dólar indisponível agora: digite o valor."} />

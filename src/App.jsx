@@ -10,13 +10,14 @@ import Aprender from "./components/Aprender";
 import SafraTab from "./components/SafraTab";
 import Exportacoes from "./components/Exportacoes";
 import Combustiveis from "./components/Combustiveis";
+import Inicio from "./components/Inicio";
 import { getWmo, WEEK } from "./clima";
 import { StockQuotes, CommodityQuotes, FuturesQuotes, TICKER_RE } from "./components/MarketQuotes";
 import { COMMODITIES, FUTURES, CHICAGO, CALCULADORAS, APELIDOS_FUTUROS, PRODUTOS_PARANA } from "./catalogo";
 import BuscaAgro from "./components/BuscaAgro";
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
-import { RefreshCw, BookOpen, BarChart3, Clock, Wheat, DollarSign, Activity, ChevronDown, ChevronUp, Timer, ArrowRight, Pause, Play, Newspaper, ExternalLink, Search, MapPin, Warehouse, TrendingUp, Landmark, CloudRain, Calculator, GraduationCap, Sprout, Ship } from "lucide-react";
+import { RefreshCw, BookOpen, BarChart3, Clock, Wheat, DollarSign, Activity, ChevronDown, ChevronUp, Timer, ArrowRight, Pause, Play, Newspaper, ExternalLink, Search, MapPin, Warehouse, TrendingUp, Landmark, CloudRain, Calculator, GraduationCap, Sprout, Ship, House } from "lucide-react";
 
 const UPDATE_SEC = 60;
 const DOCENTE = "Marcel Dancini Rodrigues";
@@ -25,9 +26,9 @@ const ALUNOS_PARTICIPANTES = ["Pietra Sanguini"]; // para incluir mais alunos, a
 const ASSISTENTE_URL = import.meta.env.VITE_ASSISTENTE_URL
   || "https://script.google.com/macros/s/AKfycbyDYcrR3XX5bqo0rKCp1c1ZgDHf4GCHsJv7jesNPo5PEtJT6qYMLCyUV6OGmB1ur-jrBA/exec";
 const API_MOEDAS_URL = "https://economia.awesomeapi.com.br/json/last/USD-BRL,EUR-BRL,GBP-BRL,ARS-BRL";
-const TABS = ["painel", "futuros", "chicago", "cooperativas", "safra", "exportacoes", "clima", "calculadoras", "aprender", "noticias", "historico", "graficos", "glossario"];
-const TAB_LABELS = { painel: "Painel", futuros: "Futuros", chicago: "Chicago", cooperativas: "Cotações Cooperativas", safra: "Safra", exportacoes: "Exportações", clima: "Clima", calculadoras: "Calculadoras", aprender: "Aprender", noticias: "Notícias", historico: "Histórico", graficos: "Gráficos", glossario: "Glossário" };
-const TAB_ICONS = { painel: Activity, futuros: TrendingUp, chicago: Landmark, cooperativas: Warehouse, safra: Sprout, exportacoes: Ship, clima: CloudRain, calculadoras: Calculator, aprender: GraduationCap, noticias: Newspaper, historico: Clock, graficos: BarChart3, glossario: BookOpen };
+const TABS = ["inicio", "painel", "futuros", "chicago", "cooperativas", "safra", "exportacoes", "clima", "calculadoras", "aprender", "noticias", "historico", "graficos", "glossario"];
+const TAB_LABELS = { inicio: "Início", painel: "Painel", futuros: "Futuros", chicago: "Chicago", cooperativas: "Cotações Cooperativas", safra: "Safra", exportacoes: "Exportações", clima: "Clima", calculadoras: "Calculadoras", aprender: "Aprender", noticias: "Notícias", historico: "Histórico", graficos: "Gráficos", glossario: "Glossário" };
+const TAB_ICONS = { inicio: House, painel: Activity, futuros: TrendingUp, chicago: Landmark, cooperativas: Warehouse, safra: Sprout, exportacoes: Ship, clima: CloudRain, calculadoras: Calculator, aprender: GraduationCap, noticias: Newspaper, historico: Clock, graficos: BarChart3, glossario: BookOpen };
 
 const INIT_MOEDAS = [
   { id: "usd", nome: "Dólar Comercial", emoji: "💵", valor: 4.912, var: -1.12 },
@@ -621,6 +622,7 @@ function GlossarioTab({ inicial }) {
 // Tudo o que a busca do topo encontra: título, onde fica (grupo e detalhe), palavras extras e o destino.
 const SINONIMOS_PARANA = { "Suíno": "porco", Boi: "gado arroba", Vaca: "gado arroba", "Erva-mate": "chimarrão", Mandioca: "aipim macaxeira", "Café em coco": "café", "Café beneficiado": "café" };
 const DESCRICAO_ABA = {
+  inicio: "Resumo do dia: mercado, clima, safra, notícias e atalhos para a aula",
   painel: "Moedas, ações, commodities, indicadores, combustíveis e previsão do tempo", futuros: "Contratos agrícolas nas bolsas internacionais",
   chicago: "Soja, milho, trigo e boi na Bolsa de Chicago, com vencimentos e valor em reais",
   safra: "Produção do Paraná, da região e de Santa Mariana, andamento do plantio e calendário agrícola",
@@ -662,7 +664,7 @@ const INDICE_BUSCA = [
 ];
 
 export default function App() {
-  const [tab, setTab] = useState("painel");
+  const [tab, setTab] = useState("inicio");
   const [clock, setClock] = useState(new Date());
   const [cd, setCd] = useState(UPDATE_SEC);
   const [paused, setPaused] = useState(false);
@@ -784,16 +786,13 @@ export default function App() {
     <div className="min-h-screen" style={{ background: "linear-gradient(180deg,#f8fafc 0%,#ecfdf5 50%,#f0f9ff 100%)", fontFamily: "system-ui, sans-serif" }}>
       <div className="max-w-4xl mx-auto px-3 pt-3 pb-2">
         <div className="rounded-xl overflow-hidden" style={{ background: "linear-gradient(135deg,#0c2340 0%,#1a5276 40%,#1e8449 100%)" }}>
-          <div className="px-4 py-4 flex flex-col items-center text-center">
-            <div className="flex items-center justify-center gap-1.5 mb-0.5"><Wheat size={14} color="#fbbf24" /><span style={{ fontSize: 10, color: "#fbbf24", fontWeight: 700, letterSpacing: 1, textTransform: "uppercase" }}>Informativo Diário</span></div>
-            <h1 className="text-base font-bold text-white">Mercado Agrícola</h1>
-            <div className="rounded-full border-2 border-white flex items-center justify-center shrink-0 mt-3" style={{ width: 56, height: 56, background: "radial-gradient(circle, #2E7D32 60%, #1B5E20 100%)" }}>
-              <div className="text-center leading-none"><div style={{ fontSize: 6.5, color: "#fff", fontWeight: 700 }}>C.E.E.P.A.</div><div style={{ fontSize: 8, color: "#fbbf24", fontWeight: 900, marginTop: 1 }}>FERNANDO</div><div style={{ fontSize: 8, color: "#fbbf24", fontWeight: 900 }}>COSTA</div></div>
+          <div className="px-4 py-2.5 flex flex-col items-center text-center">
+            <div className="flex items-center justify-center gap-2">
+              <div className="rounded-full border border-white flex items-center justify-center shrink-0" style={{ width: 30, height: 30, background: "radial-gradient(circle, #2E7D32 60%, #1B5E20 100%)" }} aria-hidden="true"><Wheat size={15} color="#fbbf24" /></div>
+              <h1 className="text-sm sm:text-base font-bold text-white">C.E.E.P.A. Fernando Costa</h1>
             </div>
-            <div className="text-sm font-bold text-white mt-2">C.E.E.P.A. Fernando Costa</div>
-            <div className="text-xs" style={{ color: "rgba(255,255,255,0.55)" }}>Santa Mariana, PR • {new Date().toLocaleDateString("pt-BR")}</div>
-            <div className="text-xs mt-1" style={{ color: "rgba(255,255,255,0.55)" }}>Docente: <strong style={{ color: "rgba(255,255,255,0.8)" }}>{DOCENTE}</strong></div>
-            <div className="text-xs" style={{ color: "rgba(255,255,255,0.55)" }}>{ALUNOS_PARTICIPANTES.length > 1 ? "Estudantes participantes" : "Estudante participante"}: <strong style={{ color: "rgba(255,255,255,0.8)" }}>{ALUNOS_PARTICIPANTES.join(", ")}</strong></div>
+            <div className="text-xs mt-1" style={{ color: "rgba(255,255,255,0.7)" }}><span style={{ color: "#fbbf24", fontWeight: 700 }}>Informativo diário do mercado agrícola</span><span className="hidden sm:inline"> • </span><span className="block sm:inline">Santa Mariana, PR • {new Date().toLocaleDateString("pt-BR")}</span></div>
+            <div className="text-xs" style={{ color: "rgba(255,255,255,0.55)" }}>Docente: <strong style={{ color: "rgba(255,255,255,0.8)" }}>{DOCENTE}</strong><span className="hidden sm:inline"> • </span><span className="block sm:inline">{ALUNOS_PARTICIPANTES.length > 1 ? "Estudantes participantes" : "Estudante participante"}: <strong style={{ color: "rgba(255,255,255,0.8)" }}>{ALUNOS_PARTICIPANTES.join(", ")}</strong></span></div>
           </div>
         </div>
       </div>
@@ -811,6 +810,9 @@ export default function App() {
         </div>
       </div>
       <div id="conteudo" className="max-w-4xl mx-auto px-3 py-4" style={{ scrollMarginTop: 100 }}>
+        {tab === "inicio" && <Inicio indicadores={indicadores} onIr={irPara} onCastor={ASSISTENTE_URL ? () => mostrarMascote(true) : null}
+          dolar={dataSource === "real" ? moedas.find(m => m.id === "usd")?.valor : dataSource === "simulado" ? null : undefined}
+          variacaoDoDolar={dataSource === "real" ? moedas.find(m => m.id === "usd")?.var : null} />}
         {tab === "painel" && <CountdownBar sec={cd} total={UPDATE_SEC} paused={paused} onToggle={() => setPaused(p => !p)} onRefresh={doUpdate} count={count} last={last} source={dataSource} />}
         {tab === "painel" && <PainelTab moedas={moedas} pm={pm} flash={flash} indicadores={indicadores} refresh={count} onViewChart={viewChart} alvo={alvo} />}
         {tab === "futuros" && <FuturesQuotes key={alvo?.futuro ? alvo.n : "futuros"} inicial={alvo?.futuro} />}

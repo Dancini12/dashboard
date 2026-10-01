@@ -56,3 +56,30 @@ export function avisosDaPrevisao(dias, hoje) {
     chuvaForte: futuros.filter(d => (d.chuva ?? 0) >= 50),
   };
 }
+
+// Consulta ao Open-Meteo usada pela aba Clima e pelo resumo da página inicial: 92 dias passados,
+// 16 de previsão e a umidade do solo em três profundidades.
+export const SANTA_MARIANA = { nome: "Santa Mariana, Paraná", latitude: -23.15, longitude: -50.52 };
+const DIAS_PASSADOS = 92;
+const CAMADAS = [["soil_moisture_0_to_7cm", "0 a 7 cm", "onde a semente germina"], ["soil_moisture_7_to_28cm", "7 a 28 cm", "onde está a maior parte das raízes"], ["soil_moisture_28_to_100cm", "28 a 100 cm", "reserva para os dias secos"]];
+
+export async function buscarClima({ latitude, longitude }) {
+  const parametros = new URLSearchParams({
+    latitude, longitude, timezone: "America/Sao_Paulo", past_days: DIAS_PASSADOS, forecast_days: 16,
+    daily: "precipitation_sum,temperature_2m_max,temperature_2m_min,et0_fao_evapotranspiration,precipitation_probability_max,weather_code",
+    hourly: CAMADAS.map(([chave]) => chave).join(","),
+  });
+  const response = await fetch(`https://api.open-meteo.com/v1/forecast?${parametros}`, { signal: AbortSignal.timeout(30000) });
+  if (!response.ok) throw new Error("indisponível");
+  const { daily, hourly } = await response.json();
+  const dias = daily.time.map((data, i) => ({
+    data, chuva: daily.precipitation_sum[i], et0: daily.et0_fao_evapotranspiration[i], maxima: daily.temperature_2m_max[i],
+    minima: daily.temperature_2m_min[i], probabilidade: daily.precipitation_probability_max[i], tempo: daily.weather_code[i],
+  }));
+  const hoje = dias[DIAS_PASSADOS].data;
+  // umidade do solo: a leitura mais recente até agora e a de 7 dias antes
+  const agora = `${hoje}T${String(new Date().getHours()).padStart(2, "0")}:00`;
+  const iAgora = Math.max(0, hourly.time.findLastIndex(t => t <= agora));
+  const solo = CAMADAS.map(([chave, camada, papel]) => ({ camada, papel, agora: hourly[chave][iAgora], semanaPassada: hourly[chave][Math.max(0, iAgora - 7 * 24)] }));
+  return { dias, hoje, solo };
+}

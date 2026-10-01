@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { COMMODITIES, FUTURES, APELIDOS_FUTUROS } from '../catalogo';
 
 async function fetchMarket(params, signal) {
   const response = await fetch(`/api/market?${new URLSearchParams(params)}`, { signal });
@@ -22,12 +23,14 @@ const COMMODITY_RE = /\b(soja|milho|cafe|boi|trigo|feijao|algodao|leite|laranja|
 const semAcento = texto => texto.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
 const EVENTO_BUSCAR_COMMODITY = 'agroinfo:buscar-commodity';
 
-export function StockQuotes({ refresh, onViewChart }) {
+export function StockQuotes({ refresh, onViewChart, buscaInicial }) {
   const [symbol, setSymbol] = useState(() => {
+    const direto = buscaInicial?.trim().toUpperCase();
+    if (direto && TICKER_RE.test(direto)) return direto; // código vindo da busca do topo
     const saved = readPreference('agroinfo.stock.v1', 'PETR4');
     return typeof saved === 'string' && TICKER_RE.test(saved) ? saved : 'PETR4';
   });
-  const [input, setInput] = useState(symbol);
+  const [input, setInput] = useState(buscaInicial?.trim() || symbol);
   const [suggestions, setSuggestions] = useState([]);
   const [searching, setSearching] = useState(false);
   const [validation, setValidation] = useState('');
@@ -74,7 +77,7 @@ export function StockQuotes({ refresh, onViewChart }) {
 
   const quote = state.quote?.symbol === symbol ? state.quote : null;
 
-  return <section className="rounded-xl border bg-white p-3 shadow-sm">
+  return <section id="consultar-acao" className="rounded-xl border bg-white p-3 shadow-sm" style={{ scrollMarginTop: 100 }}>
     <h2 className="text-sm font-bold text-blue-900 mb-3">Consultar ação ou ETF da B3</h2>
     <form onSubmit={event => {
       event.preventDefault();
@@ -136,66 +139,25 @@ export function StockQuotes({ refresh, onViewChart }) {
   </section>;
 }
 
-const COMMODITIES = [
-  ['26', 'Soja · Paraná', 'Brasil'], ['121', 'Soja · Paranaguá', 'Brasil'],
-  ['91', 'Milho · ESALQ/B3', 'Brasil'], ['12', 'Boi gordo · ESALQ/B3', 'Brasil'],
-  ['29', 'Café arábica · CEPEA', 'Brasil'], ['31', 'Café robusta · CEPEA', 'Brasil'],
-  ['211', 'Trigo · CEPEA', 'Brasil'], ['210', 'Suíno vivo · CEPEA', 'Brasil'],
-  ['155', 'Leite · produtor', 'Brasil'], ['84', 'Algodão · CEPEA', 'Brasil'],
-  ['288', 'Feijão carioca · CEPEA/CNA', 'Brasil'], ['201', 'Laranja · indústria', 'Brasil'],
-  ['23', 'Soja · Chicago', 'Internacional'], ['10', 'Milho · Chicago', 'Internacional'],
-  ['78', 'Trigo · Chicago', 'Internacional'], ['4', 'Café · Nova Iorque', 'Internacional'],
-  ['5', 'Café · Londres', 'Internacional'], ['55', 'Algodão · Nova Iorque', 'Internacional'],
-  ['53', 'Cacau · Nova Iorque', 'Internacional'], ['13', 'Suco de laranja · Nova Iorque', 'Internacional'],
-];
-
 // Liga cada commodity da lista de cotação à série histórica anual (2020-2026) exibida em Gráficos.
 const COMMODITY_HISTORY_KEY = {
   '26': 'soja', '121': 'soja', '91': 'milho', '12': 'boi',
   '29': 'cafe', '31': 'cafe', '211': 'trigo', '155': 'leite', '288': 'feijao',
 };
 
-// kg = quanto pesa a unidade de cotação; serve para converter o preço em US$ por tonelada e por kg.
-// Unidades começando com US¢ são cotadas em centavos de dólar.
-const FUTURES = [
-  { key: 'milho', name: 'Milho', emoji: '🌽', group: 'Grãos e oleaginosas', symbol: 'ZC=F', exchange: 'CBOT', unit: 'US¢/bushel', kg: 25.40117, cotacao: 'centavos de dólar por bushel (1 bushel de milho = 25,4 kg)', b3: 'CCM — Milho B3', explanation: 'O CCM brasileiro é cotado em reais por saca de 60 kg. Chicago é uma referência internacional e pode divergir conforme região, safra, câmbio e frete.' },
-  { key: 'soja', name: 'Soja', emoji: '🌱', group: 'Grãos e oleaginosas', symbol: 'ZS=F', exchange: 'CBOT', unit: 'US¢/bushel', kg: 27.21554, cotacao: 'centavos de dólar por bushel (1 bushel de soja = 27,2 kg)', b3: 'SJC — Soja CME/B3', explanation: 'Câmbio, prêmio portuário, localização e frete explicam a diferença entre Chicago e o preço em reais por saca.' },
-  { key: 'farelo', name: 'Farelo de soja', emoji: '🫘', group: 'Grãos e oleaginosas', symbol: 'ZM=F', exchange: 'CBOT', unit: 'US$/tonelada curta', kg: 907.18474, cotacao: 'dólares por tonelada curta (1 tonelada curta = 2.000 libras = 907 kg)', b3: 'Referência internacional', explanation: 'O farelo vai para a ração animal. No Brasil, o preço depende do câmbio, do frete e da oferta das indústrias esmagadoras.' },
-  { key: 'oleo', name: 'Óleo de soja', emoji: '🫗', group: 'Grãos e oleaginosas', symbol: 'ZL=F', exchange: 'CBOT', unit: 'US¢/libra-peso', kg: 0.45359237, cotacao: 'centavos de dólar por libra-peso (1 libra-peso = 0,454 kg)', b3: 'Referência internacional', explanation: 'Acompanha a demanda por óleo de cozinha e biodiesel. No Brasil, câmbio e a mistura obrigatória de biodiesel pesam no preço.' },
-  { key: 'trigo', name: 'Trigo (Chicago · SRW)', emoji: '🌾', group: 'Grãos e oleaginosas', symbol: 'ZW=F', exchange: 'CBOT', unit: 'US¢/bushel', kg: 27.21554, cotacao: 'centavos de dólar por bushel (1 bushel de trigo = 27,2 kg)', b3: 'Referência física regional', explanation: 'Trigo mole de inverno (SRW). Qualidade, origem, câmbio e importações influenciam fortemente o preço brasileiro.' },
-  { key: 'trigo-hrw', name: 'Trigo (Kansas · HRW)', emoji: '🌾', group: 'Grãos e oleaginosas', symbol: 'KE=F', exchange: 'CBOT', unit: 'US¢/bushel', kg: 27.21554, cotacao: 'centavos de dólar por bushel (1 bushel de trigo = 27,2 kg)', b3: 'Referência física regional', explanation: 'Trigo duro de inverno (HRW), mais usado para pão. No Brasil, o preço segue a qualidade do grão, o câmbio e o trigo importado.' },
-  { key: 'aveia', name: 'Aveia', emoji: '🥣', group: 'Grãos e oleaginosas', symbol: 'ZO=F', exchange: 'CBOT', unit: 'US¢/bushel', kg: 14.51495, cotacao: 'centavos de dólar por bushel (1 bushel de aveia = 14,5 kg)', b3: 'Referência física regional', explanation: 'No Sul do Brasil a aveia é cotada em reais por saca e depende muito da safra de inverno local.' },
-  { key: 'arroz', name: 'Arroz em casca', emoji: '🍚', group: 'Grãos e oleaginosas', symbol: 'ZR=F', exchange: 'CBOT', unit: 'US$/cwt', kg: 45.359237, cotacao: 'dólares por cwt (1 cwt = 100 libras = 45,4 kg)', b3: 'Referência física regional', explanation: 'No Brasil, o arroz em casca é cotado em reais por saca de 50 kg, principalmente no Rio Grande do Sul. Clima e câmbio influenciam.' },
-  { key: 'cafe', name: 'Café arábica', emoji: '☕', group: 'Café, açúcar, algodão e outros', symbol: 'KC=F', exchange: 'ICE US', unit: 'US¢/libra-peso', kg: 0.45359237, cotacao: 'centavos de dólar por libra-peso (1 libra-peso = 0,454 kg)', b3: 'ICF — Café Arábica B3', explanation: 'Tipo, bebida, peneira, certificação, câmbio e praça de entrega alteram o valor recebido pelo produtor.' },
-  { key: 'acucar', name: 'Açúcar', emoji: '🧊', group: 'Café, açúcar, algodão e outros', symbol: 'SB=F', exchange: 'ICE US', unit: 'US¢/libra-peso', kg: 0.45359237, cotacao: 'centavos de dólar por libra-peso (1 libra-peso = 0,454 kg)', b3: 'Referência internacional', explanation: 'A cotação é do açúcar bruto internacional; não equivale diretamente ao preço da cana ou do açúcar doméstico.' },
-  { key: 'algodao', name: 'Algodão', emoji: '☁️', group: 'Café, açúcar, algodão e outros', symbol: 'CT=F', exchange: 'ICE US', unit: 'US¢/libra-peso', kg: 0.45359237, cotacao: 'centavos de dólar por libra-peso de pluma (1 libra-peso = 0,454 kg)', b3: 'Referência internacional', explanation: 'Qualidade da pluma, câmbio, prêmio ou deságio e custos de exportação determinam o preço local.' },
-  { key: 'cacau', name: 'Cacau', emoji: '🍫', group: 'Café, açúcar, algodão e outros', symbol: 'CC=F', exchange: 'ICE US', unit: 'US$/tonelada', kg: 1000, cotacao: 'dólares por tonelada métrica (1.000 kg)', b3: 'Referência internacional', explanation: 'O cacau da Bahia e do Pará segue Nova Iorque e Londres convertidos pelo câmbio, com prêmio ou desconto pela qualidade da amêndoa.' },
-  { key: 'suco', name: 'Suco de laranja', emoji: '🍊', group: 'Café, açúcar, algodão e outros', symbol: 'OJ=F', exchange: 'ICE US', unit: 'US¢/libra-peso', kg: 0.45359237, cotacao: 'centavos de dólar por libra-peso de suco concentrado congelado (1 libra-peso = 0,454 kg)', b3: 'Referência internacional', explanation: 'O Brasil é o maior exportador de suco de laranja. A caixa de laranja paga ao produtor (40,8 kg) acompanha em parte este contrato.' },
-  { key: 'boi', name: 'Boi gordo', emoji: '🐂', group: 'Pecuária e leite', symbol: 'LE=F', exchange: 'CME', unit: 'US¢/libra-peso', kg: 0.45359237, cotacao: 'centavos de dólar por libra-peso de peso vivo (1 libra-peso = 0,454 kg)', b3: 'BGI — Boi Gordo B3', explanation: 'O contrato americano reflete outro mercado. No Brasil, o boi é cotado em reais por arroba (15 kg); use o BGI e o preço da sua praça como referências principais.' },
-  { key: 'boi-reposicao', name: 'Boi de reposição', emoji: '🐄', group: 'Pecuária e leite', symbol: 'GF=F', exchange: 'CME', unit: 'US¢/libra-peso', kg: 0.45359237, cotacao: 'centavos de dólar por libra-peso de peso vivo (1 libra-peso = 0,454 kg)', b3: 'Referência física regional', explanation: 'São bezerros e garrotes para engorda nos EUA. No Brasil, a referência é o preço do bezerro ou do garrote na sua região.' },
-  { key: 'suino', name: 'Suíno', emoji: '🐖', group: 'Pecuária e leite', symbol: 'HE=F', exchange: 'CME', unit: 'US¢/libra-peso', kg: 0.45359237, cotacao: 'centavos de dólar por libra-peso de carcaça (1 libra-peso = 0,454 kg)', b3: 'Referência física regional', explanation: 'O contrato americano é por peso de carcaça. No Brasil, o suíno vivo é cotado em reais por kg, e o custo do milho e do farelo pesa muito.' },
-  { key: 'leite', name: 'Leite (Classe III)', emoji: '🥛', group: 'Pecuária e leite', symbol: 'DC=F', exchange: 'CME', unit: 'US$/cwt', kg: 45.359237, cotacao: 'dólares por cwt de leite (1 cwt = 100 libras = 45,4 kg)', b3: 'Referência física regional', explanation: 'Leite para fabricação de queijo nos EUA. No Brasil, o leite é pago ao produtor em reais por litro, com bônus por gordura, proteína e qualidade.' },
-];
 const FUTURES_GROUPS = [...new Set(FUTURES.map(item => item.group))];
 const pesoDaUnidade = kg => `${kg.toLocaleString('pt-BR', { maximumFractionDigits: kg >= 100 ? 0 : kg >= 1 ? 1 : 3 })} kg`;
 const dolar = valor => valor.toLocaleString('pt-BR', { style: 'currency', currency: 'USD', minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
-// Outros nomes que o aluno pode digitar para achar o produto na lista.
-const APELIDOS = {
-  milho: 'grão de milho', soja: 'grão de soja', farelo: 'ração', oleo: 'óleo de cozinha biodiesel',
-  trigo: 'farinha pão', 'trigo-hrw': 'farinha pão', acucar: 'cana-de-açúcar', algodao: 'pluma fibra',
-  cacau: 'chocolate', suco: 'laranja citros', boi: 'gado bovino arroba', 'boi-reposicao': 'gado bovino bezerro garrote',
-  suino: 'porco carne suína', leite: 'queijo laticínio',
-};
-
-export function FuturesQuotes() {
+export function FuturesQuotes({ inicial }) {
   const [query, setQuery] = useState('');
-  const [selected, setSelected] = useState(null); // nada pré-selecionado: o aluno escolhe na lista
+  // nada pré-selecionado: o aluno escolhe na lista (ou chega aqui pela busca do topo)
+  const [selected, setSelected] = useState(() => FUTURES.find(item => item.key === inicial) ?? null);
   const [consulta, setConsulta] = useState(0); // escolher de novo o mesmo produto busca a cotação outra vez
-  const [state, setState] = useState({});
+  const [state, setState] = useState(() => (inicial ? { loading: true } : {}));
   const normalize = value => value.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
   const term = normalize(query);
-  const visiveis = FUTURES.filter(item => normalize(`${item.name} ${item.key} ${APELIDOS[item.key] ?? ''}`).includes(term));
+  const visiveis = FUTURES.filter(item => normalize(`${item.name} ${item.key} ${APELIDOS_FUTUROS[item.key] ?? ''}`).includes(term));
 
   const choose = item => {
     setState({ loading: true }); setSelected(item); setConsulta(n => n + 1);
@@ -276,10 +238,12 @@ export function FuturesQuotes() {
   </section>;
 }
 
-export function CommodityQuotes({ refresh, onViewChart }) {
+export function CommodityQuotes({ refresh, onViewChart, adicionar }) {
   const [selected, setSelected] = useState(() => {
     const saved = readPreference('agroinfo.commodities.v1', ['26', '23']);
-    return Array.isArray(saved) ? saved.filter(id => COMMODITIES.some(row => row[0] === id)) : ['26', '23'];
+    const lista = Array.isArray(saved) ? saved.filter(id => COMMODITIES.some(row => row[0] === id)) : ['26', '23'];
+    // commodity escolhida na busca do topo entra na lista
+    return adicionar && !lista.includes(adicionar) ? [...lista, adicionar] : lista;
   });
   const [search, setSearch] = useState('');
   const [notFound, setNotFound] = useState(false);
@@ -335,7 +299,7 @@ export function CommodityQuotes({ refresh, onViewChart }) {
       const siteFont = 'system-ui,-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif';
       const url = `https://www.noticiasagricolas.com.br/widgets/cotacoes?id=${id}&fonte=${encodeURIComponent(siteFont)}&largura=420`;
       const historyKey = COMMODITY_HISTORY_KEY[id];
-      return <article key={id} className="rounded-xl border shadow-sm bg-white p-3 min-w-0" style={{ borderColor: 'rgba(0,0,0,0.1)' }}>
+      return <article key={id} id={`commodity-${id}`} className="rounded-xl border shadow-sm bg-white p-3 min-w-0" style={{ borderColor: 'rgba(0,0,0,0.1)', scrollMarginTop: 100 }}>
         <div className="flex items-center justify-between gap-2 mb-2 pb-2" style={{ borderBottom: '1px solid #e5e7eb' }}>
           <h3 className="font-semibold text-sm">{name} <span className="text-xs text-slate-500">· {market}</span></h3>
           {onViewChart && historyKey && (

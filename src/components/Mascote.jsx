@@ -55,7 +55,7 @@ function lerPosicao() {
 // nele (ou em "Tire sua dúvida") abre o balão de diálogo do assistente. Balançar
 // corpo e cabeça é CSS; o piscar é aqui, em intervalos aleatórios (às vezes uma
 // piscada dupla).
-export default function Mascote({ onFechar, assistenteUrl, dadosPainel }) {
+export default function Mascote({ onFechar, assistenteUrl, dadosPainel, pergunta }) {
   const [olhos, setOlhos] = useState(0);
   const [pos, setPos] = useState(lerPosicao); // null = canto padrão
   const [inclina, setInclina] = useState(null); // graus enquanto arrasta; null = solto
@@ -81,6 +81,19 @@ export default function Mascote({ onFechar, assistenteUrl, dadosPainel }) {
     }
     setConversa(abrir);
   };
+
+  // Pergunta feita pela busca do topo: abre o balão (se estiver fechado) para o Castor responder.
+  useEffect(() => {
+    if (!pergunta || !assistenteUrl) return;
+    const t = setTimeout(() => {
+      if (conversando.current) return;
+      conversando.current = true;
+      setCena(null);
+      setBalao(lados(caixa.current));
+      setConversa(true);
+    }, 0);
+    return () => clearTimeout(t);
+  }, [pergunta, assistenteUrl]);
 
   const aoPressionar = (e) => {
     if (e.button !== 0) return;
@@ -223,7 +236,7 @@ export default function Mascote({ onFechar, assistenteUrl, dadosPainel }) {
         </button>
       )}
       {assistenteUrl && (
-        <AssistenteAgro url={assistenteUrl} dadosDashboard={dadosPainel} aberto={conversa}
+        <AssistenteAgro url={assistenteUrl} dadosDashboard={dadosPainel} aberto={conversa} pergunta={pergunta}
           onFechar={alternarConversa} onPensando={setPensando} onFalando={setFalando}
           className={`${balao.direita ? "lado-esquerda" : "lado-direita"}${balao.embaixo ? " embaixo" : ""}`} />
       )}

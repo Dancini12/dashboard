@@ -5,6 +5,9 @@ const FEEDS = {
   internacional: "https://news.google.com/rss/search?q=%28Chicago%20OR%20USDA%20OR%20China%20OR%20%22Estados%20Unidos%22%20OR%20Argentina%20OR%20%22Uni%C3%A3o%20Europeia%22%20OR%20Europa%20OR%20%C3%8Dndia%20OR%20%22mercado%20internacional%22%29%20%28soja%20OR%20milho%20OR%20trigo%20OR%20caf%C3%A9%20OR%20carne%20OR%20a%C3%A7%C3%BAcar%20OR%20algod%C3%A3o%29%20when%3A7d&hl=pt-BR&gl=BR&ceid=BR:pt-419",
 };
 
+// Busca do topo do site: notícias dos últimos 30 dias sobre o que o visitante digitou.
+const buscaUrl = termo => `https://news.google.com/rss/search?q=${encodeURIComponent(`${termo} when:30d`)}&hl=pt-BR&gl=BR&ceid=BR:pt-419`;
+
 function getTag(xml, tag) {
   const m = xml.match(new RegExp(`<${tag}(?:[^>]*)><!\\[CDATA\\[([\\s\\S]*?)\\]\\]><\\/${tag}>`))?.[1]
     ?? xml.match(new RegExp(`<${tag}(?:[^>]*)>([\\s\\S]*?)<\\/${tag}>`))?.[1]
@@ -24,7 +27,9 @@ function decodeEntities(str) {
 
 export default async function handler(req, res) {
   const feed = req.query?.feed ?? "agro";
-  const url = FEEDS[feed];
+  const termo = String(req.query?.q ?? "").trim();
+  if (feed === "busca" && (termo.length < 2 || termo.length > 60)) return res.status(400).json({ error: "busca inválida" });
+  const url = feed === "busca" ? buscaUrl(termo) : FEEDS[feed];
   if (!url) return res.status(400).json({ error: "feed inválido" });
 
   try {

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Clock, ExternalLink } from "lucide-react";
+import { APELIDOS_PARANA as APELIDOS } from "../catalogo";
 
 // Aba "Cotações Cooperativas", por enquanto só com o Paraná: cotação diária do SIMA
 // (DERAL/SEAB-PR), o preço de compra pago pelos atacadistas (cooperativas, cerealistas
@@ -9,14 +10,6 @@ const ATUALIZAR_MS = 30 * 60 * 1000; // o DERAL publica uma vez por dia útil
 const REGIAO_DA_ESCOLA = "Cornélio Procópio";
 const PAGINA_DERAL = "https://www.agricultura.pr.gov.br/Cotacao-Diaria-SIMA";
 
-// Nomes curtos para os botões, na ordem em que aparecem.
-const APELIDOS = [
-  [/^soja/i, "Soja"], [/^milho/i, "Milho"], [/^trigo/i, "Trigo"],
-  [/^caf[ée] beneficiado/i, "Café beneficiado"], [/^caf[ée] em coco/i, "Café em coco"],
-  [/^feij[ãa]o carioca/i, "Feijão carioca"], [/^feij[ãa]o preto/i, "Feijão preto"],
-  [/^mandioca/i, "Mandioca"], [/^arroz/i, "Arroz"], [/^boi/i, "Boi"], [/^vaca/i, "Vaca"],
-  [/^su[íi]no/i, "Suíno"], [/^erva/i, "Erva-mate"],
-];
 const apelido = nome => APELIDOS.find(([re]) => re.test(nome))?.[1] ?? nome.split(" ").slice(0, 2).join(" ");
 const ordem = nome => { const i = APELIDOS.findIndex(([re]) => re.test(nome)); return i < 0 ? 99 : i; };
 const UNIDADES = { "sc 60 kg": "saca de 60 kg", "kg renda": "kg (renda)" };
@@ -43,10 +36,10 @@ const COOPERATIVAS_PR = [
   { nome: "Integrada", sede: "Londrina", regiao: "Londrina", produtos: "soja, milho, trigo, café e laranja", site: "https://www.integrada.coop.br/" },
 ];
 
-export default function CotacoesCooperativas() {
+export default function CotacoesCooperativas({ produtoInicial = "Soja" }) {
   const [cotacao, setCotacao] = useState(null);
   const [erro, setErro] = useState(false);
-  const [escolhido, setEscolhido] = useState("Soja");
+  const [escolhido, setEscolhido] = useState(produtoInicial);
   const [destaque, setDestaque] = useState(null);
 
   useEffect(() => {

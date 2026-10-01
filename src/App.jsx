@@ -3,7 +3,9 @@ import Mascote, { BotaoMascote } from "./components/Mascote";
 import useMascote from "./components/useMascote";
 import CotacoesCooperativas from "./components/CotacoesCooperativas";
 import { StockQuotes, CommodityQuotes, FuturesQuotes, TICKER_RE } from "./components/MarketQuotes";
-import { useState, useEffect, useRef, useCallback } from "react";
+import { COMMODITIES, FUTURES, APELIDOS_FUTUROS, PRODUTOS_PARANA } from "./catalogo";
+import BuscaAgro from "./components/BuscaAgro";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { RefreshCw, BookOpen, BarChart3, Clock, Wheat, DollarSign, Activity, ChevronDown, ChevronUp, Timer, ArrowRight, Pause, Play, Newspaper, ExternalLink, Search, MapPin, Warehouse, TrendingUp } from "lucide-react";
 
@@ -86,8 +88,8 @@ function VarBadge({ val }) {
   const p = val >= 0;
   return <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full font-bold" style={{ background: p ? "#dcfce7" : "#fee2e2", color: p ? "#166534" : "#991b1b", fontSize: 10 }}>{p ? "▲+" : "▼"}{fmt(val)}%</span>;
 }
-function Card({ children, className = "", style = {} }) {
-  return <div className={`rounded-xl border shadow-sm ${className}`} style={{ background: "rgba(255,255,255,0.9)", borderColor: "rgba(0,0,0,0.06)", ...style }}>{children}</div>;
+function Card({ children, className = "", style = {}, id }) {
+  return <div id={id} className={`rounded-xl border shadow-sm ${className}`} style={{ scrollMarginTop: 100, background: "rgba(255,255,255,0.9)", borderColor: "rgba(0,0,0,0.06)", ...style }}>{children}</div>;
 }
 function SecTitle({ icon: I, title, color = "#1a3a5c" }) {
   return <div className="flex items-center gap-2 mb-3"><div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: color }}><I size={13} color="#fff" /></div><h2 className="text-sm font-bold" style={{ color }}>{title}</h2></div>;
@@ -174,7 +176,7 @@ function WeatherWidget() {
   }, []);
 
   return (
-    <Card className="p-3" style={{ borderLeft: "4px solid #1e40af", background: "linear-gradient(135deg,#dbeafe 0%,#eff6ff 100%)" }}>
+    <Card id="card-tempo" className="p-3" style={{ borderLeft: "4px solid #1e40af", background: "linear-gradient(135deg,#dbeafe 0%,#eff6ff 100%)" }}>
       <div className="flex items-center gap-2 mb-2.5">
         <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0" style={{ background: "#1e40af" }}>
           <span style={{ fontSize: 15 }}>🌤️</span>
@@ -248,7 +250,7 @@ function WeatherWidget() {
   );
 }
 
-function PainelTab({ moedas, pm, flash, selic, refresh, onViewChart }) {
+function PainelTab({ moedas, pm, flash, selic, refresh, onViewChart, alvo }) {
   const indicadores = INDICADORES.map(ind => ind.nome === 'Selic' ? {
     ...ind, valor: selic.value != null ? `${fmt(selic.value)}% a.a.` : selic.error ? 'Indisponível' : 'Carregando…',
     periodo: selic.date, desc: selic.error ? (selic.value != null ? 'Falha na atualização; última taxa recebida' : 'Banco Central indisponível; nova tentativa automática') : 'Meta BC · atualização automática',
@@ -257,11 +259,11 @@ function PainelTab({ moedas, pm, flash, selic, refresh, onViewChart }) {
     <div className="space-y-4">
       <WeatherWidget />
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-        <Card className="p-3"><SecTitle icon={DollarSign} title="Moedas" color="#1a5276" />{moedas.map((m, i) => <PriceRow key={m.id} emoji={m.emoji} nome={m.nome} valor={m.valor} prev={pm[m.id]} varPct={m.var} flash={flash.has(m.id)} alt={i % 2 === 0} />)}<div className="mt-2 text-xs opacity-25 text-right">Fonte: AwesomeAPI (tempo real)</div></Card>
-        <StockQuotes refresh={refresh} onViewChart={onViewChart} />
+        <Card id="card-moedas" className="p-3"><SecTitle icon={DollarSign} title="Moedas" color="#1a5276" />{moedas.map((m, i) => <PriceRow key={m.id} emoji={m.emoji} nome={m.nome} valor={m.valor} prev={pm[m.id]} varPct={m.var} flash={flash.has(m.id)} alt={i % 2 === 0} />)}<div className="mt-2 text-xs opacity-25 text-right">Fonte: AwesomeAPI (tempo real)</div></Card>
+        <StockQuotes key={alvo?.acao ? alvo.n : "acoes"} buscaInicial={alvo?.acao} refresh={refresh} onViewChart={onViewChart} />
       </div>
-      <CommodityQuotes refresh={refresh} onViewChart={onViewChart} />
-      <Card className="p-3"><SecTitle icon={BarChart3} title="Indicadores Econômicos" color="#6b21a8" /><div className="grid grid-cols-2 md:grid-cols-3 gap-2">{indicadores.map((ind, i) => (<div key={i} className="rounded-lg p-2 text-center" style={{ background: i % 2 === 0 ? "#faf5ff" : "#f5f3ff" }}><div className="text-xs font-semibold opacity-60">{ind.nome} {ind.periodo && `(${ind.periodo})`}</div><div className="text-base font-bold" style={{ color: "#6b21a8" }}>{ind.valor}</div><div className="text-xs opacity-40">{ind.desc}</div></div>))}</div><div className="mt-2 text-xs opacity-25 text-right">Fonte: BCB / IBGE / FGV</div></Card>
+      <CommodityQuotes key={alvo?.commodity ? alvo.n : "commodities"} adicionar={alvo?.commodity} refresh={refresh} onViewChart={onViewChart} />
+      <Card id="card-indicadores" className="p-3"><SecTitle icon={BarChart3} title="Indicadores Econômicos" color="#6b21a8" /><div className="grid grid-cols-2 md:grid-cols-3 gap-2">{indicadores.map((ind, i) => (<div key={i} className="rounded-lg p-2 text-center" style={{ background: i % 2 === 0 ? "#faf5ff" : "#f5f3ff" }}><div className="text-xs font-semibold opacity-60">{ind.nome} {ind.periodo && `(${ind.periodo})`}</div><div className="text-base font-bold" style={{ color: "#6b21a8" }}>{ind.valor}</div><div className="text-xs opacity-40">{ind.desc}</div></div>))}</div><div className="mt-2 text-xs opacity-25 text-right">Fonte: BCB / IBGE / FGV</div></Card>
       <div className="text-xs opacity-25 text-center">📌 Selic: Banco Central (SGS 432) • Demais indicadores: valores de referência fixos. Moedas podem conter estimativas ou simulação quando a fonte falha.</div>
     </div>
   );
@@ -321,9 +323,14 @@ function NewsCard({ item, cor }) {
 
 const NEWS_INTERVAL = 5 * 60;
 
-function NoticiasTab() {
-  const [feed, setFeed] = useState("agro");
-  const [news, setNews] = useState({ agro: [], mercado: [], internacional: [] });
+function NoticiasTab({ busca }) {
+  // quem buscou um assunto no topo do site vê primeiro as notícias sobre ele
+  const feeds = useMemo(() => (busca ? {
+    busca: { label: `🔎 ${busca}`, cor: "#9a3412", bg: "#fff7ed", desc: `Notícias dos últimos 30 dias sobre "${busca}".`, url: `/api/news?feed=busca&q=${encodeURIComponent(busca)}` },
+    ...NEWS_FEEDS,
+  } : NEWS_FEEDS), [busca]);
+  const [feed, setFeed] = useState(busca ? "busca" : "agro");
+  const [news, setNews] = useState({});
   const [loading, setLoading] = useState(true);
   const [lastUpdate, setLastUpdate] = useState(null);
   const [hasError, setHasError] = useState(false);
@@ -333,15 +340,15 @@ function NoticiasTab() {
     setLoading(true);
     setHasError(false);
     try {
-      const feeds = Object.keys(NEWS_FEEDS);
-      const results = await Promise.allSettled(feeds.map(k => fetch(`/api/news?feed=${k}`).then(r => r.json())));
-      setNews(Object.fromEntries(feeds.map((k, i) => [k,
+      const chaves = Object.keys(feeds);
+      const results = await Promise.allSettled(chaves.map(k => fetch(feeds[k].url ?? `/api/news?feed=${k}`).then(r => r.json())));
+      setNews(Object.fromEntries(chaves.map((k, i) => [k,
         results[i].status === "fulfilled" && results[i].value?.status === "ok" ? results[i].value.items : []])));
       setLastUpdate(new Date());
     } catch { setHasError(true); }
     setLoading(false);
     setCd(NEWS_INTERVAL);
-  }, []);
+  }, [feeds]);
 
   useEffect(() => {
     fetchNews();
@@ -357,8 +364,8 @@ function NoticiasTab() {
     return () => clearInterval(t);
   }, [fetchNews]);
 
-  const cfg = NEWS_FEEDS[feed];
-  const items = news[feed];
+  const cfg = feeds[feed];
+  const items = news[feed] ?? [];
   const pct = ((NEWS_INTERVAL - cd) / NEWS_INTERVAL) * 100;
   const mm = Math.floor(cd / 60), ss = cd % 60;
 
@@ -381,7 +388,7 @@ function NoticiasTab() {
         </div>
         <div className="flex items-center justify-between gap-2">
           <div className="flex flex-wrap gap-2">
-            {Object.entries(NEWS_FEEDS).map(([k, v]) => (
+            {Object.entries(feeds).map(([k, v]) => (
               <button key={k} onClick={() => setFeed(k)}
                 className="px-3 py-1.5 rounded-full text-xs font-bold transition-colors"
                 style={{ background: feed === k ? v.cor : v.bg, color: feed === k ? "#fff" : v.cor }}>
@@ -599,14 +606,38 @@ function GraficosTab({ target }) {
   );
 }
 
-function GlossarioTab() {
-  const [open, setOpen] = useState(null);
+function GlossarioTab({ inicial }) {
+  const [open, setOpen] = useState(inicial ?? null);
   return (
     <Card className="p-3"><SecTitle icon={BookOpen} title="Glossário" color="#b45309" /><div className="space-y-1">{GLOSSARIO.map((g, i) => (
-      <div key={i}><button onClick={() => setOpen(open === i ? null : i)} className="w-full flex items-center justify-between py-2 px-3 rounded-lg text-sm text-left" style={{ background: open === i ? "#fef3c7" : i % 2 === 0 ? "#fffbeb" : "#fff", border: "1px solid #fde68a" }}><span className="font-semibold">{g.icon} {g.termo}</span>{open === i ? <ChevronUp size={13} /> : <ChevronDown size={13} />}</button>{open === i && <div className="px-4 py-2 text-sm rounded-b-lg" style={{ background: "#fefce8", borderLeft: "3px solid #f59e0b", color: "#78350f" }}>{g.def}</div>}</div>
+      <div key={i} id={`glossario-${i}`} style={{ scrollMarginTop: 100 }}><button onClick={() => setOpen(open === i ? null : i)} className="w-full flex items-center justify-between py-2 px-3 rounded-lg text-sm text-left" style={{ background: open === i ? "#fef3c7" : i % 2 === 0 ? "#fffbeb" : "#fff", border: "1px solid #fde68a" }}><span className="font-semibold">{g.icon} {g.termo}</span>{open === i ? <ChevronUp size={13} /> : <ChevronDown size={13} />}</button>{open === i && <div className="px-4 py-2 text-sm rounded-b-lg" style={{ background: "#fefce8", borderLeft: "3px solid #f59e0b", color: "#78350f" }}>{g.def}</div>}</div>
     ))}</div></Card>
   );
 }
+
+// Tudo o que a busca do topo encontra: título, onde fica (grupo e detalhe), palavras extras e o destino.
+const SINONIMOS_PARANA = { "Suíno": "porco", Boi: "gado arroba", Vaca: "gado arroba", "Erva-mate": "chimarrão", Mandioca: "aipim macaxeira", "Café em coco": "café", "Café beneficiado": "café" };
+const DESCRICAO_ABA = {
+  painel: "Moedas, ações, commodities, indicadores e previsão do tempo", futuros: "Contratos agrícolas nas bolsas internacionais",
+  cooperativas: "Preço pago ao produtor nas regiões do Paraná", noticias: "Agronegócio, mercado e mercado internacional",
+  historico: "Tabela de preços de 2020 a 2026", graficos: "Evolução dos preços em gráficos", glossario: "Significado dos termos do mercado",
+};
+const INDICE_BUSCA = [
+  ...PRODUTOS_PARANA.map(nome => ({ titulo: `${nome} · preço por região do PR`, detalhe: "Quanto cooperativas e cerealistas pagam ao produtor (DERAL)", grupo: "Cooperativas",
+    termos: `cooperativa produtor parana regiao deral ${SINONIMOS_PARANA[nome] ?? ""}`, acao: { aba: "cooperativas", produto: nome } })),
+  ...COMMODITIES.map(([id, nome, mercado]) => ({ titulo: nome, detalhe: mercado === "Brasil" ? "Cotação no Brasil · Painel" : "Cotação internacional · Painel", grupo: "Painel",
+    termos: mercado === "Brasil" ? "brasil" : "internacional exterior bolsa", acao: { aba: "painel", commodity: id, ancora: `commodity-${id}` } })),
+  ...FUTURES.map(f => ({ titulo: `${f.name} · mercado futuro`, detalhe: `${f.exchange} · cotado em ${f.unit}`, grupo: "Futuros",
+    termos: `${f.key} ${APELIDOS_FUTUROS[f.key] ?? ""} bolsa contrato internacional`, acao: { aba: "futuros", futuro: f.key, ancora: "cotacao-futuro" } })),
+  ...Object.keys(CL).map(k => ({ titulo: `Gráfico de ${CL[k]}`, detalhe: "Evolução do preço de 2020 a 2026", grupo: "Gráficos",
+    termos: `${k} historico evolucao`, acao: { grafico: k } })),
+  ...GLOSSARIO.map((g, i) => ({ titulo: g.termo, detalhe: g.def, grupo: "Glossário", termos: `${g.def} significado`, acao: { aba: "glossario", termo: i, ancora: `glossario-${i}` } })),
+  ...INIT_MOEDAS.map(m => ({ titulo: m.nome, detalhe: "Cotação em reais · Painel", grupo: "Painel", termos: "moeda", acao: { aba: "painel", ancora: "card-moedas" } })),
+  ...INDICADORES.map(ind => ({ titulo: ind.nome, detalhe: ind.desc, grupo: "Painel", termos: "indicador economia juros", acao: { aba: "painel", ancora: "card-indicadores" } })),
+  { titulo: "Previsão do tempo", detalhe: "Temperatura e chuva dos próximos 5 dias", grupo: "Painel", termos: "temperatura", acao: { aba: "painel", ancora: "card-tempo" } },
+  { titulo: "Ações e fundos da B3", detalhe: "Consultar empresas da Bolsa · Painel", grupo: "Painel", termos: "acoes bolsa empresa etf investimento", acao: { aba: "painel", ancora: "consultar-acao" } },
+  ...TABS.map(t => ({ titulo: `Aba ${TAB_LABELS[t]}`, detalhe: DESCRICAO_ABA[t], grupo: "Abas", termos: DESCRICAO_ABA[t], acao: { aba: t } })),
+];
 
 export default function App() {
   const [tab, setTab] = useState("painel");
@@ -624,6 +655,23 @@ export default function App() {
   const [pm, setPm] = useState({});
   const [chartTarget, setChartTarget] = useState(null);
   const viewChart = useCallback((target) => { setChartTarget(target); setTab("graficos"); }, []);
+  const [alvo, setAlvo] = useState(null); // destino escolhido na busca do topo
+  const [perguntaCastor, setPerguntaCastor] = useState(null);
+  const irPara = (acao) => {
+    if (acao.castor) { setMascote(true); setPerguntaCastor({ texto: acao.castor, n: Date.now() }); return; }
+    if (acao.grafico) viewChart({ type: "commodity", key: acao.grafico, name: CL[acao.grafico] });
+    else setTab(acao.aba);
+    setAlvo({ ...acao, n: Date.now() });
+  };
+  const trocarAba = (t) => { setTab(t); setAlvo(null); };
+  const mostrarMascote = (v) => { setMascote(v); if (!v) setPerguntaCastor(null); };
+
+  // leva a tela até o item escolhido na busca (ou ao começo da aba)
+  useEffect(() => {
+    if (!alvo) return;
+    const t = setTimeout(() => document.getElementById(alvo.ancora ?? "conteudo")?.scrollIntoView({ behavior: "smooth", block: "start" }), 150);
+    return () => clearTimeout(t);
+  }, [alvo]);
 
   const updating = useRef(false);
   const moedasRef = useRef(moedas);
@@ -714,29 +762,30 @@ export default function App() {
         </div>
       </div>
       <div className="sticky top-0 z-50 border-b" style={{ background: "rgba(255,255,255,0.92)", backdropFilter: "blur(12px)", borderColor: "rgba(0,0,0,0.06)" }}>
-        <div className="max-w-4xl mx-auto px-3">
-          <div className="flex items-center justify-between py-2">
-            <div className="flex items-center gap-2"><div className="rounded-full flex items-center justify-center" style={{ width: 26, height: 26, background: "#2E7D32" }}><span style={{ fontSize: 7, color: "#fff", fontWeight: 900 }}>CEEP</span></div><span className="text-sm font-bold" style={{ color: "#166534" }}>AgroInfo</span></div>
-            <div className="flex items-center gap-2">
-              <div className="flex items-center gap-2 text-xs opacity-40">{count > 0 && <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: "#22c55e" }} />Ao vivo</span>}<span>{clock.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}</span></div>
-              <BotaoMascote visivel={mascote} onClick={() => setMascote(!mascote)} />
+        <div className="relative max-w-4xl mx-auto px-3">
+          <div className="flex items-center gap-2 sm:gap-3 py-2">
+            <div className="flex items-center gap-2 shrink-0"><div className="rounded-full flex items-center justify-center" style={{ width: 26, height: 26, background: "#2E7D32" }}><span style={{ fontSize: 7, color: "#fff", fontWeight: 900 }}>CEEP</span></div><span className="text-sm font-bold" style={{ color: "#166534" }}>AgroInfo</span></div>
+            <BuscaAgro itens={INDICE_BUSCA} onEscolher={irPara} comCastor={!!ASSISTENTE_URL} />
+            <div className="flex items-center gap-2 shrink-0">
+              <div className="flex items-center gap-2 text-xs opacity-40">{count > 0 && <span className="hidden sm:flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: "#22c55e" }} />Ao vivo</span>}<span>{clock.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}</span></div>
+              <BotaoMascote visivel={mascote} onClick={() => mostrarMascote(!mascote)} />
             </div>
           </div>
-          <div className="flex sm:justify-center gap-0.5 -mb-px overflow-x-auto">{TABS.map(t => { const I = TAB_ICONS[t]; return (<button key={t} onClick={() => setTab(t)} className="flex items-center gap-1 px-2.5 py-2 text-xs font-semibold rounded-t-lg whitespace-nowrap" style={{ background: tab === t ? "#fff" : "transparent", color: tab === t ? "#166534" : "#94a3b8", borderBottom: tab === t ? "2px solid #166534" : "2px solid transparent" }}><I size={12} />{TAB_LABELS[t]}</button>); })}</div>
+          <div className="flex sm:justify-center gap-0.5 -mb-px overflow-x-auto">{TABS.map(t => { const I = TAB_ICONS[t]; return (<button key={t} onClick={() => trocarAba(t)} className="flex items-center gap-1 px-2.5 py-2 text-xs font-semibold rounded-t-lg whitespace-nowrap" style={{ background: tab === t ? "#fff" : "transparent", color: tab === t ? "#166534" : "#94a3b8", borderBottom: tab === t ? "2px solid #166534" : "2px solid transparent" }}><I size={12} />{TAB_LABELS[t]}</button>); })}</div>
         </div>
       </div>
-      <div className="max-w-4xl mx-auto px-3 py-4">
+      <div id="conteudo" className="max-w-4xl mx-auto px-3 py-4" style={{ scrollMarginTop: 100 }}>
         {tab === "painel" && <CountdownBar sec={cd} total={UPDATE_SEC} paused={paused} onToggle={() => setPaused(p => !p)} onRefresh={doUpdate} count={count} last={last} source={dataSource} />}
-        {tab === "painel" && <PainelTab moedas={moedas} pm={pm} flash={flash} selic={selic} refresh={count} onViewChart={viewChart} />}
-        {tab === "futuros" && <FuturesQuotes />}
-        {tab === "cooperativas" && <CotacoesCooperativas />}
-        {tab === "noticias" && <NoticiasTab />}
+        {tab === "painel" && <PainelTab moedas={moedas} pm={pm} flash={flash} selic={selic} refresh={count} onViewChart={viewChart} alvo={alvo} />}
+        {tab === "futuros" && <FuturesQuotes key={alvo?.futuro ? alvo.n : "futuros"} inicial={alvo?.futuro} />}
+        {tab === "cooperativas" && <CotacoesCooperativas key={alvo?.produto ? alvo.n : "pr"} produtoInicial={alvo?.produto} />}
+        {tab === "noticias" && <NoticiasTab key={alvo?.busca ? alvo.n : "noticias"} busca={alvo?.busca} />}
         {tab === "historico" && <HistoricoTab />}
         {tab === "graficos" && <GraficosTab target={chartTarget} />}
-        {tab === "glossario" && <GlossarioTab />}
+        {tab === "glossario" && <GlossarioTab key={alvo?.termo != null ? alvo.n : "glossario"} inicial={alvo?.termo} />}
       </div>
       <div className="text-center py-3 text-xs opacity-20">🎓 C.E.E.P.A. Fernando Costa — Santa Mariana, PR • Docente: {DOCENTE} • {ALUNOS_PARTICIPANTES.length > 1 ? "Estudantes participantes" : "Estudante participante"}: {ALUNOS_PARTICIPANTES.join(", ")}</div>
-      {mascote && <Mascote onFechar={() => setMascote(false)} assistenteUrl={ASSISTENTE_URL} dadosPainel={{
+      {mascote && <Mascote onFechar={() => mostrarMascote(false)} assistenteUrl={ASSISTENTE_URL} pergunta={perguntaCastor} dadosPainel={{
         moedas: dataSource === "real"
           ? moedas.map(m => ({ nome: m.nome, valorReais: m.valor, variacaoPct: m.var, fonte: "AwesomeAPI" }))
           : "indisponíveis no momento",

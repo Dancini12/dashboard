@@ -135,7 +135,7 @@ function Digitado({ texto, animar, pausado, onFim, onAvanco }) {
 // (Apps Script + Gemini) responde digitando, com base nas cotações do painel. Fica
 // montado enquanto o mascote existe, para a conversa continuar quando o balão é
 // fechado e aberto de novo.
-export default function AssistenteAgro({ url, dadosDashboard, aberto, onFechar, onPensando, onFalando, className = "" }) {
+export default function AssistenteAgro({ url, dadosDashboard, aberto, pergunta, onFechar, onPensando, onFalando, className = "" }) {
   const [reduzMovimento] = useState(() => window.matchMedia("(prefers-reduced-motion: reduce)").matches);
   const [mensagens, setMensagens] = useState([]); // { id, autor: "aluno" | "assistente", texto, origem?, digitar? }
   const [saudou, setSaudou] = useState(reduzMovimento);
@@ -209,6 +209,15 @@ export default function AssistenteAgro({ url, dadosDashboard, aberto, onFechar, 
       onPensando?.(false);
     }
   };
+
+  // Pergunta vinda da busca do topo: envia como se o aluno tivesse digitado no balão.
+  const enviarAtual = useRef(enviar);
+  useEffect(() => { enviarAtual.current = enviar; });
+  useEffect(() => {
+    if (!pergunta) return;
+    const t = setTimeout(() => enviarAtual.current(pergunta.texto), 0);
+    return () => clearTimeout(t);
+  }, [pergunta]);
 
   return (
     <section className={`assistente ${className}`} hidden={!aberto} aria-label="Tire sua dúvida com o Castor">

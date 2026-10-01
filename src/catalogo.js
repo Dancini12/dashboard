@@ -44,6 +44,22 @@ export const APELIDOS_FUTUROS = {
   suino: 'porco carne suína', leite: 'queijo laticínio',
 };
 
+// Aba "Chicago": os contratos da lista acima negociados na Bolsa de Chicago (CBOT e CME).
+// A lista CHICAGO do api/market.js deve acompanhar esta.
+export const CHICAGO = FUTURES.filter(item => item.exchange === 'CBOT' || item.exchange === 'CME');
+
+// Unidade usada no Brasil para cada produto de Chicago e quanto ela pesa em kg; serve para
+// converter o preço da bolsa em dólares e em reais. Boi e suíno ficam por kg porque a arroba
+// brasileira é de carcaça e o contrato do boi americano é de peso vivo.
+const SACA_60 = { nome: 'saca de 60 kg', curto: 'sc', kg: 60 };
+const TONELADA = { nome: 'tonelada', curto: 't', kg: 1000 };
+const KG = { nome: 'kg', curto: 'kg', kg: 1 };
+export const UNIDADE_BRASIL = {
+  milho: SACA_60, soja: SACA_60, trigo: SACA_60, 'trigo-hrw': SACA_60, aveia: SACA_60,
+  arroz: { nome: 'saca de 50 kg', curto: 'sc', kg: 50 }, farelo: TONELADA, oleo: TONELADA,
+  boi: KG, 'boi-reposicao': KG, suino: KG, leite: { nome: 'litro', curto: 'litro', kg: 1.032 },
+};
+
 // Produtos da cotação diária do Paraná (DERAL): nome curto dos botões, na ordem em que aparecem.
 export const APELIDOS_PARANA = [
   [/^soja/i, "Soja"], [/^milho/i, "Milho"], [/^trigo/i, "Trigo"],

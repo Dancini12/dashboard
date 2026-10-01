@@ -4,7 +4,7 @@ import { buscar } from "../busca";
 import { TICKER_RE } from "./MarketQuotes";
 
 const CORES = {
-  Cooperativas: ["#dcfce7", "#166534"], Painel: ["#dbeafe", "#1e40af"], Futuros: ["#d1fae5", "#065f46"],
+  Cooperativas: ["#dcfce7", "#166534"], Painel: ["#dbeafe", "#1e40af"], Futuros: ["#d1fae5", "#065f46"], Chicago: ["#ccfbf1", "#115e59"],
   "Gráficos": ["#e0e7ff", "#3730a3"], "Glossário": ["#fef3c7", "#92400e"], Abas: ["#f1f5f9", "#334155"],
   "Notícias": ["#ffedd5", "#9a3412"], "Ações": ["#e0f2fe", "#075985"], Castor: ["#fde68a", "#78350f"],
 };
@@ -19,7 +19,7 @@ export default function BuscaAgro({ itens, onEscolher, comCastor }) {
 
   const termo = consulta.trim().slice(0, 60);
   const pesquisa = termo.length >= 2;
-  const achados = pesquisa ? buscar(itens, termo) : [];
+  const achados = pesquisa ? buscar(itens, termo, 10) : [];
   const ehCodigo = TICKER_RE.test(termo.toUpperCase());
   const ehPergunta = termo.includes("?") || /^(como|qual|quais|quanto|quando|onde|por ?que|o que|pra que|para que)\b/i.test(termo);
   const acoes = { titulo: `Procurar "${termo}" nas ações da B3`, detalhe: "Empresas e fundos da Bolsa", grupo: "Ações", acao: { aba: "painel", acao: termo, ancora: "consultar-acao" } };

@@ -99,3 +99,58 @@ test('futuros: só contratos agrícolas da lista e variação contra o pregão a
   assert.equal(res.data.value, 501.25);
   assert.equal(res.data.change.toFixed(2), ((501.25 - 522) / 522 * 100).toFixed(2));
 });
+test('futuros: na troca de vencimento vale a variação informada pela fonte', async t => {
+  // suíno em 01/10/2026: o contínuo passou de outubro (78,725) para dezembro (68,65); a queda real foi de 1,116%
+  t.mock.method(globalThis, 'fetch', async () => ({ ok: true, json: async () => ({ chart: { result: [{
+    meta: { regularMarketPrice: 68.65, regularMarketTime: 1790874540, regularMarketChangePercent: -1.116 },
+    indicators: { quote: [{ close: [78.25, 79.375, 78.725, 68.65] }] },
+  }] } }) }));
+  assert.equal((await call({ type: 'future', symbol: 'HE=F' })).data.change, -1.116);
+});
+test('chicago: quadro com todos os contratos, tolerando falha de um deles', async t => {
+  const { CHICAGO } = await import('../src/catalogo.js');
+  t.mock.timers.enable({ apis: ['Date'], now: new Date('2026-10-01T17:00:00Z') });
+  const pedidos = [];
+  t.mock.method(globalThis, 'fetch', async url => {
+    const simbolo = decodeURIComponent(url.match(/chart\/([^?]+)/)[1]);
+    pedidos.push(simbolo);
+    if (simbolo === 'ZO=F') return { ok: false, status: 404 };
+    return { ok: true, json: async () => ({ chart: { result: [{
+      meta: { regularMarketPrice: 1275.5, regularMarketTime: 1790874225, regularMarketDayHigh: 1295, regularMarketDayLow: 1273.75,
+        shortName: simbolo === 'ZW=F' ? 'Chicago SRW Wheat Futures,Mar-2' : 'Soybean Futures,Nov-2026' },
+      indicators: { quote: [{ close: [1288.25, 1297.75, 1293, 1275.5] }] },
+    }] } }) };
+  });
+  const res = await call({ type: 'chicago' });
+  assert.equal(res.code, 200);
+  assert.deepEqual(pedidos.sort(), CHICAGO.map(item => item.symbol).sort(), 'a API consulta os mesmos contratos da aba');
+  assert.equal(res.data.contratos.length, CHICAGO.length - 1);
+  const soja = res.data.contratos.find(c => c.symbol === 'ZS=F');
+  assert.deepEqual(soja.vencimento, { mes: 11, ano: 2026 });
+  assert.equal(soja.change.toFixed(2), ((1275.5 - 1293) / 1293 * 100).toFixed(2));
+  assert.equal(soja.high, 1295);
+  // ano cortado no nome: março já passou em outubro de 2026, então é março de 2027
+  assert.deepEqual(res.data.contratos.find(c => c.symbol === 'ZW=F').vencimento, { mes: 3, ano: 2027 });
+});
+test('chicago: próximos vencimentos do produto, pulando contrato que já saiu da fonte', async t => {
+  assert.equal((await call({ type: 'chicago', symbol: 'KC=F' })).code, 400, 'café é de Nova Iorque');
+  t.mock.timers.enable({ apis: ['Date'], now: new Date('2026-10-01T17:00:00Z') });
+  const pedidos = [];
+  t.mock.method(globalThis, 'fetch', async url => {
+    const simbolo = decodeURIComponent(url.match(/chart\/([^?]+)/)[1]);
+    pedidos.push(simbolo);
+    if (simbolo === 'ZSX26.CBT') return { ok: false, status: 404 };
+    return { ok: true, json: async () => ({ chart: { result: [{
+      meta: { regularMarketPrice: 1292.25, regularMarketTime: 1790874225 }, indicators: { quote: [{ close: [1300, 1292.25] }] },
+    }] } }) };
+  });
+  const res = await call({ type: 'chicago', symbol: 'ZS=F' });
+  assert.equal(res.code, 200);
+  assert.deepEqual(pedidos, ['ZSX26.CBT', 'ZSF27.CBT', 'ZSH27.CBT', 'ZSK27.CBT', 'ZSN27.CBT']);
+  assert.deepEqual(res.data.vencimentos.map(v => [v.contrato, v.mes, v.ano]), [['ZSF27', 1, 2027], ['ZSH27', 3, 2027], ['ZSK27', 5, 2027], ['ZSN27', 7, 2027]]);
+});
+test('chicago: sem nenhuma cotação, avisa em vez de inventar', async t => {
+  t.mock.method(globalThis, 'fetch', async () => ({ ok: false, status: 500 }));
+  assert.equal((await call({ type: 'chicago' })).code, 502);
+  assert.equal((await call({ type: 'chicago', symbol: 'ZC=F' })).code, 502);
+});

@@ -7,6 +7,7 @@ Painel educacional gratuito do **C.E.E.P.A. Fernando Costa** (Santa Mariana, PR)
 - **Busca no topo:** digite um produto, moeda, termo ou dúvida (ex.: "soja", "porco", "dólar", "o que é hedge") e vá direto à cotação, ao gráfico, ao glossário, às notícias ou ao Castor.
 - **Painel:** moedas, Selic, ações da B3, cotações de commodities (soja, milho, café, boi, trigo, leite…) e previsão do tempo.
 - **Futuros:** os principais contratos agrícolas de Chicago, Nova Iorque e CME, com a unidade em que cada um é cotado e o equivalente em US$ por tonelada e por kg.
+- **Chicago:** todos os contratos agrícolas da Bolsa de Chicago (CBOT e CME) em uma tabela, com variação do dia, próximos vencimentos e o valor convertido para saca, tonelada ou kg em dólares e em reais.
 - **Cotações Cooperativas:** cotação diária do Paraná (DERAL/SEAB), por região.
 - **Notícias:** agronegócio, mercado e mercado internacional.
 - **Histórico, Gráficos e Glossário** para estudar a evolução dos preços e os termos do mercado.

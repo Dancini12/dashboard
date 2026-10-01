@@ -2,12 +2,13 @@ import VisitorCounter from "./components/VisitorCounter";
 import Mascote, { BotaoMascote } from "./components/Mascote";
 import useMascote from "./components/useMascote";
 import CotacoesCooperativas from "./components/CotacoesCooperativas";
+import BolsaChicago from "./components/BolsaChicago";
 import { StockQuotes, CommodityQuotes, FuturesQuotes, TICKER_RE } from "./components/MarketQuotes";
-import { COMMODITIES, FUTURES, APELIDOS_FUTUROS, PRODUTOS_PARANA } from "./catalogo";
+import { COMMODITIES, FUTURES, CHICAGO, APELIDOS_FUTUROS, PRODUTOS_PARANA } from "./catalogo";
 import BuscaAgro from "./components/BuscaAgro";
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
-import { RefreshCw, BookOpen, BarChart3, Clock, Wheat, DollarSign, Activity, ChevronDown, ChevronUp, Timer, ArrowRight, Pause, Play, Newspaper, ExternalLink, Search, MapPin, Warehouse, TrendingUp } from "lucide-react";
+import { RefreshCw, BookOpen, BarChart3, Clock, Wheat, DollarSign, Activity, ChevronDown, ChevronUp, Timer, ArrowRight, Pause, Play, Newspaper, ExternalLink, Search, MapPin, Warehouse, TrendingUp, Landmark } from "lucide-react";
 
 const UPDATE_SEC = 60;
 const DOCENTE = "Marcel Dancini Rodrigues";
@@ -16,9 +17,9 @@ const ALUNOS_PARTICIPANTES = ["Pietra Sanguini"]; // para incluir mais alunos, a
 const ASSISTENTE_URL = import.meta.env.VITE_ASSISTENTE_URL
   || "https://script.google.com/macros/s/AKfycbyDYcrR3XX5bqo0rKCp1c1ZgDHf4GCHsJv7jesNPo5PEtJT6qYMLCyUV6OGmB1ur-jrBA/exec";
 const API_MOEDAS_URL = "https://economia.awesomeapi.com.br/json/last/USD-BRL,EUR-BRL,GBP-BRL,ARS-BRL";
-const TABS = ["painel", "futuros", "cooperativas", "noticias", "historico", "graficos", "glossario"];
-const TAB_LABELS = { painel: "Painel", futuros: "Futuros", cooperativas: "Cotações Cooperativas", noticias: "Notícias", historico: "Histórico", graficos: "Gráficos", glossario: "Glossário" };
-const TAB_ICONS = { painel: Activity, futuros: TrendingUp, cooperativas: Warehouse, noticias: Newspaper, historico: Clock, graficos: BarChart3, glossario: BookOpen };
+const TABS = ["painel", "futuros", "chicago", "cooperativas", "noticias", "historico", "graficos", "glossario"];
+const TAB_LABELS = { painel: "Painel", futuros: "Futuros", chicago: "Chicago", cooperativas: "Cotações Cooperativas", noticias: "Notícias", historico: "Histórico", graficos: "Gráficos", glossario: "Glossário" };
+const TAB_ICONS = { painel: Activity, futuros: TrendingUp, chicago: Landmark, cooperativas: Warehouse, noticias: Newspaper, historico: Clock, graficos: BarChart3, glossario: BookOpen };
 
 const INIT_MOEDAS = [
   { id: "usd", nome: "Dólar Comercial", emoji: "💵", valor: 4.912, var: -1.12 },
@@ -619,10 +620,12 @@ function GlossarioTab({ inicial }) {
 const SINONIMOS_PARANA = { "Suíno": "porco", Boi: "gado arroba", Vaca: "gado arroba", "Erva-mate": "chimarrão", Mandioca: "aipim macaxeira", "Café em coco": "café", "Café beneficiado": "café" };
 const DESCRICAO_ABA = {
   painel: "Moedas, ações, commodities, indicadores e previsão do tempo", futuros: "Contratos agrícolas nas bolsas internacionais",
+  chicago: "Soja, milho, trigo e boi na Bolsa de Chicago, com vencimentos e valor em reais",
   cooperativas: "Preço pago ao produtor nas regiões do Paraná", noticias: "Agronegócio, mercado e mercado internacional",
   historico: "Tabela de preços de 2020 a 2026", graficos: "Evolução dos preços em gráficos", glossario: "Significado dos termos do mercado",
 };
 const INDICE_BUSCA = [
+  { titulo: "Chicago · cotações da bolsa (CBOT e CME)", detalhe: DESCRICAO_ABA.chicago, grupo: "Chicago", termos: "indices internacional vencimento", acao: { aba: "chicago" } },
   ...PRODUTOS_PARANA.map(nome => ({ titulo: `${nome} · preço por região do PR`, detalhe: "Quanto cooperativas e cerealistas pagam ao produtor (DERAL)", grupo: "Cooperativas",
     termos: `cooperativa produtor parana regiao deral ${SINONIMOS_PARANA[nome] ?? ""}`, acao: { aba: "cooperativas", produto: nome } })),
   ...COMMODITIES.map(([id, nome, mercado]) => ({ titulo: nome, detalhe: mercado === "Brasil" ? "Cotação no Brasil · Painel" : "Cotação internacional · Painel", grupo: "Painel",
@@ -631,6 +634,8 @@ const INDICE_BUSCA = [
     termos: `${f.key} ${APELIDOS_FUTUROS[f.key] ?? ""} bolsa contrato internacional`, acao: { aba: "futuros", futuro: f.key, ancora: "cotacao-futuro" } })),
   ...Object.keys(CL).map(k => ({ titulo: `Gráfico de ${CL[k]}`, detalhe: "Evolução do preço de 2020 a 2026", grupo: "Gráficos",
     termos: `${k} historico evolucao`, acao: { grafico: k } })),
+  ...CHICAGO.map(f => ({ titulo: `${f.name} · Bolsa de Chicago`, detalhe: "Preço, próximos vencimentos e valor em reais", grupo: "Chicago",
+    termos: `${f.key} ${APELIDOS_FUTUROS[f.key] ?? ""} ${f.exchange} vencimento`, acao: { aba: "chicago", chicago: f.key, ancora: "chicago-detalhe" } })),
   ...GLOSSARIO.map((g, i) => ({ titulo: g.termo, detalhe: g.def, grupo: "Glossário", termos: `${g.def} significado`, acao: { aba: "glossario", termo: i, ancora: `glossario-${i}` } })),
   ...INIT_MOEDAS.map(m => ({ titulo: m.nome, detalhe: "Cotação em reais · Painel", grupo: "Painel", termos: "moeda", acao: { aba: "painel", ancora: "card-moedas" } })),
   ...INDICADORES.map(ind => ({ titulo: ind.nome, detalhe: ind.desc, grupo: "Painel", termos: "indicador economia juros", acao: { aba: "painel", ancora: "card-indicadores" } })),
@@ -771,13 +776,14 @@ export default function App() {
               <BotaoMascote visivel={mascote} onClick={() => mostrarMascote(!mascote)} />
             </div>
           </div>
-          <div className="flex sm:justify-center gap-0.5 -mb-px overflow-x-auto">{TABS.map(t => { const I = TAB_ICONS[t]; return (<button key={t} onClick={() => trocarAba(t)} className="flex items-center gap-1 px-2.5 py-2 text-xs font-semibold rounded-t-lg whitespace-nowrap" style={{ background: tab === t ? "#fff" : "transparent", color: tab === t ? "#166534" : "#94a3b8", borderBottom: tab === t ? "2px solid #166534" : "2px solid transparent" }}><I size={12} />{TAB_LABELS[t]}</button>); })}</div>
+          <div className="-mb-px overflow-x-auto"><div className="flex gap-0.5 w-max sm:mx-auto">{TABS.map(t => { const I = TAB_ICONS[t]; return (<button key={t} onClick={() => trocarAba(t)} className="flex items-center gap-1 px-2.5 py-2 text-xs font-semibold rounded-t-lg whitespace-nowrap" style={{ background: tab === t ? "#fff" : "transparent", color: tab === t ? "#166534" : "#94a3b8", borderBottom: tab === t ? "2px solid #166534" : "2px solid transparent" }}><I size={12} />{TAB_LABELS[t]}</button>); })}</div></div>
         </div>
       </div>
       <div id="conteudo" className="max-w-4xl mx-auto px-3 py-4" style={{ scrollMarginTop: 100 }}>
         {tab === "painel" && <CountdownBar sec={cd} total={UPDATE_SEC} paused={paused} onToggle={() => setPaused(p => !p)} onRefresh={doUpdate} count={count} last={last} source={dataSource} />}
         {tab === "painel" && <PainelTab moedas={moedas} pm={pm} flash={flash} selic={selic} refresh={count} onViewChart={viewChart} alvo={alvo} />}
         {tab === "futuros" && <FuturesQuotes key={alvo?.futuro ? alvo.n : "futuros"} inicial={alvo?.futuro} />}
+        {tab === "chicago" && <BolsaChicago key={alvo?.chicago ? alvo.n : "chicago"} inicial={alvo?.chicago} dolar={dataSource === "real" ? moedas.find(m => m.id === "usd")?.valor : null} />}
         {tab === "cooperativas" && <CotacoesCooperativas key={alvo?.produto ? alvo.n : "pr"} produtoInicial={alvo?.produto} />}
         {tab === "noticias" && <NoticiasTab key={alvo?.busca ? alvo.n : "noticias"} busca={alvo?.busca} />}
         {tab === "historico" && <HistoricoTab />}

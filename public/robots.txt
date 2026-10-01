@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://agroinfo-dashboard.vercel.app/sitemap.xml

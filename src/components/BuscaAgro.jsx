@@ -5,7 +5,7 @@ import { TICKER_RE } from "./MarketQuotes";
 
 const CORES = {
   Cooperativas: ["#dcfce7", "#166534"], Painel: ["#dbeafe", "#1e40af"], Futuros: ["#d1fae5", "#065f46"], Chicago: ["#ccfbf1", "#115e59"],
-  "Gráficos": ["#e0e7ff", "#3730a3"], "Histórico": ["#ecfccb", "#3f6212"], Calculadoras: ["#fae8ff", "#86198f"], Clima: ["#e0f2fe", "#075985"], Aprender: ["#ffe4e6", "#9f1239"], "Glossário": ["#fef3c7", "#92400e"], Abas: ["#f1f5f9", "#334155"],
+  "Gráficos": ["#e0e7ff", "#3730a3"], "Histórico": ["#ecfccb", "#3f6212"], Calculadoras: ["#fae8ff", "#86198f"], Clima: ["#e0f2fe", "#075985"], Safra: ["#dcfce7", "#14532d"], "Exportações": ["#e0e7ff", "#3730a3"], Aprender: ["#ffe4e6", "#9f1239"], "Glossário": ["#fef3c7", "#92400e"], Abas: ["#f1f5f9", "#334155"],
   "Notícias": ["#ffedd5", "#9a3412"], "Ações": ["#e0f2fe", "#075985"], Castor: ["#fde68a", "#78350f"],
 };
 

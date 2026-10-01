@@ -7,13 +7,15 @@ import CompararHistorico from "./components/CompararHistorico";
 import ClimaAgricola from "./components/ClimaAgricola";
 import Calculadoras from "./components/Calculadoras";
 import Aprender from "./components/Aprender";
+import SafraTab from "./components/SafraTab";
+import Exportacoes from "./components/Exportacoes";
 import { getWmo, WEEK } from "./clima";
 import { StockQuotes, CommodityQuotes, FuturesQuotes, TICKER_RE } from "./components/MarketQuotes";
 import { COMMODITIES, FUTURES, CHICAGO, CALCULADORAS, APELIDOS_FUTUROS, PRODUTOS_PARANA } from "./catalogo";
 import BuscaAgro from "./components/BuscaAgro";
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
-import { RefreshCw, BookOpen, BarChart3, Clock, Wheat, DollarSign, Activity, ChevronDown, ChevronUp, Timer, ArrowRight, Pause, Play, Newspaper, ExternalLink, Search, MapPin, Warehouse, TrendingUp, Landmark, CloudRain, Calculator, GraduationCap } from "lucide-react";
+import { RefreshCw, BookOpen, BarChart3, Clock, Wheat, DollarSign, Activity, ChevronDown, ChevronUp, Timer, ArrowRight, Pause, Play, Newspaper, ExternalLink, Search, MapPin, Warehouse, TrendingUp, Landmark, CloudRain, Calculator, GraduationCap, Sprout, Ship } from "lucide-react";
 
 const UPDATE_SEC = 60;
 const DOCENTE = "Marcel Dancini Rodrigues";
@@ -22,9 +24,9 @@ const ALUNOS_PARTICIPANTES = ["Pietra Sanguini"]; // para incluir mais alunos, a
 const ASSISTENTE_URL = import.meta.env.VITE_ASSISTENTE_URL
   || "https://script.google.com/macros/s/AKfycbyDYcrR3XX5bqo0rKCp1c1ZgDHf4GCHsJv7jesNPo5PEtJT6qYMLCyUV6OGmB1ur-jrBA/exec";
 const API_MOEDAS_URL = "https://economia.awesomeapi.com.br/json/last/USD-BRL,EUR-BRL,GBP-BRL,ARS-BRL";
-const TABS = ["painel", "futuros", "chicago", "cooperativas", "clima", "calculadoras", "aprender", "noticias", "historico", "graficos", "glossario"];
-const TAB_LABELS = { painel: "Painel", futuros: "Futuros", chicago: "Chicago", cooperativas: "Cotações Cooperativas", clima: "Clima", calculadoras: "Calculadoras", aprender: "Aprender", noticias: "Notícias", historico: "Histórico", graficos: "Gráficos", glossario: "Glossário" };
-const TAB_ICONS = { painel: Activity, futuros: TrendingUp, chicago: Landmark, cooperativas: Warehouse, clima: CloudRain, calculadoras: Calculator, aprender: GraduationCap, noticias: Newspaper, historico: Clock, graficos: BarChart3, glossario: BookOpen };
+const TABS = ["painel", "futuros", "chicago", "cooperativas", "safra", "exportacoes", "clima", "calculadoras", "aprender", "noticias", "historico", "graficos", "glossario"];
+const TAB_LABELS = { painel: "Painel", futuros: "Futuros", chicago: "Chicago", cooperativas: "Cotações Cooperativas", safra: "Safra", exportacoes: "Exportações", clima: "Clima", calculadoras: "Calculadoras", aprender: "Aprender", noticias: "Notícias", historico: "Histórico", graficos: "Gráficos", glossario: "Glossário" };
+const TAB_ICONS = { painel: Activity, futuros: TrendingUp, chicago: Landmark, cooperativas: Warehouse, safra: Sprout, exportacoes: Ship, clima: CloudRain, calculadoras: Calculator, aprender: GraduationCap, noticias: Newspaper, historico: Clock, graficos: BarChart3, glossario: BookOpen };
 
 const INIT_MOEDAS = [
   { id: "usd", nome: "Dólar Comercial", emoji: "💵", valor: 4.912, var: -1.12 },
@@ -619,6 +621,8 @@ const SINONIMOS_PARANA = { "Suíno": "porco", Boi: "gado arroba", Vaca: "gado ar
 const DESCRICAO_ABA = {
   painel: "Moedas, ações, commodities, indicadores e previsão do tempo", futuros: "Contratos agrícolas nas bolsas internacionais",
   chicago: "Soja, milho, trigo e boi na Bolsa de Chicago, com vencimentos e valor em reais",
+  safra: "Produção do Paraná, da região e de Santa Mariana, andamento do plantio e calendário agrícola",
+  exportacoes: "Quanto o Brasil e o Paraná exportam de soja, milho, carnes e outros, e para quais países",
   clima: "Chuva que caiu e que vai cair, água no solo e risco de geada", calculadoras: "Preço da saca, conversor de unidades, relação de troca, ponto de equilíbrio e financiamento",
   aprender: "Simulador de hedge e quiz do mercado",
   cooperativas: "Preço pago ao produtor nas regiões do Paraná", noticias: "Agronegócio, mercado e mercado internacional",
@@ -641,6 +645,9 @@ const INDICE_BUSCA = [
   ...INDICADORES.map(ind => ({ titulo: ind.nome, detalhe: ind.desc, grupo: "Painel", termos: "indicador economia juros", acao: { aba: "painel", ancora: "card-indicadores" } })),
   ...CALCULADORAS.map(c => ({ titulo: `Calculadora: ${c.nome}`, detalhe: "Faça a conta com os seus números · Calculadoras", grupo: "Calculadoras",
     termos: `calcular conta ${c.termos}`, acao: { aba: "calculadoras", calculadora: c.id, ancora: "calculadora" } })),
+  { titulo: "Safra do Paraná e de Santa Mariana", detalhe: DESCRICAO_ABA.safra, grupo: "Safra", termos: "producao area rendimento produtividade colheita plantio deral ibge brasil estimativa", acao: { aba: "safra" } },
+  { titulo: "Calendário agrícola do Paraná", detalhe: "Meses de plantio e colheita de cada cultura · Safra", grupo: "Safra", termos: "quando plantar colher epoca janela meses", acao: { aba: "safra" } },
+  { titulo: "Exportações do agro", detalhe: DESCRICAO_ABA.exportacoes, grupo: "Exportações", termos: "exportacao embarque china destino comercio exterior porto paranagua vendas externas", acao: { aba: "exportacoes" } },
   { titulo: "Chuva e clima para a lavoura", detalhe: DESCRICAO_ABA.clima, grupo: "Clima", termos: "clima geada solo umidade previsao 15 dias seca estiagem", acao: { aba: "clima" } },
   { titulo: "Simulador de hedge", detalhe: "Trave um preço e veja o resultado se o mercado subir ou cair · Aprender", grupo: "Aprender", termos: "protecao travar preco futuro simular", acao: { aba: "aprender", ancora: "simulador-hedge" } },
   { titulo: "Quiz do mercado agrícola", detalhe: "Teste o que você sabe · Aprender", grupo: "Aprender", termos: "perguntas jogo teste atividade", acao: { aba: "aprender", ancora: "quiz" } },
@@ -805,6 +812,8 @@ export default function App() {
         {tab === "painel" && <PainelTab moedas={moedas} pm={pm} flash={flash} indicadores={indicadores} refresh={count} onViewChart={viewChart} alvo={alvo} />}
         {tab === "futuros" && <FuturesQuotes key={alvo?.futuro ? alvo.n : "futuros"} inicial={alvo?.futuro} />}
         {tab === "chicago" && <BolsaChicago key={alvo?.chicago ? alvo.n : "chicago"} inicial={alvo?.chicago} dolar={dataSource === "real" ? moedas.find(m => m.id === "usd")?.valor : null} />}
+        {tab === "safra" && <SafraTab />}
+        {tab === "exportacoes" && <Exportacoes />}
         {tab === "clima" && <ClimaAgricola />}
         {tab === "calculadoras" && <Calculadoras key={alvo?.calculadora ? alvo.n : "calculadoras"} inicial={alvo?.calculadora} dolar={dataSource === "real" ? moedas.find(m => m.id === "usd")?.valor : null} />}
         {tab === "aprender" && <Aprender onPerguntar={ASSISTENTE_URL ? (texto => irPara({ castor: texto })) : null} />}

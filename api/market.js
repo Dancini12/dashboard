@@ -1,5 +1,7 @@
 /* global process, Buffer */
 import lerPlanilha from 'read-excel-file/node';
+import { dadosDeSafra } from '../server/safra.js';
+import { exportacoesPorProduto, destinosDasExportacoes, LimiteDePedidos } from '../server/exportacoes.js';
 
 // Ativos liberados sem chave na BRAPI; com BRAPI_TOKEN no servidor, o plano define o resto.
 const ATIVOS_LIVRES = ['PETR4', 'VALE3', 'ITUB4', 'MGLU3'];
@@ -124,7 +126,7 @@ async function bolsaDeChicago(symbol) {
 }
 
 export default async function handler(req, res) {
-  const { type, symbol = '', q = '' } = req.query ?? {};
+  const { type, symbol = '', q = '', parte = '' } = req.query ?? {};
 
   if (type === 'future') {
     if (!FUTUROS_AGRO.has(symbol)) return res.status(400).json({ error: 'Contrato futuro não reconhecido.' });
@@ -155,6 +157,30 @@ export default async function handler(req, res) {
     // completo: vale por 6 horas; faltando algum, tenta de novo em 5 minutos
     res.setHeader('Cache-Control', Object.values(indicadores).every(Boolean) ? 's-maxage=21600, stale-while-revalidate=86400' : 's-maxage=300');
     return res.status(200).json({ indicadores, source: 'Banco Central · SGS' });
+  }
+
+  if (type === 'exportacoes') {
+    if (parte !== 'produtos' && parte !== 'destinos') return res.status(400).json({ error: 'Informe a parte: produtos ou destinos.' });
+    try {
+      const dados = await (parte === 'produtos' ? exportacoesPorProduto() : destinosDasExportacoes());
+      res.setHeader('Cache-Control', 's-maxage=86400, stale-while-revalidate=604800'); // a fonte atualiza uma vez por mês
+      return res.status(200).json(dados);
+    } catch (erro) {
+      // a fonte aceita um pedido a cada 10 segundos: o site tenta de novo sozinho
+      if (erro instanceof LimiteDePedidos) return res.status(503).json({ error: 'A fonte das exportações pediu para aguardar alguns segundos.', tentarEm: 11 });
+      return res.status(502).json({ error: 'Dados de exportação indisponíveis no momento.' });
+    }
+  }
+
+  if (type === 'safra') {
+    try {
+      const safra = await dadosDeSafra();
+      // completo: vale por 12 horas (as fontes mudam uma vez por mês); faltando alguma, tenta de novo em 10 minutos
+      res.setHeader('Cache-Control', safra.parana && safra.municipio && safra.brasil ? 's-maxage=43200, stale-while-revalidate=86400' : 's-maxage=600');
+      return res.status(200).json(safra);
+    } catch {
+      return res.status(502).json({ error: 'Dados de safra indisponíveis no momento.' });
+    }
   }
 
   if (type === 'pr') {

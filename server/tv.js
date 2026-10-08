@@ -22,6 +22,13 @@ function objetoEm(texto, inicio) {
   throw new Error('dados do player incompletos');
 }
 
+const ENTIDADES = { amp: '&', quot: '"', '#39': "'", lt: '<', gt: '>' };
+// Título da transmissão pelo cabeçalho da página, para quando os dados do player não vêm.
+function tituloDaPagina(html) {
+  const titulo = /<meta name="title" content="([^"]*)"/.exec(html)?.[1] ?? /<title>([^<]*?)(?: - YouTube)?<\/title>/.exec(html)?.[1];
+  return titulo ? titulo.replace(/&(amp|quot|#39|lt|gt);/g, (_, nome) => ENTIDADES[nome]).trim() : null;
+}
+
 // HTML da página /live do canal → { situacao: 'aoVivo' | 'agendado' | 'fora', videoId, titulo, inicio }.
 // Página que não é a do canal (aviso de cookies, bloqueio, erro) dá erro em vez de "fora", para a aba
 // não dizer que o canal saiu do ar quando só a consulta falhou.
@@ -34,8 +41,15 @@ export function lerPaginaAoVivo(html, channelId) {
   }
   const dados = objetoEm(html, comeco + DADOS_DO_PLAYER.length);
   const video = dados.videoDetails;
-  // sem os dados do vídeo, o YouTube recusou a consulta (costuma dizer o motivo)
-  if (!video?.videoId) throw new Error(`sem dados do vídeo: ${dados.playabilityStatus?.status} ${dados.playabilityStatus?.reason ?? ''}`.trim());
+  if (!video?.videoId) {
+    // A acessos vindos de servidores (como o da Vercel), o YouTube troca os dados do vídeo que está
+    // tocando por um pedido de login ("confirme que você não é um bot"). A página continua sendo a da
+    // transmissão, com o código do vídeo no endereço canônico; e, como transmissão agendada vem com os
+    // dados completos, página assim aberta pelo /live do canal é de transmissão no ar.
+    const videoId = /<link rel="canonical" href="https:\/\/www\.youtube\.com\/watch\?v=([\w-]{11})"/.exec(html)?.[1];
+    if (dados.playabilityStatus?.status === 'LOGIN_REQUIRED' && videoId && html.includes(channelId)) return { situacao: 'aoVivo', videoId, titulo: tituloDaPagina(html) };
+    throw new Error(`sem dados do vídeo: ${dados.playabilityStatus?.status} ${dados.playabilityStatus?.reason ?? ''}`.trim());
+  }
   if (video.channelId !== channelId) throw new Error('transmissão de outro canal');
   if (video.isUpcoming) {
     const segundos = Number(dados.playabilityStatus?.liveStreamability?.liveStreamabilityRenderer?.offlineSlate?.liveStreamOfflineSlateRenderer?.scheduledStartTime);

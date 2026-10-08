@@ -16,6 +16,13 @@ test('tv: título com chaves e aspas não confunde a leitura', () => {
   const html = pagina({ playabilityStatus: { status: 'OK' }, videoDetails: video({ isLive: true, title: 'Soja } sobe "forte" {hoje} \\' }) });
   assert.equal(lerPaginaAoVivo(html, CANAL).titulo, 'Soja } sobe "forte" {hoje} \\');
 });
+test('tv: pedido de login no lugar dos dados do vídeo (acesso por servidor) ainda dá a transmissão no ar', () => {
+  const html = `<html><head><title>Mercado &amp; Cia - YouTube</title><meta name="title" content="Mercado &amp; Cia &quot;ao vivo&quot;"><link rel="canonical" href="https://www.youtube.com/watch?v=abcdefghijk"></head>`
+    + `<body><script>var ytInitialPlayerResponse = {"playabilityStatus":{"status":"LOGIN_REQUIRED","reason":"Faça login para confirmar que você não é um bot"}};</script><script>var ytInitialData = {"browseId":"${CANAL}"};</script></body></html>`;
+  assert.deepEqual(lerPaginaAoVivo(html, CANAL), { situacao: 'aoVivo', videoId: 'abcdefghijk', titulo: 'Mercado & Cia "ao vivo"' });
+  assert.equal(lerPaginaAoVivo(html.replace(/<meta name="title"[^>]*>/, ''), CANAL).titulo, 'Mercado & Cia', 'sem a meta, vale o título da página');
+  assert.throws(() => lerPaginaAoVivo(html, 'UCbbbbbbbbbbbbbbbbbbbbbb'), /sem dados do vídeo: LOGIN_REQUIRED/, 'página que nem cita o canal');
+});
 test('tv: transmissão agendada traz o horário de início', () => {
   const html = pagina({
     playabilityStatus: { status: 'LIVE_STREAM_OFFLINE', playableInEmbed: true,

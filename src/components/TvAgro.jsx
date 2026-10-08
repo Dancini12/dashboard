@@ -115,7 +115,7 @@ export default function TvAgro({ inicial }) {
             const passando = guia?.[c.id]?.situacao === "aoVivo";
             return (
               <button key={c.id} type="button" disabled={!c.channelId} aria-pressed={ativo} onClick={() => assistir(c.id)}
-                title={!c.channelId ? "Este canal não transmite pelo YouTube" : passando ? `Ao vivo agora: ${guia[c.id].titulo}` : c.descricao}
+                title={!c.channelId ? "Este canal não transmite pelo YouTube" : passando ? `Ao vivo agora${guia[c.id].titulo ? `: ${guia[c.id].titulo}` : ""}` : c.descricao}
                 className="inline-flex items-center gap-1.5 rounded-full px-3.5 py-2 text-xs sm:text-sm font-bold transition-colors disabled:cursor-not-allowed"
                 style={!c.channelId ? { background: "#f1f5f9", color: "#94a3b8" } : ativo ? { background: VERDE, color: "#fff" } : { background: "#f0fdf4", color: VERDE }}>
                 {passando && <NoAr claro={ativo} />}
@@ -141,7 +141,7 @@ export default function TvAgro({ inicial }) {
               : <span className="rounded px-1.5 py-0.5 font-bold uppercase" style={{ background: "#f1f5f9", color: "#334155", fontSize: 10 }}>{aoVivo ? "Transmissão ao vivo" : "Vídeos recentes"}</span>)}
           </div>
           <p className="text-xs sm:text-sm text-slate-600 mt-0.5">{canal.descricao}</p>
-          {aoVivo && noAr && <p className="text-xs sm:text-sm text-slate-900 mt-1"><span className="text-slate-500">No ar:</span> <strong>{info.titulo}</strong></p>}
+          {aoVivo && noAr && info.titulo && <p className="text-xs sm:text-sm text-slate-900 mt-1"><span className="text-slate-500">No ar:</span> <strong>{info.titulo}</strong></p>}
 
           {semAoVivo && (
             <Aviso>

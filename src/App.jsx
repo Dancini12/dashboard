@@ -11,12 +11,14 @@ import SafraTab from "./components/SafraTab";
 import Exportacoes from "./components/Exportacoes";
 import Combustiveis from "./components/Combustiveis";
 import Inicio from "./components/Inicio";
+import TvAgro from "./components/TvAgro";
 import { StockQuotes, CommodityQuotes, TICKER_RE } from "./components/MarketQuotes";
 import { COMMODITIES, FUTURES, CALCULADORAS, APELIDOS_FUTUROS, PRODUTOS_PARANA } from "./catalogo";
+import { CANAIS_AGRO } from "./canaisAgro";
 import BuscaAgro from "./components/BuscaAgro";
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
-import { RefreshCw, BookOpen, BarChart3, Clock, Wheat, DollarSign, ChevronDown, ChevronUp, ArrowRight, Newspaper, ExternalLink, Warehouse, Landmark, CloudRain, Calculator, GraduationCap, Sprout, Ship, House } from "lucide-react";
+import { RefreshCw, BookOpen, BarChart3, Clock, Wheat, DollarSign, ChevronDown, ChevronUp, ArrowRight, Newspaper, ExternalLink, Warehouse, Landmark, CloudRain, Calculator, GraduationCap, Sprout, Ship, House, Tv } from "lucide-react";
 
 const UPDATE_SEC = 60;
 const DOCENTE = "Marcel Dancini Rodrigues";
@@ -25,9 +27,9 @@ const ALUNOS_PARTICIPANTES = ["Pietra Sanguini"]; // para incluir mais alunos, a
 const ASSISTENTE_URL = import.meta.env.VITE_ASSISTENTE_URL
   || "https://script.google.com/macros/s/AKfycbyDYcrR3XX5bqo0rKCp1c1ZgDHf4GCHsJv7jesNPo5PEtJT6qYMLCyUV6OGmB1ur-jrBA/exec";
 const API_MOEDAS_URL = "https://economia.awesomeapi.com.br/json/last/USD-BRL,EUR-BRL,GBP-BRL,ARS-BRL";
-const TABS = ["inicio", "bolsas", "cooperativas", "safra", "exportacoes", "clima", "calculadoras", "aprender", "noticias", "evolucao", "glossario"];
-const TAB_LABELS = { inicio: "Início", bolsas: "Bolsas", cooperativas: "Cotações Cooperativas", safra: "Safra", exportacoes: "Exportações", clima: "Clima", calculadoras: "Calculadoras", aprender: "Aprender", noticias: "Notícias", evolucao: "Evolução", glossario: "Glossário" };
-const TAB_ICONS = { inicio: House, bolsas: Landmark, cooperativas: Warehouse, safra: Sprout, exportacoes: Ship, clima: CloudRain, calculadoras: Calculator, aprender: GraduationCap, noticias: Newspaper, evolucao: BarChart3, glossario: BookOpen };
+const TABS = ["inicio", "bolsas", "cooperativas", "safra", "exportacoes", "clima", "calculadoras", "aprender", "noticias", "tv", "evolucao", "glossario"];
+const TAB_LABELS = { inicio: "Início", bolsas: "Bolsas", cooperativas: "Cotações Cooperativas", safra: "Safra", exportacoes: "Exportações", clima: "Clima", calculadoras: "Calculadoras", aprender: "Aprender", noticias: "Notícias", tv: "TV Agro", evolucao: "Evolução", glossario: "Glossário" };
+const TAB_ICONS = { inicio: House, bolsas: Landmark, cooperativas: Warehouse, safra: Sprout, exportacoes: Ship, clima: CloudRain, calculadoras: Calculator, aprender: GraduationCap, noticias: Newspaper, tv: Tv, evolucao: BarChart3, glossario: BookOpen };
 
 const INIT_MOEDAS = [
   // valor e variação só existem depois que a fonte responde: nada de número inventado
@@ -491,6 +493,7 @@ const DESCRICAO_ABA = {
   clima: "Chuva que caiu e que vai cair, água no solo e risco de geada", calculadoras: "Preço da saca, conversor de unidades, relação de troca, ponto de equilíbrio e financiamento",
   aprender: "Simulação de uma safra com decisões do produtor e simulador de hedge",
   cooperativas: "Preço pago ao produtor nas regiões do Paraná, indicadores de preço do Brasil e combustíveis", noticias: "Agronegócio, mercado e mercado internacional",
+  tv: "Canais de TV do agro ao vivo e os vídeos recentes de cada um, pelo YouTube",
   evolucao: "Comparação de qual item subiu mais, gráficos e tabela de preços de 2020 a 2026", glossario: "Significado dos termos do mercado",
 };
 const INDICE_BUSCA = [
@@ -519,6 +522,8 @@ const INDICE_BUSCA = [
   { titulo: "Diesel e combustíveis no Paraná", detalhe: "Preço médio da semana nos postos (ANP) · Cotações Cooperativas", grupo: "Cooperativas", termos: "gasolina etanol alcool oleo diesel posto litro custo", acao: { aba: "cooperativas", ancora: "card-combustiveis" } },
   { titulo: "Previsão do tempo", detalhe: "Tempo de hoje, chuva e previsão de 15 dias · Clima", grupo: "Clima", termos: "temperatura", acao: { aba: "clima" } },
   { titulo: "Ações e fundos da B3", detalhe: "Consultar empresas da Bolsa brasileira · Bolsas", grupo: "Bolsas", termos: "acoes bolsa empresa etf investimento b3", acao: { aba: "bolsas", ancora: "consultar-acao" } },
+  ...CANAIS_AGRO.filter(c => c.channelId).map(c => ({ titulo: `${c.nome} · ao vivo`, detalhe: `${c.descricao} · TV Agro`, grupo: "TV Agro",
+    termos: "tv televisao canal assistir video programa transmissao youtube", acao: { aba: "tv", canal: c.id } })),
   ...TABS.map(t => ({ titulo: `Aba ${TAB_LABELS[t]}`, detalhe: DESCRICAO_ABA[t], grupo: "Abas", termos: DESCRICAO_ABA[t], acao: { aba: t } })),
 ];
 
@@ -694,6 +699,7 @@ export default function App() {
           <Combustiveis />
         </CotacoesCooperativas>}
         {tab === "noticias" && <NoticiasTab key={alvo?.busca ? alvo.n : "noticias"} busca={alvo?.busca} />}
+        {tab === "tv" && <TvAgro key={alvo?.canal ? alvo.n : "tv"} inicial={alvo?.canal} />}
         {tab === "evolucao" && <EvolucaoTab target={chartTarget} />}
         {tab === "glossario" && <GlossarioTab key={alvo?.termo != null ? alvo.n : "glossario"} inicial={alvo?.termo} />}
       </div>

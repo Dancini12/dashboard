@@ -14,6 +14,7 @@ Painel educacional gratuito do **C.E.E.P.A. Fernando Costa** (Santa Mariana, PR)
 - **Calculadoras:** saca a partir de Chicago, conversor de unidades, relação de troca, ponto de equilíbrio e financiamento.
 - **Aprender:** simulação de uma safra, em que o aluno decide como um produtor (comprar insumos, financiar, negociar o preço, travar na bolsa, vender ou guardar), e simulador de hedge.
 - **Notícias:** agronegócio, mercado e mercado internacional.
+- **TV Agro:** canais do agro ao vivo pelo player oficial do YouTube (Canal Rural, Canal do Boi, Notícias Agrícolas e Embrapa), com os vídeos recentes de cada um quando não há transmissão. A lista de canais fica em `src/canaisAgro.js`.
 - **Evolução:** comparação de qual item subiu mais (o visitante escolhe em cascata entre Chicago, Nova Iorque, commodities do Brasil e ações, até 6 itens), gráficos e tabela de preços de 2020 a 2026 e histórico de ações.
 - **Glossário** com os termos do mercado.
 - **Castor:** assistente que responde dúvidas dos alunos sobre o mercado.

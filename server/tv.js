@@ -67,6 +67,13 @@ export function lerPaginaAoVivo(html, channelId) {
     : { situacao: 'fora', motivo: `transmissão que não dá para exibir (${dados.playabilityStatus?.status}${video.isLive ? '' : ', não está ao vivo'})` };
 }
 
+async function tituloDoVideo(videoId) {
+  try {
+    const response = await fetch(`https://www.youtube.com/oembed?format=json&url=${encodeURIComponent(`https://www.youtube.com/watch?v=${videoId}`)}`, { signal: AbortSignal.timeout(6000), headers: { 'User-Agent': UA_AGROINFO } });
+    return response.ok ? (await response.json()).title ?? null : null;
+  } catch { return null; }
+}
+
 async function situacaoDoCanal(canal) {
   const response = await fetch(`https://www.youtube.com/channel/${canal.channelId}/live`, {
     signal: AbortSignal.timeout(12000),
@@ -74,7 +81,10 @@ async function situacaoDoCanal(canal) {
     headers: { 'User-Agent': UA_AGROINFO, 'Accept-Language': 'pt-BR,pt;q=0.9', Cookie: 'SOCS=CAI' },
   });
   if (!response.ok) throw new Error(`HTTP ${response.status}`);
-  return lerPaginaAoVivo(await response.text(), canal.channelId);
+  const lido = lerPaginaAoVivo(await response.text(), canal.channelId);
+  // a página com pedido de login vem sem o título: o endereço oficial de incorporação (oEmbed) informa
+  if (lido.situacao === 'aoVivo' && !lido.titulo) lido.titulo = await tituloDoVideo(lido.videoId);
+  return lido;
 }
 
 // Situação de cada canal que tem YouTube. Canal cuja consulta falhou fica de fora de "canais", e a

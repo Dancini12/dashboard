@@ -28,24 +28,38 @@ const esperar = (ms, sinal) => new Promise((seguir, parar) => {
 });
 // Todos os pedidos da aba passam por uma fila só, um de cada vez. Depois de um pedido que foi mesmo
 // até a fonte, o seguinte espera o intervalo; resposta guardada pelo site (cache) não conta.
-let fila = Promise.resolve();
+const fila = [];
+let atendendo = false;
 let fonteLivreEm = 0;
 
-// Busca uma parte dos dados ("parte=produtos", "parte=pais&pais=160&fluxo=export"…); se a fonte pedir
-// para aguardar (503), espera e tenta de novo.
-function buscar(consulta, sinal) {
-  const pedido = fila.then(async () => {
-    for (let tentativa = 1; ; tentativa++) {
-      await esperar(fonteLivreEm - Date.now(), sinal);
-      const response = await fetch(`/api/market?type=exportacoes&${consulta}`, { signal: sinal });
-      if (response.headers.get("x-vercel-cache") !== "HIT") fonteLivreEm = Date.now() + INTERVALO_DA_FONTE;
-      if (response.ok) return response.json();
-      const corpo = await response.json().catch(() => ({}));
-      if (response.status !== 503 || tentativa >= TENTATIVAS) throw new Error(corpo.error || "indisponível");
-    }
+// Um pedido ("parte=produtos", "parte=pais&pais=160&fluxo=export"…); se a fonte pedir para aguardar
+// (503), espera e tenta de novo.
+async function pedir(consulta, sinal) {
+  for (let tentativa = 1; ; tentativa++) {
+    await esperar(fonteLivreEm - Date.now(), sinal);
+    const response = await fetch(`/api/market?type=exportacoes&${consulta}`, { signal: sinal });
+    if (response.headers.get("x-vercel-cache") !== "HIT") fonteLivreEm = Date.now() + INTERVALO_DA_FONTE;
+    if (response.ok) return response.json();
+    const corpo = await response.json().catch(() => ({}));
+    if (response.status !== 503 || tentativa >= TENTATIVAS) throw new Error(corpo.error || "indisponível");
+  }
+}
+async function atender() {
+  if (atendendo) return;
+  atendendo = true;
+  while (fila.length) {
+    const { consulta, sinal, entregar, falhar } = fila.shift();
+    await pedir(consulta, sinal).then(entregar, falhar); // pedido que falhou não trava os seguintes
+  }
+  atendendo = false;
+}
+// Põe o pedido na fila. naFrente: o que o visitante acabou de pedir passa à frente do que a aba
+// carrega sozinha.
+function buscar(consulta, sinal, naFrente = false) {
+  return new Promise((entregar, falhar) => {
+    fila[naFrente ? "unshift" : "push"]({ consulta, sinal, entregar, falhar });
+    atender();
   });
-  fila = pedido.catch(() => {}); // pedido que falhou não trava os seguintes
-  return pedido;
 }
 
 function Variacao({ valor }) {
@@ -137,7 +151,7 @@ function ComercioComPais({ ultimoMes }) {
   useEffect(() => {
     if (!consulta) return;
     const controle = new AbortController();
-    const fluxo = nome => buscar(`parte=pais&pais=${consulta.pais[0]}&fluxo=${nome}`, controle.signal)
+    const fluxo = nome => buscar(`parte=pais&pais=${consulta.pais[0]}&fluxo=${nome}`, controle.signal, true)
       .then(resposta => { if (!controle.signal.aborted) setDados(d => ({ ...d, [nome]: resposta })); })
       .catch(() => { if (!controle.signal.aborted) setDados(d => ({ ...d, [nome]: { erro: true } })); });
     // um fluxo depois do outro: a fonte não aceita dois pedidos juntos
@@ -200,7 +214,7 @@ function ComercioComPais({ ultimoMes }) {
             return (
               <div key={fluxo}>
                 <h5 className="text-xs font-bold uppercase tracking-wider text-slate-500">{titulo} <span className="font-normal normal-case tracking-normal">({tipo})</span></h5>
-                {!resposta ? <p className="text-xs text-slate-500 mt-1.5">Buscando na fonte oficial. Ela só aceita um pedido de cada vez, com alguns segundos de intervalo: pode levar até um minuto…</p>
+                {!resposta ? <p className="text-xs text-slate-500 mt-1.5">Buscando na fonte oficial, que só aceita um pedido de cada vez. Costuma levar meio minuto; na primeira consulta do dia, até dois minutos…</p>
                   : resposta.erro ? <p role="alert" className="text-xs text-amber-800 mt-1.5">Não foi possível buscar as {tipo} agora. Toque em “Ver” para tentar de novo.</p>
                     : !doAno ? <p className="text-xs text-slate-500 mt-1.5">{vazio}{ano ? ` em ${ano}` : " neste ano nem no anterior"}.</p>
                       : <>

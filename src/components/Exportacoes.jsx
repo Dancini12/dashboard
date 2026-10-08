@@ -1,32 +1,51 @@
 import { useEffect, useState } from "react";
 import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { Search } from "lucide-react";
+import { PAISES, acharPais } from "../paises";
 
 // Aba "Exportações": quanto o Brasil e o Paraná embarcam dos principais produtos do agro, mês a
-// mês, contra o ano anterior, e para onde vai (Comex Stat, /api/market?type=exportacoes). A fonte
-// aceita um pedido a cada 10 segundos: quando ela pede para esperar, a aba tenta de novo sozinha.
+// mês, contra o ano anterior, e para onde vai; e, para o país que o visitante digitar, o que o Brasil
+// vende para ele e compra dele (Comex Stat, /api/market?type=exportacoes). A fonte recusa pedidos
+// seguidos: a aba faz um de cada vez, com intervalo, e tenta de novo sozinha quando é recusada.
 const AZUL = "#2a78d6";
 const CINZA = "#94a3b8"; // ano anterior, para comparação
 const MESES = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"];
-const TENTATIVAS = 6;
+const TENTATIVAS = 8;
+// A fonte diz aceitar um pedido a cada 10 segundos; medido em 08/10/2026, recusa os que chegam com
+// menos de uns 13 segundos de intervalo.
+const INTERVALO_DA_FONTE = 14000;
 
 const decimal = (v, casas = 1) => v.toLocaleString("pt-BR", { minimumFractionDigits: 0, maximumFractionDigits: casas });
-const toneladas = kg => { const t = kg / 1000; return t >= 1e6 ? `${decimal(t / 1e6, t >= 1e7 ? 1 : 2)} milhões de t` : t >= 1000 ? `${decimal(t / 1000, t >= 1e5 ? 0 : 1)} mil t` : `${decimal(t, 0)} t`; };
-const dolares = v => (v >= 1e9 ? `US$ ${decimal(v / 1e9, 2)} bilhões` : `US$ ${decimal(v / 1e6, v >= 1e8 ? 0 : 1)} milhões`);
+const toneladas = kg => { const t = kg / 1000; return t >= 1e6 ? `${decimal(t / 1e6, t >= 1e7 ? 1 : 2)} milhões de t` : t >= 1000 ? `${decimal(t / 1000, t >= 1e5 ? 0 : 1)} mil t` : t >= 1 ? `${decimal(t, t < 10 ? 1 : 0)} t` : `${decimal(kg, 0)} kg`; };
+const dolares = v => (v >= 1e9 ? `US$ ${decimal(v / 1e9, 2)} bilhões` : v >= 1e6 ? `US$ ${decimal(v / 1e6, v >= 1e8 ? 0 : 1)} milhões` : v >= 1000 ? `US$ ${decimal(v / 1000, 0)} mil` : `US$ ${decimal(v, 0)}`);
 const comSinal = v => `${v > 0 ? "+" : v < 0 ? "−" : ""}${decimal(Math.abs(v))}%`;
 const variacao = (atual, anterior) => (anterior > 0 ? (atual - anterior) / anterior * 100 : null);
 
-// Busca uma parte dos dados; se a fonte pedir para aguardar (503), espera e tenta de novo.
-async function buscar(parte, sinal) {
-  for (let tentativa = 1; ; tentativa++) {
-    const response = await fetch(`/api/market?type=exportacoes&parte=${parte}`, { signal: sinal });
-    if (response.ok) return response.json();
-    const corpo = await response.json().catch(() => ({}));
-    if (response.status !== 503 || tentativa >= TENTATIVAS) throw new Error(corpo.error || "indisponível");
-    await new Promise((seguir, parar) => {
-      const espera = setTimeout(seguir, (corpo.tentarEm ?? 11) * 1000);
-      sinal.addEventListener("abort", () => { clearTimeout(espera); parar(new Error("cancelado")); }, { once: true });
-    });
-  }
+const esperar = (ms, sinal) => new Promise((seguir, parar) => {
+  if (sinal.aborted) { parar(new Error("cancelado")); return; }
+  const espera = setTimeout(seguir, Math.max(0, ms));
+  sinal.addEventListener("abort", () => { clearTimeout(espera); parar(new Error("cancelado")); }, { once: true });
+});
+// Todos os pedidos da aba passam por uma fila só, um de cada vez. Depois de um pedido que foi mesmo
+// até a fonte, o seguinte espera o intervalo; resposta guardada pelo site (cache) não conta.
+let fila = Promise.resolve();
+let fonteLivreEm = 0;
+
+// Busca uma parte dos dados ("parte=produtos", "parte=pais&pais=160&fluxo=export"…); se a fonte pedir
+// para aguardar (503), espera e tenta de novo.
+function buscar(consulta, sinal) {
+  const pedido = fila.then(async () => {
+    for (let tentativa = 1; ; tentativa++) {
+      await esperar(fonteLivreEm - Date.now(), sinal);
+      const response = await fetch(`/api/market?type=exportacoes&${consulta}`, { signal: sinal });
+      if (response.headers.get("x-vercel-cache") !== "HIT") fonteLivreEm = Date.now() + INTERVALO_DA_FONTE;
+      if (response.ok) return response.json();
+      const corpo = await response.json().catch(() => ({}));
+      if (response.status !== 503 || tentativa >= TENTATIVAS) throw new Error(corpo.error || "indisponível");
+    }
+  });
+  fila = pedido.catch(() => {}); // pedido que falhou não trava os seguintes
+  return pedido;
 }
 
 function Variacao({ valor }) {
@@ -81,6 +100,132 @@ function Participacoes({ itens }) {
   );
 }
 
+// Produtos de um fluxo (o que o Brasil vende ou compra), do maior para o menor volume: o peso ao lado
+// do nome e, embaixo, a barra proporcional ao maior da lista e o valor em dólares.
+function Volumes({ ano }) {
+  const maior = Math.max(...ano.produtos.map(p => p.kg), 1);
+  return (
+    <ol className="mt-2 space-y-2">
+      {ano.produtos.map(p => (
+        <li key={p.nome} className="text-xs">
+          <div className="flex items-baseline justify-between gap-3">
+            <span className="text-slate-800">{p.nome}</span>
+            <strong className="whitespace-nowrap text-slate-900" style={{ fontVariantNumeric: "tabular-nums" }}>{toneladas(p.kg)}</strong>
+          </div>
+          <div className="flex items-center gap-2 mt-0.5">
+            <span className="block flex-1 overflow-hidden rounded-full" style={{ height: 6, background: "#e2e8f0" }}><span className="block" style={{ height: "100%", width: `${Math.max(1, p.kg / maior * 100)}%`, background: AZUL }} /></span>
+            <span className="whitespace-nowrap text-slate-500" style={{ fontSize: 11, fontVariantNumeric: "tabular-nums" }}>{dolares(p.fob)}</span>
+          </div>
+        </li>
+      ))}
+      {ano.outros.quantos > 0 && <li className="text-xs text-slate-500">Mais {ano.outros.quantos} {ano.outros.quantos > 1 ? "produtos" : "produto"}: {toneladas(ano.outros.kg)} · {dolares(ano.outros.fob)}</li>}
+    </ol>
+  );
+}
+
+// Comércio do agro com um país: o visitante digita o país e vê o que o Brasil vende para ele e o que
+// compra dele. São duas consultas na fonte (parte=pais), uma depois da outra.
+const FLUXOS = [["export", "O Brasil vende", "exportações", "O Brasil não vendeu produtos do agro para este país"], ["import", "O Brasil compra", "importações", "O Brasil não comprou produtos do agro deste país"]];
+
+function ComercioComPais({ ultimoMes }) {
+  const [texto, setTexto] = useState("");
+  const [consulta, setConsulta] = useState(null); // { pais: [código, nome] }; objeto novo a cada pedido, para consultar de novo
+  const [opcoes, setOpcoes] = useState(null); // países que combinam com o texto, quando não deu para saber qual é
+  const [dados, setDados] = useState({}); // { export, import }: a resposta de cada fluxo, ou { erro: true }
+  const [anoEscolhido, setAnoEscolhido] = useState(null);
+
+  useEffect(() => {
+    if (!consulta) return;
+    const controle = new AbortController();
+    const fluxo = nome => buscar(`parte=pais&pais=${consulta.pais[0]}&fluxo=${nome}`, controle.signal)
+      .then(resposta => { if (!controle.signal.aborted) setDados(d => ({ ...d, [nome]: resposta })); })
+      .catch(() => { if (!controle.signal.aborted) setDados(d => ({ ...d, [nome]: { erro: true } })); });
+    // um fluxo depois do outro: a fonte não aceita dois pedidos juntos
+    fluxo("export").then(() => fluxo("import"));
+    return () => controle.abort();
+  }, [consulta]);
+
+  const consultar = (pais) => { setConsulta({ pais }); setTexto(pais[1]); setOpcoes(null); setDados({}); setAnoEscolhido(null); };
+  const procurar = (evento) => {
+    evento.preventDefault();
+    const achado = acharPais(texto);
+    if (achado.pais) consultar(achado.pais); else setOpcoes(achado.opcoes);
+  };
+
+  const pais = consulta?.pais;
+  const anos = [...new Set(FLUXOS.flatMap(([fluxo]) => dados[fluxo]?.anos?.map(a => a.ano) ?? []))].sort((a, b) => b - a);
+  const ano = anos.includes(anoEscolhido) ? anoEscolhido : anos[0];
+  // o ano do último mês publicado ainda está pela metade
+  const rotuloDoAno = (a) => {
+    if (!ultimoMes) return String(a);
+    const mes = Number(ultimoMes.slice(5, 7));
+    return a === Number(ultimoMes.slice(0, 4)) && mes < 12 ? `${a} · ${mes > 1 ? `jan a ${MESES[mes - 1]}` : "jan"}` : `${a} · ano inteiro`;
+  };
+  const totalDe = fluxo => dados[fluxo]?.anos?.find(a => a.ano === ano)?.total ?? { kg: 0, fob: 0 };
+  const completo = FLUXOS.every(([fluxo]) => dados[fluxo]?.anos);
+  const saldo = totalDe("export").fob - totalDe("import").fob;
+
+  return (
+    <section id="comercio-pais" className="rounded-xl border bg-white p-3 shadow-sm" style={{ scrollMarginTop: 100 }}>
+      <h3 className="text-sm font-bold" style={{ color: "#14532d" }}>Comércio do agro com um país</h3>
+      <p className="text-xs text-slate-600 mt-1">Digite um país para ver quanto o Brasil vende para ele e quanto compra dele, produto por produto.</p>
+      <form onSubmit={procurar} className="flex gap-1.5 mt-3">
+        <label className="flex-1 min-w-0">
+          <span className="sr-only">País</span>
+          <input list="paises-do-comex" value={texto} onChange={e => { setTexto(e.target.value); setOpcoes(null); }} placeholder="País (ex.: China)" autoComplete="off"
+            className="block w-full rounded-lg border bg-white p-2 text-base sm:text-sm text-slate-900" />
+        </label>
+        <datalist id="paises-do-comex">{PAISES.map(([codigo, nome]) => <option key={codigo} value={nome} />)}</datalist>
+        <button type="submit" className="flex items-center gap-1 rounded-lg px-3 text-xs font-bold text-white" style={{ background: "#166534" }}><Search size={12} aria-hidden="true" />Ver</button>
+      </form>
+      {opcoes && (opcoes.length ? (
+        <div className="mt-2">
+          <p className="text-xs text-slate-600">Mais de um país combina com esse nome. Qual deles?</p>
+          <div className="flex flex-wrap gap-2 mt-1.5">
+            {opcoes.slice(0, 12).map(opcao => <button key={opcao[0]} type="button" onClick={() => consultar(opcao)} className="rounded-full border px-3 py-1 text-xs font-bold" style={{ background: "#f0fdf4", borderColor: "#bbf7d0", color: "#166534" }}>{opcao[1]}</button>)}
+          </div>
+        </div>
+      ) : <p role="alert" className="text-xs text-amber-800 mt-2">Não achei esse país. Confira o nome (ex.: China, Estados Unidos, Argentina).</p>)}
+
+      {pais && <>
+        <div className="flex flex-wrap items-center justify-between gap-2 mt-4">
+          <h4 className="text-sm font-bold text-slate-900">Brasil e {pais[1]}</h4>
+          {anos.length > 1 ? <Botoes rotulo="Período" opcoes={anos.map(a => [a, rotuloDoAno(a)])} ativo={ano} onEscolher={setAnoEscolhido} />
+            : ano && <span className="text-xs text-slate-500">{rotuloDoAno(ano)}</span>}
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 mt-3">
+          {FLUXOS.map(([fluxo, titulo, tipo, vazio]) => {
+            const resposta = dados[fluxo];
+            const doAno = resposta?.anos?.find(a => a.ano === ano);
+            return (
+              <div key={fluxo}>
+                <h5 className="text-xs font-bold uppercase tracking-wider text-slate-500">{titulo} <span className="font-normal normal-case tracking-normal">({tipo})</span></h5>
+                {!resposta ? <p className="text-xs text-slate-500 mt-1.5">Buscando na fonte oficial. Ela só aceita um pedido de cada vez, com alguns segundos de intervalo: pode levar até um minuto…</p>
+                  : resposta.erro ? <p role="alert" className="text-xs text-amber-800 mt-1.5">Não foi possível buscar as {tipo} agora. Toque em “Ver” para tentar de novo.</p>
+                    : !doAno ? <p className="text-xs text-slate-500 mt-1.5">{vazio}{ano ? ` em ${ano}` : " neste ano nem no anterior"}.</p>
+                      : <>
+                        <p className="mt-1"><strong className="text-lg font-black text-slate-900">{toneladas(doAno.total.kg)}</strong> <span className="text-xs text-slate-500">· {dolares(doAno.total.fob)}</span></p>
+                        <Volumes ano={doAno} />
+                      </>}
+              </div>
+            );
+          })}
+        </div>
+        {completo && ano && (
+          <p className="rounded-lg p-2.5 mt-3 text-xs text-slate-700" style={{ background: "#f8fafc" }}>
+            Saldo do agro neste comércio em {ano}: <strong style={{ color: saldo >= 0 ? "#15803d" : "#b91c1c" }}>{saldo >= 0 ? "+" : "−"}{dolares(Math.abs(saldo))}</strong>{" "}
+            ({saldo >= 0 ? "o Brasil vendeu mais do que comprou" : "o Brasil comprou mais do que vendeu"}).
+          </p>
+        )}
+        <p className="text-xs text-slate-500 mt-2">
+          Entram os produtos da agropecuária e os alimentos (capítulos 1 a 24 do Sistema Harmonizado), o algodão em pluma e os adubos; minério, petróleo e
+          produtos da indústria ficam de fora. Peso líquido embarcado; os dólares são o valor da mercadoria no embarque (FOB).
+        </p>
+      </>}
+    </section>
+  );
+}
+
 export default function Exportacoes() {
   const [produtos, setProdutos] = useState(null);
   const [destinos, setDestinos] = useState(null);
@@ -91,8 +236,8 @@ export default function Exportacoes() {
   useEffect(() => {
     const controle = new AbortController();
     // uma parte depois da outra: a fonte não aceita dois pedidos juntos
-    buscar("produtos", controle.signal).then(setProdutos).catch(() => { if (!controle.signal.aborted) setErro(e => ({ ...e, produtos: true })); })
-      .then(() => buscar("destinos", controle.signal)).then(setDestinos).catch(() => { if (!controle.signal.aborted) setErro(e => ({ ...e, destinos: true })); });
+    buscar("parte=produtos", controle.signal).then(setProdutos).catch(() => { if (!controle.signal.aborted) setErro(e => ({ ...e, produtos: true })); })
+      .then(() => buscar("parte=destinos", controle.signal)).then(setDestinos).catch(() => { if (!controle.signal.aborted) setErro(e => ({ ...e, destinos: true })); });
     return () => controle.abort();
   }, []);
 
@@ -123,6 +268,8 @@ export default function Exportacoes() {
         </p>
         {produtos && <p className="text-xs text-slate-500 mt-1">Dados oficiais até {MESES[ultimoMes - 1]}/{ano}. O governo publica o mês anterior no começo de cada mês.</p>}
       </section>
+
+      <ComercioComPais ultimoMes={produtos?.ultimoMes} />
 
       {!produtos && !erro.produtos && <p className="text-sm text-slate-500">Buscando as exportações na fonte oficial. Na primeira consulta do dia pode levar até um minuto…</p>}
       {erro.produtos && <p role="alert" className="rounded-xl border p-3 text-sm text-amber-800 bg-amber-50">Os dados de exportação não estão disponíveis agora. Tente novamente em alguns minutos.</p>}

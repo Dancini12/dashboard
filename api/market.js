@@ -3,7 +3,7 @@ import lerPlanilha from 'read-excel-file/node';
 import { dadosDeSafra } from '../server/safra.js';
 import { combustiveisDoParana } from '../server/combustiveis.js';
 import { canaisAoVivo } from '../server/tv.js';
-import { exportacoesPorProduto, destinosDasExportacoes, LimiteDePedidos } from '../server/exportacoes.js';
+import { exportacoesPorProduto, destinosDasExportacoes, comercioComPais, paisDoComex, LimiteDePedidos } from '../server/exportacoes.js';
 
 // Ativos liberados sem chave na BRAPI; com BRAPI_TOKEN no servidor, o plano define o resto.
 const ATIVOS_LIVRES = ['PETR4', 'VALE3', 'ITUB4', 'MGLU3'];
@@ -167,14 +167,17 @@ export default async function handler(req, res) {
   }
 
   if (type === 'exportacoes') {
-    if (parte !== 'produtos' && parte !== 'destinos') return res.status(400).json({ error: 'Informe a parte: produtos ou destinos.' });
+    const { pais, fluxo } = req.query ?? {};
+    const comPais = parte === 'pais';
+    if (parte !== 'produtos' && parte !== 'destinos' && !comPais) return res.status(400).json({ error: 'Informe a parte: produtos, destinos ou pais.' });
+    if (comPais && (!paisDoComex(pais) || (fluxo !== 'export' && fluxo !== 'import'))) return res.status(400).json({ error: 'Informe o código do país e o fluxo (export ou import).' });
     try {
-      const dados = await (parte === 'produtos' ? exportacoesPorProduto() : destinosDasExportacoes());
+      const dados = await (comPais ? comercioComPais(pais, fluxo) : parte === 'produtos' ? exportacoesPorProduto() : destinosDasExportacoes());
       res.setHeader('Cache-Control', 's-maxage=86400, stale-while-revalidate=604800'); // a fonte atualiza uma vez por mês
       return res.status(200).json(dados);
     } catch (erro) {
-      // a fonte aceita um pedido a cada 10 segundos: o site tenta de novo sozinho
-      if (erro instanceof LimiteDePedidos) return res.status(503).json({ error: 'A fonte das exportações pediu para aguardar alguns segundos.', tentarEm: 11 });
+      // a fonte recusa pedidos com menos de uns 13 segundos de intervalo: o site tenta de novo sozinho
+      if (erro instanceof LimiteDePedidos) return res.status(503).json({ error: 'A fonte das exportações pediu para aguardar alguns segundos.', tentarEm: 14 });
       return res.status(502).json({ error: 'Dados de exportação indisponíveis no momento.' });
     }
   }

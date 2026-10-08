@@ -30,11 +30,13 @@ export function lerPaginaAoVivo(html, channelId) {
   if (comeco < 0) {
     // sem transmissão no ar nem agendada, o YouTube mostra a página inicial do canal
     if (html.includes(`<link rel="canonical" href="https://www.youtube.com/channel/${channelId}"`)) return { situacao: 'fora' };
-    throw new Error('página inesperada');
+    throw new Error(`página inesperada: ${/<title>([^<]*)/.exec(html)?.[1].slice(0, 60) ?? 'sem título'}`);
   }
   const dados = objetoEm(html, comeco + DADOS_DO_PLAYER.length);
   const video = dados.videoDetails;
-  if (!video?.videoId || video.channelId !== channelId) throw new Error('transmissão de outro canal');
+  // sem os dados do vídeo, o YouTube recusou a consulta (costuma dizer o motivo)
+  if (!video?.videoId) throw new Error(`sem dados do vídeo: ${dados.playabilityStatus?.status} ${dados.playabilityStatus?.reason ?? ''}`.trim());
+  if (video.channelId !== channelId) throw new Error('transmissão de outro canal');
   if (video.isUpcoming) {
     const segundos = Number(dados.playabilityStatus?.liveStreamability?.liveStreamabilityRenderer?.offlineSlate?.liveStreamOfflineSlateRenderer?.scheduledStartTime);
     return { situacao: 'agendado', videoId: video.videoId, titulo: video.title, inicio: segundos ? new Date(segundos * 1000).toISOString() : null };
@@ -54,12 +56,13 @@ async function situacaoDoCanal(canal) {
   return lerPaginaAoVivo(await response.text(), canal.channelId);
 }
 
-// Situação de cada canal que tem YouTube. Canal cuja consulta falhou fica de fora da resposta, e a
-// aba trata esse canal como trataria todos se esta consulta não existisse.
+// Situação de cada canal que tem YouTube. Canal cuja consulta falhou fica de fora de "canais", e a
+// aba trata esse canal como trataria todos se esta consulta não existisse; o motivo vai em "falhas".
 export async function canaisAoVivo() {
   const canais = CANAIS_AGRO.filter(canal => canal.channelId);
   const respostas = await Promise.allSettled(canais.map(situacaoDoCanal));
   const lidos = canais.flatMap((canal, i) => (respostas[i].status === 'fulfilled' ? [[canal.id, respostas[i].value]] : []));
-  if (!lidos.length) throw new Error('YouTube não respondeu');
-  return { canais: Object.fromEntries(lidos), fonte: 'YouTube' };
+  const falhas = canais.flatMap((canal, i) => (respostas[i].status === 'rejected' ? [[canal.id, String(respostas[i].reason?.message ?? respostas[i].reason)]] : []));
+  if (!lidos.length) throw new Error(`YouTube não respondeu: ${falhas[0]?.[1]}`);
+  return { canais: Object.fromEntries(lidos), ...(falhas.length ? { falhas: Object.fromEntries(falhas) } : {}), fonte: 'YouTube' };
 }

@@ -32,7 +32,8 @@ test('tv: sem transmissão, encerrada ou sem permissão de exibir em outros site
   assert.deepEqual(lerPaginaAoVivo(pagina({ playabilityStatus: { status: 'LOGIN_REQUIRED' }, videoDetails: video({ isLive: true }) }), CANAL), { situacao: 'fora' });
 });
 test('tv: página que não é a do canal é erro, não "fora do ar"', () => {
-  assert.throws(() => lerPaginaAoVivo('<html><body>Antes de continuar no YouTube</body></html>', CANAL), /inesperada/);
+  assert.throws(() => lerPaginaAoVivo('<html><head><title>Antes de continuar</title></head><body></body></html>', CANAL), /inesperada: Antes de continuar/);
+  assert.throws(() => lerPaginaAoVivo(pagina({ playabilityStatus: { status: 'LOGIN_REQUIRED', reason: 'Faça login' }, videoDetails: {} }), CANAL), /sem dados do vídeo: LOGIN_REQUIRED Faça login/);
   assert.throws(() => lerPaginaAoVivo(pagina({ playabilityStatus: { status: 'OK' }, videoDetails: video({ isLive: true, channelId: 'UCbbbbbbbbbbbbbbbbbbbbbb' }) }), CANAL), /outro canal/);
   assert.throws(() => lerPaginaAoVivo('<script>var ytInitialPlayerResponse = {"videoDetails":{"videoId":"abc', CANAL), /incompletos/);
 });

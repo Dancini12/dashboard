@@ -21,6 +21,8 @@ test('tv: pedido de login no lugar dos dados do vídeo (acesso por servidor) ain
     + `<body><script>var ytInitialPlayerResponse = {"playabilityStatus":{"status":"LOGIN_REQUIRED","reason":"Faça login para confirmar que você não é um bot"}};</script><script>var ytInitialData = {"browseId":"${CANAL}"};</script></body></html>`;
   assert.deepEqual(lerPaginaAoVivo(html, CANAL), { situacao: 'aoVivo', videoId: 'abcdefghijk', titulo: 'Mercado & Cia "ao vivo"' });
   assert.equal(lerPaginaAoVivo(html.replace(/<meta name="title"[^>]*>/, ''), CANAL).titulo, 'Mercado & Cia', 'sem a meta, vale o título da página');
+  const semCanonico = html.replace(/<link rel="canonical"[^>]*>/, '').replace('{"browseId"', '{"currentVideoEndpoint":{"commandMetadata":{"webCommandMetadata":{"url":"/watch?v=abcdefghijk"}},"watchEndpoint":{"videoId":"abcdefghijk"}},"browseId"');
+  assert.equal(lerPaginaAoVivo(semCanonico, CANAL).videoId, 'abcdefghijk', 'sem o endereço canônico, vale o vídeo atual da página');
   assert.throws(() => lerPaginaAoVivo(html, 'UCbbbbbbbbbbbbbbbbbbbbbb'), /sem dados do vídeo: LOGIN_REQUIRED/, 'página que nem cita o canal');
 });
 test('tv: transmissão agendada traz o horário de início', () => {
@@ -33,10 +35,10 @@ test('tv: transmissão agendada traz o horário de início', () => {
 });
 test('tv: sem transmissão, encerrada ou sem permissão de exibir em outros sites conta como fora do ar', () => {
   const doCanal = `<html><head><link rel="canonical" href="https://www.youtube.com/channel/${CANAL}"></head><body>window.ytInitialPlayerResponse,a.b</body></html>`;
-  assert.deepEqual(lerPaginaAoVivo(doCanal, CANAL), { situacao: 'fora' });
-  assert.deepEqual(lerPaginaAoVivo(pagina({ playabilityStatus: { status: 'OK' }, videoDetails: video({}) }), CANAL), { situacao: 'fora' }, 'gravação de transmissão encerrada');
-  assert.deepEqual(lerPaginaAoVivo(pagina({ playabilityStatus: { status: 'OK', playableInEmbed: false }, videoDetails: video({ isLive: true }) }), CANAL), { situacao: 'fora' });
-  assert.deepEqual(lerPaginaAoVivo(pagina({ playabilityStatus: { status: 'LOGIN_REQUIRED' }, videoDetails: video({ isLive: true }) }), CANAL), { situacao: 'fora' });
+  assert.deepEqual(lerPaginaAoVivo(doCanal, CANAL), { situacao: 'fora', motivo: 'sem transmissão aberta' });
+  assert.equal(lerPaginaAoVivo(pagina({ playabilityStatus: { status: 'OK' }, videoDetails: video({}) }), CANAL).situacao, 'fora', 'gravação de transmissão encerrada');
+  assert.equal(lerPaginaAoVivo(pagina({ playabilityStatus: { status: 'OK', playableInEmbed: false }, videoDetails: video({ isLive: true }) }), CANAL).situacao, 'fora');
+  assert.equal(lerPaginaAoVivo(pagina({ playabilityStatus: { status: 'LOGIN_REQUIRED' }, videoDetails: video({ isLive: true }) }), CANAL).situacao, 'fora');
 });
 test('tv: página que não é a do canal é erro, não "fora do ar"', () => {
   assert.throws(() => lerPaginaAoVivo('<html><head><title>Antes de continuar</title></head><body></body></html>', CANAL), /inesperada: Antes de continuar/);

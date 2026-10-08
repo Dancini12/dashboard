@@ -7,6 +7,8 @@
 // playlistId: vídeos enviados pelo canal, para o plano B ("Ver vídeos recentes"). É o channelId com
 //   "UULF" no lugar de "UC": os envios sem as transmissões ao vivo e os Shorts. A lista com tudo
 //   ("UU" + o resto) começa pela transmissão agendada, que ainda não toca.
+// videoIdAoVivo (opcional): código do vídeo de uma transmissão que fica no ar o dia todo. Com ele, o
+//   player abre direto nessa transmissão em vez de perguntar ao YouTube o que o canal está passando.
 // Canal sem channelId aparece desabilitado na tela, com o link para o site.
 export const CANAIS_AGRO = [
   {
@@ -14,6 +16,11 @@ export const CANAIS_AGRO = [
     descricao: 'Notícias do agronegócio, mercado, previsão do tempo e leilões, 24 horas por dia.',
     channelId: 'UCcmbSgSpK0dQhw3IBaBGo-g', // youtube.com/@CanalruralBr: Brasil, desde 2015, com os links do canalrural.com.br
     playlistId: 'UULFcmbSgSpK0dQhw3IBaBGo-g',
+    // O "ao vivo pelo canal" do YouTube recusa o Canal Rural (erro 150), porque o canal mantém mais de
+    // uma transmissão aberta; por isso o player aponta direto para a "Canal Rural 24h". Este código
+    // muda quando o canal reinicia a transmissão: se a aba passar a cair nos vídeos recentes, abra
+    // youtube.com/@CanalruralBr/live e copie para cá o que vem depois de "watch?v=" no endereço.
+    videoIdAoVivo: 'OiBOXN-gTQo', // conferido em 08/10/2026
     siteUrl: 'https://www.canalrural.com.br/',
   },
   {
@@ -48,8 +55,17 @@ export const CANAIS_AGRO = [
   },
 ];
 
+// Endereço oficial do YouTube para player incorporado sem cookies ("modo de privacidade otimizada").
+// Além de não rastrear o aluno, resolve um defeito medido em 08/10/2026: pelo www.youtube.com, cerca
+// de um terço dos visitantes recebia o ao vivo pelo canal sempre quebrado (player preto, erro no
+// play), porque o defeito acompanhava o cookie do visitante. Sem cookie, ele varia a cada carga, e a
+// aba carrega o player de novo quando acontece.
+export const PLAYER_YOUTUBE = 'https://www.youtube-nocookie.com';
+
 // Endereços do player oficial e da página do canal no YouTube.
-export const urlAoVivo = canal => `https://www.youtube.com/embed/live_stream?channel=${canal.channelId}`;
-export const urlRecentes = canal => `https://www.youtube.com/embed/videoseries?list=${canal.playlistId}`;
+export const urlAoVivo = canal => (canal.videoIdAoVivo
+  ? `${PLAYER_YOUTUBE}/embed/${canal.videoIdAoVivo}`
+  : `${PLAYER_YOUTUBE}/embed/live_stream?channel=${canal.channelId}`);
+export const urlRecentes = canal => `${PLAYER_YOUTUBE}/embed/videoseries?list=${canal.playlistId}`;
 // O YouTube leva este endereço para a transmissão que estiver no ar, se houver.
 export const urlNoYouTube = canal => `https://www.youtube.com/channel/${canal.channelId}/live`;

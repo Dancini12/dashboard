@@ -5,7 +5,8 @@ import { CANAIS_AGRO, urlAoVivo, urlNoYouTube, urlRecentes } from '../src/canais
 test('tv agro: todo canal tem os campos da aba, sem id repetido e com site em https', () => {
   assert.equal(new Set(CANAIS_AGRO.map(c => c.id)).size, CANAIS_AGRO.length);
   for (const canal of CANAIS_AGRO) {
-    assert.deepEqual(Object.keys(canal).sort(), ['channelId', 'descricao', 'id', 'nome', 'playlistId', 'siteUrl']);
+    assert.deepEqual(Object.keys(canal).filter(campo => campo !== 'videoIdAoVivo').sort(), ['channelId', 'descricao', 'id', 'nome', 'playlistId', 'siteUrl']);
+    if ('videoIdAoVivo' in canal) assert.match(canal.videoIdAoVivo, /^[\w-]{11}$/, `${canal.id}: código de vídeo do YouTube`);
     assert.ok(canal.nome && canal.descricao, canal.id);
     assert.match(canal.siteUrl, /^https:\/\//, canal.id);
   }
@@ -22,7 +23,8 @@ test('tv agro: ID do YouTube no formato certo, ou os dois campos vazios', () => 
 });
 test('tv agro: endereços do player oficial do YouTube', () => {
   const canal = { channelId: 'UCaaaaaaaaaaaaaaaaaaaaaa', playlistId: 'UULFaaaaaaaaaaaaaaaaaaaaaa' };
-  assert.equal(urlAoVivo(canal), 'https://www.youtube.com/embed/live_stream?channel=UCaaaaaaaaaaaaaaaaaaaaaa');
-  assert.equal(urlRecentes(canal), 'https://www.youtube.com/embed/videoseries?list=UULFaaaaaaaaaaaaaaaaaaaaaa');
+  assert.equal(urlAoVivo(canal), 'https://www.youtube-nocookie.com/embed/live_stream?channel=UCaaaaaaaaaaaaaaaaaaaaaa');
+  assert.equal(urlRecentes(canal), 'https://www.youtube-nocookie.com/embed/videoseries?list=UULFaaaaaaaaaaaaaaaaaaaaaa');
   assert.equal(urlNoYouTube(canal), 'https://www.youtube.com/channel/UCaaaaaaaaaaaaaaaaaaaaaa/live');
+  assert.equal(urlAoVivo({ ...canal, videoIdAoVivo: 'abcdefghijk' }), 'https://www.youtube-nocookie.com/embed/abcdefghijk', 'transmissão fixa tem preferência');
 });

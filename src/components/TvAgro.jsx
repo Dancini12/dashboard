@@ -1,12 +1,13 @@
 import { useEffect, useRef, useState } from "react";
 import { ExternalLink, History, Radio } from "lucide-react";
-import { CANAIS_AGRO, urlAoVivo, urlNoYouTube, urlRecentes } from "../canaisAgro";
+import { CANAIS_AGRO, PLAYER_YOUTUBE, urlAoVivo, urlNoYouTube, urlRecentes } from "../canaisAgro";
 
 // Aba "TV Agro": canais do agro ao vivo, pelo player oficial do YouTube. O site não tem como saber
 // antes se o canal está no ar (isso exigiria chave de API): quem avisa é o próprio player. Quando ele
 // avisa que não tem transmissão para mostrar, a tela passa para os vídeos recentes do canal (plano B)
 // e explica o motivo. O botão "Ver vídeos recentes" faz a mesma troca à mão.
-const YOUTUBE = "https://www.youtube.com";
+// O endereço do ao vivo pelo canal às vezes chega do YouTube sem a transmissão pronta (player preto,
+// que dá erro no play e não responde ao site): nesse caso a tela carrega o player de novo, até 3 vezes.
 const VERDE = "#166534";
 const COM_YOUTUBE = CANAIS_AGRO.filter(c => c.channelId);
 const SEM_YOUTUBE = CANAIS_AGRO.filter(c => !c.channelId);
@@ -18,34 +19,50 @@ const BOTAO = "inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs sm:
 const CONTORNO = { border: "1px solid #bbf7d0", color: VERDE, background: "#fff" };
 
 export default function TvAgro({ inicial }) {
-  const [escolha, setEscolha] = useState(() => ({ id: (COM_YOUTUBE.find(c => c.id === inicial) ?? COM_YOUTUBE[0])?.id, recentes: false }));
+  // recargas: quantas vezes o player ao vivo do canal escolhido já foi carregado de novo sozinho
+  const [escolha, setEscolha] = useState(() => ({ id: (COM_YOUTUBE.find(c => c.id === inicial) ?? COM_YOUTUBE[0])?.id, recentes: false, recargas: 0 }));
+  const [carga, setCarga] = useState(0); // cada número novo monta o player outra vez
   const [semSinal, setSemSinal] = useState([]); // endereços de player que avisaram erro
   const [carregado, setCarregado] = useState(null); // quadro (elemento) que já terminou de carregar
-  const [semResposta, setSemResposta] = useState(null); // endereço do player que ficou 10 segundos sem responder
+  const [semYouTube, setSemYouTube] = useState(false); // a rede não deixou chegar ao YouTube
   const quadro = useRef(null);
 
   const canal = COM_YOUTUBE.find(c => c.id === escolha.id);
-  const assistir = (id) => { setEscolha({ id, recentes: false }); setSemSinal([]); setSemResposta(null); }; // escolher o canal tenta o ao vivo de novo
+  // escolher o canal, mesmo o que já está na tela, tenta o ao vivo de novo
+  const assistir = (id) => { setEscolha({ id, recentes: false, recargas: 0 }); setSemSinal([]); setCarga(n => n + 1); };
+  const { recargas } = escolha;
   const semAoVivo = Boolean(canal) && semSinal.includes(urlAoVivo(canal));
   const aoVivo = Boolean(canal) && !escolha.recentes && !semAoVivo;
   const player = canal ? (aoVivo ? urlAoVivo(canal) : urlRecentes(canal)) : null;
   const semRecentes = !aoVivo && semSinal.includes(player);
-  const calado = Boolean(player) && semResposta === player;
+
+  // Rede que bloqueia o YouTube (comum em escolas): o quadro do player fica com um erro do navegador
+  // e o site não enxerga o que há dentro dele. Um pedido simples ao YouTube mostra se a rede deixa
+  // chegar lá; a resposta em si não importa (e nem pode ser lida daqui), só se a ligação aconteceu.
+  useEffect(() => {
+    let ativo = true;
+    fetch(`${PLAYER_YOUTUBE}/robots.txt`, { mode: "no-cors", cache: "no-store", signal: AbortSignal.timeout(15000) })
+      .catch(() => { if (ativo) setSemYouTube(true); });
+    return () => { ativo = false; };
+  }, []);
 
   // O player só conta o que acontece nele a quem pede, e só depois de pronto: o pedido se repete até
-  // a primeira resposta. Dez segundos sem resposta nenhuma é sinal de que o YouTube nem abriu no
-  // quadro (rede que bloqueia o YouTube, como a de muitas escolas).
+  // a primeira resposta, por 4 segundos. Player ao vivo que não responde nesse tempo é carregado de
+  // novo, menos quando a pessoa já clicou nele (o foco está no quadro) ou a rede não chega ao YouTube.
   useEffect(() => {
     if (!player || carregado !== quadro.current) return;
     let pedidos = 0;
     const pedir = () => {
-      if (pedidos++ >= 20) { clearInterval(repeticao); setSemResposta(player); return; }
-      quadro.current?.contentWindow?.postMessage(JSON.stringify({ event: "listening", id: "tv-agro", channel: "widget" }), YOUTUBE);
+      if (++pedidos <= 8) { quadro.current?.contentWindow?.postMessage(JSON.stringify({ event: "listening", id: "tv-agro", channel: "widget" }), PLAYER_YOUTUBE); return; }
+      clearInterval(repeticao);
+      if (aoVivo && recargas < 3 && !semYouTube && document.activeElement !== quadro.current) {
+        setEscolha(atual => ({ ...atual, recargas: atual.recargas + 1 }));
+        setCarga(n => n + 1);
+      }
     };
     const ouvir = (evento) => {
-      if (evento.origin !== YOUTUBE || evento.source !== quadro.current?.contentWindow) return;
+      if (evento.origin !== PLAYER_YOUTUBE || evento.source !== quadro.current?.contentWindow) return;
       clearInterval(repeticao);
-      setSemResposta(atual => (atual === player ? null : atual));
       let aviso;
       try { aviso = JSON.parse(evento.data); } catch { return; }
       // erro do player: sem transmissão, vídeo fora do ar ou exibição bloqueada em outros sites
@@ -55,7 +72,7 @@ export default function TvAgro({ inicial }) {
     window.addEventListener("message", ouvir);
     pedir();
     return () => { clearInterval(repeticao); window.removeEventListener("message", ouvir); };
-  }, [player, carregado]);
+  }, [player, carregado, aoVivo, recargas, semYouTube]);
 
   return (
     <div className="space-y-4">
@@ -98,16 +115,16 @@ export default function TvAgro({ inicial }) {
             </Aviso>
           )}
           {semRecentes && <Aviso><strong>Os vídeos recentes de {canal.nome} não carregaram aqui.</strong> Abra o site do canal para assistir.</Aviso>}
-          {calado && (
+          {semYouTube && (
             <Aviso>
-              <strong>O player do YouTube não respondeu.</strong> Se o quadro abaixo ficou em branco ou com mensagem de erro, a rede em que você está pode
-              estar bloqueando o YouTube (é comum em redes de escola). Tente em outra rede ou use “Abrir no site do canal”.
+              <strong>Esta rede não está deixando o YouTube abrir.</strong> É comum em redes de escola: o player abaixo deve ficar em branco ou com
+              mensagem de erro. Tente em outra rede (os dados do celular, por exemplo) ou use “Abrir no site do canal”.
             </Aviso>
           )}
 
           <div className="relative mt-3 w-full overflow-hidden rounded-lg aspect-video" style={{ background: "#0f172a" }}>
-            <iframe key={player} ref={quadro} onLoad={evento => setCarregado(evento.currentTarget)}
-              src={`${player}&enablejsapi=1&origin=${encodeURIComponent(window.location.origin)}`}
+            <iframe key={`${player}#${carga}`} ref={quadro} onLoad={evento => setCarregado(evento.currentTarget)}
+              src={`${player}${player.includes("?") ? "&" : "?"}enablejsapi=1&origin=${encodeURIComponent(window.location.origin)}`}
               title={aoVivo ? `${canal.nome} ao vivo no YouTube` : `Vídeos recentes de ${canal.nome} no YouTube`}
               loading="lazy" allowFullScreen allow="autoplay; encrypted-media; picture-in-picture" referrerPolicy="strict-origin-when-cross-origin"
               className="absolute inset-0 h-full w-full" style={{ border: 0 }} />
@@ -115,13 +132,13 @@ export default function TvAgro({ inicial }) {
 
           <div className="flex flex-wrap gap-2 mt-3">
             {aoVivo
-              ? <button type="button" onClick={() => setEscolha({ id: canal.id, recentes: true })} className={BOTAO} style={{ background: VERDE, color: "#fff" }}><History size={14} aria-hidden="true" />Ver vídeos recentes</button>
+              ? <button type="button" onClick={() => setEscolha({ id: canal.id, recentes: true, recargas: 0 })} className={BOTAO} style={{ background: VERDE, color: "#fff" }}><History size={14} aria-hidden="true" />Ver vídeos recentes</button>
               : <button type="button" onClick={() => assistir(canal.id)} className={BOTAO} style={{ background: VERDE, color: "#fff" }}><Radio size={14} aria-hidden="true" />{semAoVivo ? "Tentar o ao vivo de novo" : "Voltar para o ao vivo"}</button>}
             <a href={canal.siteUrl} target="_blank" rel="noopener noreferrer" className={BOTAO} style={CONTORNO}><ExternalLink size={14} aria-hidden="true" />Abrir no site do canal</a>
           </div>
-          {aoVivo && !calado && (
+          {aoVivo && !semYouTube && (
             <p className="text-xs text-slate-500 mt-2">
-              Se o player avisar que a transmissão ainda vai começar ou que o vídeo está indisponível, o canal não está ao vivo no momento: toque em “Ver vídeos recentes”.
+              O player avisou que a transmissão ainda vai começar, que o vídeo está indisponível ou que ocorreu um erro? Toque em “Ver vídeos recentes”, ou no nome do canal para carregar o ao vivo de novo.
             </p>
           )}
           <p className="text-xs text-slate-500 mt-1">No telão, use o botão de tela cheia no canto do player.</p>

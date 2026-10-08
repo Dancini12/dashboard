@@ -14,7 +14,7 @@ Painel educacional gratuito do **C.E.E.P.A. Fernando Costa** (Santa Mariana, PR)
 - **Calculadoras:** saca a partir de Chicago, conversor de unidades, relação de troca, ponto de equilíbrio e financiamento.
 - **Aprender:** simulação de uma safra, em que o aluno decide como um produtor (comprar insumos, financiar, negociar o preço, travar na bolsa, vender ou guardar), e simulador de hedge.
 - **Notícias:** agronegócio, mercado e mercado internacional.
-- **TV Agro:** canais do agro ao vivo pelo player oficial do YouTube (Canal Rural, Canal do Boi, Notícias Agrícolas e Embrapa), com os vídeos recentes de cada um quando não há transmissão. A lista de canais fica em `src/canaisAgro.js`.
+- **TV Agro:** canais do agro ao vivo pelo player oficial do YouTube (Canal Rural, Canal do Boi, Notícias Agrícolas e Embrapa), com a marcação de quem está no ar e os vídeos recentes de cada um quando não há transmissão. A lista de canais fica em `src/canaisAgro.js`.
 - **Evolução:** comparação de qual item subiu mais (o visitante escolhe em cascata entre Chicago, Nova Iorque, commodities do Brasil e ações, até 6 itens), gráficos e tabela de preços de 2020 a 2026 e histórico de ações.
 - **Glossário** com os termos do mercado.
 - **Castor:** assistente que responde dúvidas dos alunos sobre o mercado.
@@ -36,6 +36,12 @@ Projeto em React + Vite, hospedado na Vercel. Notas técnicas abaixo.
 - `npm run build` gera o frontend; a hospedagem precisa executar também `api/market.js`. Um servidor apenas estático (inclusive `vite preview`) não fornece essa API.
 
 Fontes: https://dadosabertos.bcb.gov.br/dataset/432-taxa-de-juros---meta-selic-definida-pelo-copom, https://brapi.dev/docs/acoes e https://www.noticiasagricolas.com.br/widgets/.
+
+## TV Agro
+
+- `/api/market?type=tv` (`server/tv.js`) lê a página pública `youtube.com/channel/<id>/live` de cada canal e devolve a situação (no ar, agendado ou fora do ar) e o código do vídeo da transmissão; não usa chave de API e a resposta fica 1 minuto em cache.
+- Com o código do vídeo, a aba abre o player direto na transmissão. Se a consulta falhar, usa o endereço "ao vivo pelo canal" do YouTube (ou o `videoIdAoVivo` de reserva do canal) e passa para os vídeos recentes quando o player avisa erro.
+- Os players usam `youtube-nocookie.com`, o endereço do YouTube sem cookies.
 
 ## Assistente de dúvidas (Castor responde)
 

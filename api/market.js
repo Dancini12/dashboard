@@ -2,6 +2,7 @@
 import lerPlanilha from 'read-excel-file/node';
 import { dadosDeSafra } from '../server/safra.js';
 import { combustiveisDoParana } from '../server/combustiveis.js';
+import { canaisAoVivo } from '../server/tv.js';
 import { exportacoesPorProduto, destinosDasExportacoes, LimiteDePedidos } from '../server/exportacoes.js';
 
 // Ativos liberados sem chave na BRAPI; com BRAPI_TOKEN no servidor, o plano define o resto.
@@ -185,6 +186,16 @@ export default async function handler(req, res) {
       return res.status(200).json(combustiveis);
     } catch {
       return res.status(502).json({ error: 'Preços da ANP indisponíveis no momento.' });
+    }
+  }
+
+  if (type === 'tv') {
+    try {
+      const tv = await canaisAoVivo();
+      res.setHeader('Cache-Control', 's-maxage=60, stale-while-revalidate=120'); // transmissão começa e acaba a qualquer hora
+      return res.status(200).json(tv);
+    } catch {
+      return res.status(502).json({ error: 'Programação do YouTube indisponível no momento.' });
     }
   }
 

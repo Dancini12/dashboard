@@ -1,26 +1,39 @@
 import { useEffect, useRef, useState } from "react";
 import { ExternalLink, History, Radio } from "lucide-react";
-import { CANAIS_AGRO, PLAYER_YOUTUBE, urlAoVivo, urlNoYouTube, urlRecentes } from "../canaisAgro";
+import { CANAIS_AGRO, PLAYER_YOUTUBE, urlAoVivo, urlDoVideo, urlNoYouTube, urlRecentes } from "../canaisAgro";
 
-// Aba "TV Agro": canais do agro ao vivo, pelo player oficial do YouTube. O site não tem como saber
-// antes se o canal está no ar (isso exigiria chave de API): quem avisa é o próprio player. Quando ele
-// avisa que não tem transmissão para mostrar, a tela passa para os vídeos recentes do canal (plano B)
-// e explica o motivo. O botão "Ver vídeos recentes" faz a mesma troca à mão.
-// O endereço do ao vivo pelo canal às vezes chega do YouTube sem a transmissão pronta (player preto,
-// que dá erro no play e não responde ao site): nesse caso a tela carrega o player de novo, até 3 vezes.
+// Aba "TV Agro": canais do agro ao vivo, pelo player oficial do YouTube. O servidor do site consulta
+// o YouTube (/api/market?type=tv) e diz, de cada canal, se há transmissão no ar e qual é o vídeo: com
+// isso o player abre direto na transmissão, e canal fora do ar já aparece com os vídeos recentes
+// (plano B) e o motivo. O botão "Ver vídeos recentes" faz a mesma troca à mão.
+// Se a consulta falha, a aba se vira com o player: abre o endereço "ao vivo pelo canal" e passa para
+// os vídeos recentes quando o player avisa erro. Esse endereço às vezes chega do YouTube sem a
+// transmissão pronta (player preto, que dá erro no play e não responde ao site): nesse caso a tela
+// carrega o player de novo, até 3 vezes.
 const VERDE = "#166534";
+const VERMELHO = "#dc2626";
 const COM_YOUTUBE = CANAIS_AGRO.filter(c => c.channelId);
 const SEM_YOUTUBE = CANAIS_AGRO.filter(c => !c.channelId);
+// "sexta-feira, 09/10, 10:00"
+const quando = inicio => new Date(inicio).toLocaleString("pt-BR", { weekday: "long", day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
 
 const Aviso = ({ children }) => (
   <div role="status" className="rounded-lg p-2.5 mt-3 text-xs sm:text-sm" style={{ background: "#fffbeb", border: "1px solid #fde68a", color: "#78350f" }}>{children}</div>
 );
+const NoAr = ({ claro }) => <span aria-hidden="true" className="inline-block shrink-0 rounded-full" style={{ width: 8, height: 8, background: VERMELHO, boxShadow: claro ? "0 0 0 2px rgba(255,255,255,0.85)" : "none" }} />;
 const BOTAO = "inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs sm:text-sm font-bold";
 const CONTORNO = { border: "1px solid #bbf7d0", color: VERDE, background: "#fff" };
 
 export default function TvAgro({ inicial }) {
-  // recargas: quantas vezes o player ao vivo do canal escolhido já foi carregado de novo sozinho
-  const [escolha, setEscolha] = useState(() => ({ id: (COM_YOUTUBE.find(c => c.id === inicial) ?? COM_YOUTUBE[0])?.id, recentes: false, recargas: 0 }));
+  // modo: "auto" segue a programação (ao vivo se o canal está no ar, senão vídeos recentes), "aoVivo"
+  // insiste no ao vivo e "recentes" é a escolha dos vídeos recentes. recargas: quantas vezes o player
+  // ao vivo do canal escolhido já foi carregado de novo sozinho.
+  const [escolha, setEscolha] = useState(() => ({ id: (COM_YOUTUBE.find(c => c.id === inicial) ?? COM_YOUTUBE[0])?.id, modo: "auto", recargas: 0 }));
+  // Programação: undefined enquanto a primeira consulta não volta, null se ela falhou. "guia" é a mais
+  // recente (marca os canais no ar); "base" é a que valia quando o canal foi escolhido e decide o
+  // player, para uma consulta nova não trocar o vídeo de quem está assistindo.
+  const [guia, setGuia] = useState(undefined);
+  const [base, setBase] = useState(undefined);
   const [carga, setCarga] = useState(0); // cada número novo monta o player outra vez
   const [semSinal, setSemSinal] = useState([]); // endereços de player que avisaram erro
   const [carregado, setCarregado] = useState(null); // quadro (elemento) que já terminou de carregar
@@ -28,13 +41,30 @@ export default function TvAgro({ inicial }) {
   const quadro = useRef(null);
 
   const canal = COM_YOUTUBE.find(c => c.id === escolha.id);
-  // escolher o canal, mesmo o que já está na tela, tenta o ao vivo de novo
-  const assistir = (id) => { setEscolha({ id, recentes: false, recargas: 0 }); setSemSinal([]); setCarga(n => n + 1); };
+  // escolher o canal, mesmo o que já está na tela, vale como "tentar de novo" com a programação mais recente
+  const assistir = (id, modo = "auto") => { setEscolha({ id, modo, recargas: 0 }); setSemSinal([]); setCarga(n => n + 1); setBase(guia); };
   const { recargas } = escolha;
-  const semAoVivo = Boolean(canal) && semSinal.includes(urlAoVivo(canal));
-  const aoVivo = Boolean(canal) && !escolha.recentes && !semAoVivo;
-  const player = canal ? (aoVivo ? urlAoVivo(canal) : urlRecentes(canal)) : null;
+  const consultando = base === undefined;
+  const info = canal ? base?.[canal.id] : undefined; // o que a programação diz do canal; undefined se não disse nada
+  const noAr = info?.situacao === "aoVivo";
+  const foraDoAr = Boolean(info) && !noAr; // transmissão só agendada, ou nenhuma
+  const enderecoAoVivo = canal ? (noAr ? urlDoVideo(info.videoId) : urlAoVivo(canal)) : null;
+  const semAoVivo = Boolean(canal) && (semSinal.includes(enderecoAoVivo) || (foraDoAr && escolha.modo === "auto"));
+  const aoVivo = Boolean(canal) && escolha.modo !== "recentes" && !semAoVivo;
+  const player = canal && !consultando ? (aoVivo ? enderecoAoVivo : urlRecentes(canal)) : null;
   const semRecentes = !aoVivo && semSinal.includes(player);
+
+  // Programação dos canais, conferida de novo a cada 3 minutos enquanto a aba está aberta.
+  useEffect(() => {
+    let ativo = true;
+    const consultar = () => fetch("/api/market?type=tv", { signal: AbortSignal.timeout(8000) })
+      .then(r => (r.ok ? r.json() : Promise.reject(new Error("indisponível"))))
+      .then(d => { if (ativo) { setGuia(d.canais); setBase(atual => (atual === undefined ? d.canais : atual)); } })
+      .catch(() => { if (ativo) { setGuia(atual => atual ?? null); setBase(atual => (atual === undefined ? null : atual)); } });
+    consultar();
+    const t = setInterval(consultar, 3 * 60 * 1000);
+    return () => { ativo = false; clearInterval(t); };
+  }, []);
 
   // Rede que bloqueia o YouTube (comum em escolas): o quadro do player fica com um erro do navegador
   // e o site não enxerga o que há dentro dele. Um pedido simples ao YouTube mostra se a rede deixa
@@ -82,16 +112,19 @@ export default function TvAgro({ inicial }) {
         <div role="group" aria-label="Canais" className="flex flex-wrap gap-2 mt-3">
           {CANAIS_AGRO.map(c => {
             const ativo = c.id === canal?.id;
+            const passando = guia?.[c.id]?.situacao === "aoVivo";
             return (
               <button key={c.id} type="button" disabled={!c.channelId} aria-pressed={ativo} onClick={() => assistir(c.id)}
-                title={c.channelId ? c.descricao : "Este canal não transmite pelo YouTube"}
-                className="rounded-full px-3.5 py-2 text-xs sm:text-sm font-bold transition-colors disabled:cursor-not-allowed"
+                title={!c.channelId ? "Este canal não transmite pelo YouTube" : passando ? `Ao vivo agora: ${guia[c.id].titulo}` : c.descricao}
+                className="inline-flex items-center gap-1.5 rounded-full px-3.5 py-2 text-xs sm:text-sm font-bold transition-colors disabled:cursor-not-allowed"
                 style={!c.channelId ? { background: "#f1f5f9", color: "#94a3b8" } : ativo ? { background: VERDE, color: "#fff" } : { background: "#f0fdf4", color: VERDE }}>
-                {c.nome}{!c.channelId && <span className="font-normal"> · indisponível</span>}
+                {passando && <NoAr claro={ativo} />}
+                <span>{c.nome}{passando && <span className="sr-only"> (ao vivo agora)</span>}{!c.channelId && <span className="font-normal"> · indisponível</span>}</span>
               </button>
             );
           })}
         </div>
+        {guia && <p className="flex items-center gap-1.5 text-xs text-slate-500 mt-2"><NoAr />ao vivo agora no YouTube</p>}
         {SEM_YOUTUBE.map(c => (
           <p key={c.id} className="text-xs text-slate-500 mt-2">
             {c.nome} não transmite pelo YouTube. <a href={c.siteUrl} target="_blank" rel="noopener noreferrer" className="font-bold underline" style={{ color: VERDE }}>Assistir no site do canal</a>
@@ -103,14 +136,19 @@ export default function TvAgro({ inicial }) {
         <section className="rounded-xl border bg-white p-3 shadow-sm">
           <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
             <h3 className="text-base font-bold" style={{ color: "#14532d" }}>{canal.nome}</h3>
-            <span className="rounded px-1.5 py-0.5 font-bold uppercase" style={{ background: "#f1f5f9", color: "#334155", fontSize: 10 }}>{aoVivo ? "Transmissão ao vivo" : "Vídeos recentes"}</span>
+            {!consultando && (aoVivo && noAr
+              ? <span className="inline-flex items-center gap-1 rounded px-1.5 py-0.5 font-bold uppercase" style={{ background: "#fee2e2", color: "#991b1b", fontSize: 10 }}><NoAr />Ao vivo agora</span>
+              : <span className="rounded px-1.5 py-0.5 font-bold uppercase" style={{ background: "#f1f5f9", color: "#334155", fontSize: 10 }}>{aoVivo ? "Transmissão ao vivo" : "Vídeos recentes"}</span>)}
           </div>
           <p className="text-xs sm:text-sm text-slate-600 mt-0.5">{canal.descricao}</p>
+          {aoVivo && noAr && <p className="text-xs sm:text-sm text-slate-900 mt-1"><span className="text-slate-500">No ar:</span> <strong>{info.titulo}</strong></p>}
 
           {semAoVivo && (
             <Aviso>
-              <strong>{canal.nome} não está ao vivo aqui no momento.</strong> O YouTube não entregou uma transmissão ao vivo deste canal para o painel
-              (o canal pode estar fora do ar ou não liberar a transmissão para outros sites), então o player abaixo mostra os vídeos recentes.{" "}
+              <strong>{canal.nome} não está ao vivo {foraDoAr ? "agora" : "aqui no momento"}.</strong>{" "}
+              {foraDoAr
+                ? <>{info.situacao === "agendado" ? <>Próxima transmissão: “{info.titulo}”{info.inicio && `, ${quando(info.inicio)}`}.</> : <>O canal não tem transmissão aberta no YouTube neste momento.</>} Enquanto isso, o player abaixo mostra os vídeos recentes.</>
+                : <>O YouTube não entregou uma transmissão ao vivo deste canal para o painel (o canal pode estar fora do ar ou não liberar a transmissão para outros sites), então o player abaixo mostra os vídeos recentes.</>}{" "}
               <a href={urlNoYouTube(canal)} target="_blank" rel="noopener noreferrer" className="font-bold underline whitespace-nowrap">Conferir no YouTube</a>
             </Aviso>
           )}
@@ -123,20 +161,23 @@ export default function TvAgro({ inicial }) {
           )}
 
           <div className="relative mt-3 w-full overflow-hidden rounded-lg aspect-video" style={{ background: "#0f172a" }}>
-            <iframe key={`${player}#${carga}`} ref={quadro} onLoad={evento => setCarregado(evento.currentTarget)}
-              src={`${player}${player.includes("?") ? "&" : "?"}enablejsapi=1&origin=${encodeURIComponent(window.location.origin)}`}
-              title={aoVivo ? `${canal.nome} ao vivo no YouTube` : `Vídeos recentes de ${canal.nome} no YouTube`}
-              loading="lazy" allowFullScreen allow="autoplay; encrypted-media; picture-in-picture" referrerPolicy="strict-origin-when-cross-origin"
-              className="absolute inset-0 h-full w-full" style={{ border: 0 }} />
+            {consultando
+              ? <p className="absolute inset-0 flex items-center justify-center text-sm" style={{ color: "#cbd5e1" }}>Conferindo o que está no ar…</p>
+              : <iframe key={`${player}#${carga}`} ref={quadro} onLoad={evento => setCarregado(evento.currentTarget)}
+                  src={`${player}${player.includes("?") ? "&" : "?"}enablejsapi=1&origin=${encodeURIComponent(window.location.origin)}`}
+                  title={aoVivo ? `${canal.nome} ao vivo no YouTube` : `Vídeos recentes de ${canal.nome} no YouTube`}
+                  loading="lazy" allowFullScreen allow="autoplay; encrypted-media; picture-in-picture" referrerPolicy="strict-origin-when-cross-origin"
+                  className="absolute inset-0 h-full w-full" style={{ border: 0 }} />}
           </div>
 
           <div className="flex flex-wrap gap-2 mt-3">
             {aoVivo
-              ? <button type="button" onClick={() => setEscolha({ id: canal.id, recentes: true, recargas: 0 })} className={BOTAO} style={{ background: VERDE, color: "#fff" }}><History size={14} aria-hidden="true" />Ver vídeos recentes</button>
-              : <button type="button" onClick={() => assistir(canal.id)} className={BOTAO} style={{ background: VERDE, color: "#fff" }}><Radio size={14} aria-hidden="true" />{semAoVivo ? "Tentar o ao vivo de novo" : "Voltar para o ao vivo"}</button>}
+              ? <button type="button" onClick={() => setEscolha({ id: canal.id, modo: "recentes", recargas: 0 })} className={BOTAO} style={{ background: VERDE, color: "#fff" }}><History size={14} aria-hidden="true" />Ver vídeos recentes</button>
+              // com o canal fora do ar segundo a programação, "tentar de novo" insiste no ao vivo mesmo assim
+              : <button type="button" onClick={() => assistir(canal.id, semAoVivo && foraDoAr ? "aoVivo" : "auto")} className={BOTAO} style={{ background: VERDE, color: "#fff" }}><Radio size={14} aria-hidden="true" />{semAoVivo ? "Tentar o ao vivo de novo" : "Voltar para o ao vivo"}</button>}
             <a href={canal.siteUrl} target="_blank" rel="noopener noreferrer" className={BOTAO} style={CONTORNO}><ExternalLink size={14} aria-hidden="true" />Abrir no site do canal</a>
           </div>
-          {aoVivo && !semYouTube && (
+          {aoVivo && !noAr && !semYouTube && (
             <p className="text-xs text-slate-500 mt-2">
               O player avisou que a transmissão ainda vai começar, que o vídeo está indisponível ou que ocorreu um erro? Toque em “Ver vídeos recentes”, ou no nome do canal para carregar o ao vivo de novo.
             </p>

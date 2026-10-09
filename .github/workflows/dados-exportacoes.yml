@@ -1,0 +1,38 @@
+# Deixa prontas as consultas da aba Exportações. Todo dia de madrugada confere se a fonte oficial
+# (Comex Stat) publicou um mês novo; quando publicou, gera de novo os arquivos de
+# public/dados/exportacoes/ e os envia para o repositório, o que publica o site sozinho.
+name: Dados de exportação
+
+on:
+  schedule:
+    - cron: '30 7 * * *' # 4h30 no horário de Brasília
+  workflow_dispatch: # permite rodar na hora, pelo botão "Run workflow" do GitHub
+
+permissions:
+  contents: write
+
+concurrency: dados-exportacoes
+
+jobs:
+  atualizar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Buscar os dados na fonte oficial
+        run: node scripts/dados-exportacoes.mjs
+      - name: Enviar para o repositório, se mudou
+        run: |
+          if [ -z "$(git status --porcelain public/dados)" ]; then
+            echo "Nada mudou."
+            exit 0
+          fi
+          git config user.name "AgroInfo (dados automáticos)"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add public/dados
+          git commit -m "Dados de exportação atualizados pela fonte oficial"
+          git pull --rebase origin main
+          git push origin HEAD:main

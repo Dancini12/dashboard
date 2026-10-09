@@ -143,7 +143,7 @@ const visita = { cidade: null };
 // cidadeDaEscola: quem chega pelo quadro "Tempo em Santa Mariana" da página inicial já escolheu a cidade.
 export default function ClimaAgricola({ cidadeDaEscola = false }) {
   const [local, setLocal] = useState(() => (cidadeDaEscola ? SANTA_MARIANA : visita.cidade));
-  const [busca, setBusca] = useState("");
+  const [busca, setBusca] = useState(local?.nome ?? ""); // o campo mostra a cidade escolhida: a aba não tem título com o nome dela
   const [estado, setEstado] = useState({}); // { clima, de } quando chega; { erro } se falhar
   const [porHora, setPorHora] = useState({}); // { dados, de } da previsão hora a hora; { erro } se falhar
   const [diaEscolhido, setDiaEscolhido] = useState(null); // dia aberto na previsão do tempo; null = hoje
@@ -163,15 +163,16 @@ export default function ClimaAgricola({ cidadeDaEscola = false }) {
 
   const procurar = async (evento) => {
     evento.preventDefault();
-    if (!busca.trim()) return;
+    const cidade = busca.split(",")[0].trim(); // "Londrina, Paraná" → "Londrina": o serviço procura só pelo nome
+    if (!cidade) return;
     setErroDaBusca("");
     try {
-      const response = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(busca.trim())}&count=1&language=pt&format=json`, { signal: AbortSignal.timeout(15000) });
+      const response = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(cidade)}&count=1&language=pt&format=json`, { signal: AbortSignal.timeout(15000) });
       const achado = (await response.json()).results?.[0];
       if (!achado) { setErroDaBusca("Cidade não encontrada. Confira o nome."); return; }
       visita.cidade = { nome: `${achado.name}${achado.admin1 ? `, ${achado.admin1}` : ""}`, latitude: achado.latitude, longitude: achado.longitude };
       setLocal(visita.cidade);
-      setBusca("");
+      setBusca(visita.cidade.nome);
     } catch { setErroDaBusca("Não foi possível procurar a cidade agora."); }
   };
 
@@ -187,13 +188,13 @@ export default function ClimaAgricola({ cidadeDaEscola = false }) {
   return (
     <div className="space-y-4">
       <section className="rounded-xl border bg-white p-3 shadow-sm">
-        <h2 className="text-sm font-bold text-green-800">Clima para a lavoura{local && ` · ${estado.de ?? local.nome}`}</h2>
-        <p className="text-xs text-slate-600 mt-1">A previsão do tempo dia a dia, quanto choveu, quanto deve chover, como está a água no solo e se há risco de geada ou calor forte nos próximos 15 dias.</p>
+        <h2 className="sr-only">Clima para a lavoura</h2>
+        <p className="text-xs text-slate-600">A previsão do tempo dia a dia, quanto choveu, quanto deve chover, como está a água no solo e se há risco de geada ou calor forte nos próximos 15 dias.</p>
         <form onSubmit={procurar} className="flex gap-1.5 mt-3">
           <label className="relative flex-1 min-w-0">
             <span className="sr-only">Cidade</span>
             <MapPin size={13} className="absolute" style={{ left: 9, top: "50%", transform: "translateY(-50%)", color: "#64748b" }} aria-hidden="true" />
-            <input value={busca} onChange={e => setBusca(e.target.value)} placeholder={local ? "Ver outra cidade (ex.: Londrina)" : "Digite a cidade (ex.: Londrina)"} className="block w-full rounded-lg border bg-white text-sm" style={{ padding: "7px 10px 7px 28px" }} />
+            <input value={busca} onChange={e => setBusca(e.target.value)} onFocus={e => e.target.select()} placeholder="Digite a cidade (ex.: Londrina)" className="block w-full rounded-lg border bg-white text-sm" style={{ padding: "7px 10px 7px 28px" }} />
           </label>
           <button type="submit" className="flex items-center gap-1 rounded-lg px-3 text-xs font-bold text-white" style={{ background: "#166534" }}><Search size={12} aria-hidden="true" />Buscar</button>
         </form>

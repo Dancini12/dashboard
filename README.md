@@ -4,6 +4,7 @@
 
 Painel educacional gratuito do **C.E.E.P.A. Fernando Costa** (Santa Mariana, PR) para alunos e produtores acompanharem o mercado agrícola:
 
+- **Link direto para cada aba:** o endereço muda com a aba (`…/#tv`, `…/#exportacoes`, `…/#clima`), então dá para mandar o link de uma aba e usar o botão "voltar" do navegador entre elas.
 - **Busca no topo:** digite um produto, moeda, termo ou dúvida (ex.: "soja", "porco", "dólar", "o que é hedge") e vá direto à cotação, ao gráfico, ao glossário, às notícias ou ao Castor.
 - **Início:** resumo do dia, com dólar, soja em Chicago, preços da região, diesel, tempo, andamento da safra, manchetes, atalhos para as atividades, todas as moedas e os indicadores do Banco Central (Selic, IPCA, INPC, IGP-M, CDI, poupança).
 - **Bolsas:** os 17 contratos agrícolas de Chicago (CBOT e CME) e de Nova Iorque (ICE) em tabelas, com variação do dia, próximos vencimentos e o valor convertido para saca, arroba, tonelada ou kg, em dólares e em reais; e a consulta de ações e fundos da B3.

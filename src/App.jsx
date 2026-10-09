@@ -529,8 +529,13 @@ const INDICE_BUSCA = [
   ...TABS.map(t => ({ titulo: `Aba ${TAB_LABELS[t]}`, detalhe: DESCRICAO_ABA[t], grupo: "Abas", termos: DESCRICAO_ABA[t], acao: { aba: t } })),
 ];
 
+// Cada aba tem endereço próprio (…/#tv, …/#exportacoes), para mandar o link de uma aba e para o
+// botão "voltar" do navegador andar entre as abas. A página inicial fica sem nada depois do endereço.
+const abaDoEndereco = () => { const nome = window.location.hash.slice(1); return TABS.includes(nome) ? nome : "inicio"; };
+const TITULO_DO_SITE = document.title;
+
 export default function App() {
-  const [tab, setTab] = useState("inicio");
+  const [tab, setTab] = useState(abaDoEndereco);
   const [clock, setClock] = useState(new Date());
   const [count, setCount] = useState(0);
   const [moedasEm, setMoedasEm] = useState(null); // hora da última resposta da fonte das moedas
@@ -556,6 +561,18 @@ export default function App() {
     setAlvo({ ...acao, n: Date.now() });
   };
   const trocarAba = (t) => { setTab(t); setAlvo(null); };
+  // a aba aberta vai para o endereço e para o título da página…
+  useEffect(() => {
+    if (abaDoEndereco() !== tab) window.history.pushState(null, "", tab === "inicio" ? window.location.pathname + window.location.search : `#${tab}`);
+    document.title = tab === "inicio" ? TITULO_DO_SITE : `${TAB_LABELS[tab]} · AgroInfo`;
+  }, [tab]);
+  // …e "voltar", "avançar" ou um link para outra aba trocam a aba
+  useEffect(() => {
+    const aoMudarOEndereco = () => { setTab(abaDoEndereco()); setAlvo(null); };
+    window.addEventListener("popstate", aoMudarOEndereco);
+    window.addEventListener("hashchange", aoMudarOEndereco);
+    return () => { window.removeEventListener("popstate", aoMudarOEndereco); window.removeEventListener("hashchange", aoMudarOEndereco); };
+  }, []);
   const mostrarMascote = (v) => { setMascote(v); if (!v) setPerguntaCastor(null); };
 
   // leva a tela até o item escolhido na busca (ou ao começo da aba)

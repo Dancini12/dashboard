@@ -133,7 +133,7 @@ export default function Inicio({ dolar, variacaoDoDolar, onIr, onCastor, childre
                       : <><strong>✅ Sem avisos</strong> de geada, calor forte ou chuva forte para os próximos 15 dias.</>}
               </p>
             </> : <p className="text-xs text-slate-500 mt-2">{clima.erro ? "Previsão indisponível agora." : "Buscando a previsão…"}</p>}
-            <VerMais onClick={() => onIr({ aba: "clima" })}>Ver o clima completo</VerMais>
+            <VerMais onClick={() => onIr({ aba: "clima", cidadeDaEscola: true })}>Ver o clima completo</VerMais>
           </div>
           <div className="rounded-xl border bg-white p-3 shadow-sm" style={{ borderColor: "rgba(0,0,0,0.08)" }}>
             <h3 className="text-sm font-bold" style={{ color: "#14532d" }}>Lavouras do Paraná</h3>

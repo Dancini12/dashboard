@@ -10,7 +10,7 @@ Painel educacional gratuito do **C.E.E.P.A. Fernando Costa** (Santa Mariana, PR)
 - **Cotações Cooperativas:** cotação diária do Paraná (DERAL/SEAB), por região, com mapa de onde se paga mais e menos; indicadores de preço do Brasil (CEPEA) e preço dos combustíveis no Paraná (ANP).
 - **Safra:** produção, área e rendimento por safra no Paraná e na região de Cornélio Procópio, andamento de plantio e colheita, calendário agrícola (DERAL), produção de Santa Mariana e safra do Brasil (IBGE).
 - **Exportações:** volume, valor e preço médio dos principais produtos do agro, mês a mês, no Brasil e no Paraná, com países de destino e estados de origem; e a consulta por país, que mostra o que o Brasil vende para ele e compra dele, produto por produto (Comex Stat).
-- **Clima:** previsão do tempo (agora, os próximos 7 dias e cada dia por período e hora a hora), chuva dos últimos 30 dias e prevista para 15, água no solo e avisos de geada, calor e chuva forte (Open-Meteo).
+- **Clima:** para a cidade que o visitante digitar (a aba abre sem cidade escolhida), previsão do tempo (agora, os próximos 7 dias e cada dia por período e hora a hora), chuva dos últimos 30 dias e prevista para 15, água no solo e avisos de geada, calor e chuva forte (Open-Meteo).
 - **Calculadoras:** saca a partir de Chicago, conversor de unidades, relação de troca, ponto de equilíbrio e financiamento.
 - **Aprender:** simulação de uma safra, em que o aluno decide como um produtor (comprar insumos, financiar, negociar o preço, travar na bolsa, vender ou guardar), e simulador de hedge.
 - **Notícias:** agronegócio, mercado e mercado internacional.

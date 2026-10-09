@@ -522,7 +522,7 @@ const INDICE_BUSCA = [
   { titulo: "Comparar qual subiu mais", detalhe: "Chicago, Nova Iorque, commodities do Brasil e ações no mesmo gráfico · Evolução", grupo: "Evolução",
     termos: "comparacao valorizou alta queda grafico historico", acao: { aba: "evolucao", ancora: "comparar-historico" } },
   { titulo: "Diesel e combustíveis no Paraná", detalhe: "Preço médio da semana nos postos (ANP) · Cotações Cooperativas", grupo: "Cooperativas", termos: "gasolina etanol alcool oleo diesel posto litro custo", acao: { aba: "cooperativas", ancora: "card-combustiveis" } },
-  { titulo: "Previsão do tempo", detalhe: "O tempo agora, os próximos 7 dias e cada dia por período · Clima", grupo: "Clima", termos: "temperatura hoje amanha semana hora vento umidade sensacao", acao: { aba: "clima", ancora: "previsao-tempo" } },
+  { titulo: "Previsão do tempo", detalhe: "O tempo agora, os próximos 7 dias e cada dia por período · Clima", grupo: "Clima", termos: "temperatura hoje amanha semana hora vento umidade sensacao cidade", acao: { aba: "clima" } },
   { titulo: "Ações e fundos da B3", detalhe: "Consultar empresas da Bolsa brasileira · Bolsas", grupo: "Bolsas", termos: "acoes bolsa empresa etf investimento b3", acao: { aba: "bolsas", ancora: "consultar-acao" } },
   ...CANAIS_AGRO.filter(c => c.channelId).map(c => ({ titulo: `${c.nome} · ao vivo`, detalhe: `${c.descricao} · TV Agro`, grupo: "TV Agro",
     termos: "tv televisao canal assistir video programa transmissao youtube", acao: { aba: "tv", canal: c.id } })),
@@ -693,7 +693,7 @@ export default function App() {
         </Bolsas>}
         {tab === "safra" && <SafraTab />}
         {tab === "exportacoes" && <Exportacoes />}
-        {tab === "clima" && <ClimaAgricola />}
+        {tab === "clima" && <ClimaAgricola key={alvo?.cidadeDaEscola ? alvo.n : "clima"} cidadeDaEscola={Boolean(alvo?.cidadeDaEscola)} />}
         {tab === "calculadoras" && <Calculadoras key={alvo?.calculadora ? alvo.n : "calculadoras"} inicial={alvo?.calculadora} dolar={dolar} />}
         {tab === "aprender" && <Aprender onPerguntar={ASSISTENTE_URL ? (texto => irPara({ castor: texto })) : null} />}
         {tab === "cooperativas" && <CotacoesCooperativas key={alvo?.produto ? alvo.n : "pr"} produtoInicial={alvo?.produto}>

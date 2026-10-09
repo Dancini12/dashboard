@@ -136,8 +136,13 @@ function PrevisaoDoTempo({ dias, hoje, porHora, semHoras, escolhido, onEscolher 
   );
 }
 
-export default function ClimaAgricola() {
-  const [local, setLocal] = useState(SANTA_MARIANA);
+// A aba abre sem cidade nenhuma: é o visitante que escolhe. A cidade escolhida fica guardada enquanto
+// a página está aberta, para quem sai da aba e volta não precisar digitar de novo.
+const visita = { cidade: null };
+
+// cidadeDaEscola: quem chega pelo quadro "Tempo em Santa Mariana" da página inicial já escolheu a cidade.
+export default function ClimaAgricola({ cidadeDaEscola = false }) {
+  const [local, setLocal] = useState(() => (cidadeDaEscola ? SANTA_MARIANA : visita.cidade));
   const [busca, setBusca] = useState("");
   const [estado, setEstado] = useState({}); // { clima, de } quando chega; { erro } se falhar
   const [porHora, setPorHora] = useState({}); // { dados, de } da previsão hora a hora; { erro } se falhar
@@ -145,6 +150,7 @@ export default function ClimaAgricola() {
   const [erroDaBusca, setErroDaBusca] = useState("");
 
   useEffect(() => {
+    if (!local) return;
     let ativo = true;
     buscarClima(local)
       .then(clima => { if (ativo) setEstado({ clima, de: local.nome }); })
@@ -163,13 +169,14 @@ export default function ClimaAgricola() {
       const response = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(busca.trim())}&count=1&language=pt&format=json`, { signal: AbortSignal.timeout(15000) });
       const achado = (await response.json()).results?.[0];
       if (!achado) { setErroDaBusca("Cidade não encontrada. Confira o nome."); return; }
-      setLocal({ nome: `${achado.name}${achado.admin1 ? `, ${achado.admin1}` : ""}`, latitude: achado.latitude, longitude: achado.longitude });
+      visita.cidade = { nome: `${achado.name}${achado.admin1 ? `, ${achado.admin1}` : ""}`, latitude: achado.latitude, longitude: achado.longitude };
+      setLocal(visita.cidade);
       setBusca("");
     } catch { setErroDaBusca("Não foi possível procurar a cidade agora."); }
   };
 
   const { clima } = estado;
-  const carregando = estado.de !== local.nome && !estado.erro;
+  const carregando = Boolean(local) && estado.de !== local.nome && !estado.erro;
   const resumo = clima && resumoDaChuva(clima.dias, clima.hoje);
   const avisos = clima && avisosDaPrevisao(clima.dias, clima.hoje);
   const iHoje = clima ? clima.dias.findIndex(d => d.data === clima.hoje) : 0;
@@ -180,18 +187,18 @@ export default function ClimaAgricola() {
   return (
     <div className="space-y-4">
       <section className="rounded-xl border bg-white p-3 shadow-sm">
-        <h2 className="text-sm font-bold text-green-800">Clima para a lavoura · {estado.de ?? local.nome}</h2>
+        <h2 className="text-sm font-bold text-green-800">Clima para a lavoura{local && ` · ${estado.de ?? local.nome}`}</h2>
         <p className="text-xs text-slate-600 mt-1">A previsão do tempo dia a dia, quanto choveu, quanto deve chover, como está a água no solo e se há risco de geada ou calor forte nos próximos 15 dias.</p>
         <form onSubmit={procurar} className="flex gap-1.5 mt-3">
           <label className="relative flex-1 min-w-0">
-            <span className="sr-only">Outra cidade</span>
+            <span className="sr-only">Cidade</span>
             <MapPin size={13} className="absolute" style={{ left: 9, top: "50%", transform: "translateY(-50%)", color: "#64748b" }} aria-hidden="true" />
-            <input value={busca} onChange={e => setBusca(e.target.value)} placeholder="Ver outra cidade (ex.: Londrina)" className="block w-full rounded-lg border bg-white text-sm" style={{ padding: "7px 10px 7px 28px" }} />
+            <input value={busca} onChange={e => setBusca(e.target.value)} placeholder={local ? "Ver outra cidade (ex.: Londrina)" : "Digite a cidade (ex.: Londrina)"} className="block w-full rounded-lg border bg-white text-sm" style={{ padding: "7px 10px 7px 28px" }} />
           </label>
           <button type="submit" className="flex items-center gap-1 rounded-lg px-3 text-xs font-bold text-white" style={{ background: "#166534" }}><Search size={12} aria-hidden="true" />Buscar</button>
-          {local !== SANTA_MARIANA && <button type="button" onClick={() => setLocal(SANTA_MARIANA)} className="rounded-lg border px-3 text-xs font-bold" style={{ borderColor: "#bbf7d0", color: "#166534" }}>Santa Mariana</button>}
         </form>
         {erroDaBusca && <p role="alert" className="text-xs text-amber-800 mt-1.5">{erroDaBusca}</p>}
+        {!local && !erroDaBusca && <p className="text-xs text-slate-500 mt-2">Escolha uma cidade para ver a previsão do tempo, a chuva e a água no solo.</p>}
         {carregando && <p className="text-xs text-slate-500 mt-2">Buscando o clima de {local.nome}…</p>}
         {estado.erro && <p role="alert" className="text-xs text-amber-800 mt-2">{clima ? "Não foi possível atualizar agora; os dados abaixo são os últimos recebidos." : "O serviço de clima não respondeu. Tente novamente em alguns minutos."}</p>}
       </section>

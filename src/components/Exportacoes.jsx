@@ -53,10 +53,24 @@ async function atender() {
   }
   atendendo = false;
 }
-// Põe o pedido na fila. naFrente: o que o visitante acabou de pedir passa à frente do que a aba
-// carrega sozinha.
-function buscar(consulta, sinal, naFrente = false) {
-  return new Promise((entregar, falhar) => {
+// Os dados da aba e os países mais procurados ficam prontos em arquivos do próprio site, gerados por
+// scripts/dados-exportacoes.mjs: abrem na hora, sem depender da fonte. Arquivo que não existe (país
+// fora da lista) ou velho demais (a geração parou) não vale, e aí a consulta vai à fonte.
+const VALIDADE_DO_ARQUIVO = 45 * 24 * 60 * 60 * 1000; // a fonte publica um mês novo por mês
+async function doArquivo(consulta, sinal) {
+  const pedido = new URLSearchParams(consulta);
+  const nome = pedido.get("parte") === "pais" ? `pais-${pedido.get("pais")}-${pedido.get("fluxo")}` : pedido.get("parte");
+  try {
+    const response = await fetch(`/dados/exportacoes/${nome}.json`, { signal: sinal });
+    if (!response.ok) return null;
+    const dados = await response.json(); // no computador de desenvolvimento, arquivo que falta devolve a página do site, que não é JSON
+    return Date.now() - Date.parse(dados.geradoEm) < VALIDADE_DO_ARQUIVO ? dados : null;
+  } catch { return null; }
+}
+// Busca uma parte dos dados: do arquivo pronto, se houver, ou da fonte, pela fila. naFrente: o que o
+// visitante acabou de pedir passa à frente do que a aba carrega sozinha.
+async function buscar(consulta, sinal, naFrente = false) {
+  return await doArquivo(consulta, sinal) ?? new Promise((entregar, falhar) => {
     fila[naFrente ? "unshift" : "push"]({ consulta, sinal, entregar, falhar });
     atender();
   });

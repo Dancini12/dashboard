@@ -38,6 +38,12 @@ Projeto em React + Vite, hospedado na Vercel. Notas técnicas abaixo.
 
 Fontes: https://dadosabertos.bcb.gov.br/dataset/432-taxa-de-juros---meta-selic-definida-pelo-copom, https://brapi.dev/docs/acoes e https://www.noticiasagricolas.com.br/widgets/.
 
+## Exportações prontas
+
+- `scripts/dados-exportacoes.mjs` busca no Comex Stat os dados da aba Exportações e o comércio com os 20 países da lista que está no começo do script, e grava tudo em `public/dados/exportacoes/`. A aba lê esses arquivos antes de ir à fonte, então abre na hora; país fora da lista continua sendo buscado na hora, pela API.
+- Cada arquivo guarda de que mês é (`mesDaFonte`) e quando foi gerado (`geradoEm`). O script só refaz o que falta ou é de mês anterior; arquivo com mais de 45 dias deixa de valer e a aba volta a consultar a fonte.
+- Para atualizar à mão: `node scripts/dados-exportacoes.mjs` e depois enviar a pasta `public/dados` para o repositório.
+
 ## TV Agro
 
 - `/api/market?type=tv` (`server/tv.js`) lê a página pública `youtube.com/channel/<id>/live` de cada canal e devolve a situação (no ar, agendado ou fora do ar) e o código do vídeo da transmissão; não usa chave de API e a resposta fica 1 minuto em cache.

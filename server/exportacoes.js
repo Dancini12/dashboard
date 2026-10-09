@@ -92,6 +92,13 @@ export function lerDestinos(lista) {
   };
 }
 
+// Último mês que a fonte já publicou ('AAAA-MM'), por uma consulta leve (só a soja, que embarca o ano
+// todo): serve para saber se há mês novo sem pedir tudo de novo.
+export async function ultimoMesPublicado() {
+  const lista = await consultar({ filtros: [{ filter: 'heading', values: ['1201'] }], detalhes: ['heading'], porMes: true });
+  return lista.map(l => `${l.year}-${l.monthNumber}`).sort().at(-1);
+}
+
 export const exportacoesPorProduto = async () => lerProdutos(await consultar({ detalhes: ['heading', 'state'], porMes: true }));
 export const destinosDasExportacoes = async () => lerDestinos(await consultar({ detalhes: ['heading', 'country'], porMes: false }));
 

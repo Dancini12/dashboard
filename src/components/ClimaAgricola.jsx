@@ -1,17 +1,20 @@
 import { useEffect, useState } from "react";
 import { Bar, BarChart, CartesianGrid, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { MapPin, Search } from "lucide-react";
-import { avisosDaPrevisao, buscarClima, getWmo, resumoDaChuva, SANTA_MARIANA, WEEK } from "../clima";
+import { avisosDaPrevisao, buscarClima, buscarPrevisao, emojiDoTempo, getWmo, periodosDoDia, resumoDaChuva, SANTA_MARIANA, WEEK } from "../clima";
 
-// Aba "Clima": chuva que já caiu, chuva prevista, umidade do solo e avisos para a lavoura,
-// a partir do Open-Meteo (o mesmo serviço do resumo da página inicial). Os valores passados são
-// estimativas do modelo para o ponto escolhido, não a leitura de um pluviômetro.
+// Aba "Clima": a previsão do tempo (agora, os próximos 7 dias e cada dia por período), a chuva que já
+// caiu, a chuva prevista, a umidade do solo e os avisos para a lavoura, a partir do Open-Meteo (o
+// mesmo serviço do resumo da página inicial). Os valores passados são estimativas do modelo para o
+// ponto escolhido, não a leitura de um pluviômetro.
 const AZUL = "#2a78d6";      // o que já choveu
 const AZUL_CLARO = "#86b6ef"; // previsão (mesmo tom, mais claro)
 const mm = v => `${v.toLocaleString("pt-BR", { minimumFractionDigits: 0, maximumFractionDigits: 1 })} mm`;
 const diaMes = data => `${data.slice(8, 10)}/${data.slice(5, 7)}`;
 const diaDaSemana = data => WEEK[new Date(`${data}T12:00:00`).getDay()];
 const listaDeDias = dias => dias.map(d => diaMes(d.data)).join(", ");
+const diaPorExtenso = data => { const nome = new Date(`${data}T12:00:00`).toLocaleDateString("pt-BR", { weekday: "long" }); return nome.charAt(0).toUpperCase() + nome.slice(1); };
+const grau = v => `${Math.round(v)}°`;
 
 function Dica({ active, payload }) {
   const dia = payload?.[0]?.payload;
@@ -38,10 +41,107 @@ const Aviso = ({ tom, icone, titulo, children }) => (
   </div>
 );
 
+// Previsão do tempo: como está agora, os próximos 7 dias em quadros e, do dia escolhido, o resumo por
+// período (madrugada, manhã, tarde e noite) e a tabela hora a hora. porHora vem de outra consulta e
+// pode faltar: os quadros dos dias aparecem do mesmo jeito.
+function PrevisaoDoTempo({ dias, hoje, porHora, semHoras, escolhido, onEscolher }) {
+  const dia = dias.find(d => d.data === escolhido) ?? dias[0];
+  const horas = porHora?.horasPorDia[dia.data] ?? [];
+  const periodos = periodosDoDia(horas);
+  const agora = porHora?.agora;
+  const chove = (dia.chuva ?? 0) >= 0.1;
+  return (
+    <section id="previsao-tempo" className="rounded-xl border bg-white p-3 shadow-sm" style={{ scrollMarginTop: 100 }}>
+      <h3 className="text-sm font-bold" style={{ color: "#14532d" }}>Previsão do tempo</h3>
+      {agora && (
+        <div className="flex flex-wrap items-center gap-x-6 gap-y-2 mt-2">
+          <div className="flex items-center gap-3">
+            <span style={{ fontSize: 44, lineHeight: 1 }} aria-hidden="true">{emojiDoTempo(agora.tempo, agora.deDia)}</span>
+            <div>
+              <div className="text-3xl font-black text-slate-900" style={{ lineHeight: 1 }}>{Math.round(agora.temperatura)} °C</div>
+              <div className="text-xs font-semibold text-slate-700 mt-1">{getWmo(agora.tempo).label} · agora, às {agora.hora.slice(11, 16)}</div>
+            </div>
+          </div>
+          <dl className="flex flex-wrap gap-x-5 gap-y-1 text-xs text-slate-600">
+            <div><dt className="inline">Sensação de </dt><dd className="inline font-bold text-slate-900">{Math.round(agora.sensacao)} °C</dd></div>
+            <div><dt className="inline">Umidade do ar: </dt><dd className="inline font-bold text-slate-900">{agora.umidade}%</dd></div>
+            <div><dt className="inline">Vento: </dt><dd className="inline font-bold text-slate-900">{Math.round(agora.vento)} km/h</dd></div>
+          </dl>
+        </div>
+      )}
+      <p className="text-xs text-slate-600 mt-3">Próximos 7 dias. Toque em um dia para ver como ele vai ser.</p>
+      <div role="group" aria-label="Dia da previsão" className="grid grid-cols-4 sm:grid-cols-7 gap-1.5 mt-1.5">
+        {dias.map(d => {
+          const ativo = d.data === dia.data;
+          return (
+            <button key={d.data} type="button" aria-pressed={ativo} onClick={() => onEscolher(d.data)} title={getWmo(d.tempo).label}
+              className="rounded-lg border px-1 py-2 text-center" style={ativo ? { background: "#f0fdf4", borderColor: "#166534" } : { background: "#fff", borderColor: "#e2e8f0" }}>
+              <span className="block text-xs font-bold" style={{ color: ativo ? "#166534" : "#334155" }}>{d.data === hoje ? "Hoje" : diaDaSemana(d.data)}</span>
+              <span className="block text-slate-500" style={{ fontSize: 10 }}>{diaMes(d.data)}</span>
+              <span className="block my-1" style={{ fontSize: 24, lineHeight: 1 }} aria-hidden="true">{getWmo(d.tempo).emoji}</span>
+              <span className="block text-xs"><strong className="text-slate-900">{grau(d.maxima)}</strong> <span className="text-slate-500">{grau(d.minima)}</span></span>
+              <span className="block text-slate-600" style={{ fontSize: 10 }}>{mm(d.chuva ?? 0)}</span>
+              <span className="block text-slate-500" style={{ fontSize: 10 }}>{d.probabilidade != null ? `${d.probabilidade}% de chance` : "\u00a0"}</span>
+            </button>
+          );
+        })}
+      </div>
+
+      <div className="mt-3">
+        <h4 className="text-sm font-bold text-slate-900">{dia.data === hoje ? "Hoje" : diaPorExtenso(dia.data)}, {diaMes(dia.data)} · {getWmo(dia.tempo).label}</h4>
+        <p className="text-xs text-slate-600 mt-0.5">
+          Mínima de {Math.round(dia.minima)} °C e máxima de {Math.round(dia.maxima)} °C.{" "}
+          {chove ? `Chuva prevista de ${mm(dia.chuva)}${dia.probabilidade != null ? `, com ${dia.probabilidade}% de chance` : ""}.` : `Sem chuva prevista${dia.probabilidade ? ` (chance de ${dia.probabilidade}%)` : ""}.`}
+        </p>
+        {periodos.length > 0 ? (
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-2">
+            {periodos.map(p => (
+              <div key={p.nome} className="rounded-lg p-2.5" style={{ background: "#f8fafc" }}>
+                <div className="text-xs text-slate-500"><strong className="text-slate-700">{p.nome}</strong> · {p.de}h às {p.ate}h</div>
+                <div className="flex items-center gap-2 mt-1">
+                  <span style={{ fontSize: 24, lineHeight: 1 }} aria-hidden="true">{emojiDoTempo(p.tempo, p.deDia)}</span>
+                  <span className="text-base font-black text-slate-900">{grau(p.minima)} a {grau(p.maxima)}</span>
+                </div>
+                <div className="text-xs text-slate-700 mt-1">{getWmo(p.tempo).label}</div>
+                <div className="text-xs text-slate-500">Chuva: {mm(p.chuva)}{p.probabilidade != null && ` · ${p.probabilidade}% de chance`}</div>
+                <div className="text-xs text-slate-500">Vento de até {Math.round(p.vento)} km/h</div>
+              </div>
+            ))}
+          </div>
+        ) : <p className="text-xs text-slate-500 mt-2">{semHoras ? "O detalhe por período não está disponível agora." : "Buscando o detalhe por período…"}</p>}
+        {horas.length > 0 && (
+          <details className="mt-2 text-xs text-slate-600">
+            <summary className="cursor-pointer font-semibold text-green-800">Ver hora a hora</summary>
+            <div className="mt-2 overflow-x-auto">
+              <table className="w-full text-xs">
+                <thead><tr style={{ background: "#166534", color: "#fff" }}>
+                  <th className="py-1.5 px-2 text-left">Hora</th><th className="py-1.5 px-2 text-left">Tempo</th><th className="py-1.5 px-2 text-right">Temp.</th><th className="py-1.5 px-2 text-right">Chuva</th><th className="py-1.5 px-2 text-right">Chance</th><th className="py-1.5 px-2 text-right">Vento</th>
+                </tr></thead>
+                <tbody>{horas.map((h, i) => (
+                  <tr key={h.hora} style={{ background: i % 2 ? "#fff" : "#f8fafc" }}>
+                    <td className="py-1 px-2 font-semibold whitespace-nowrap">{h.hora.slice(11, 13)}h</td>
+                    <td className="py-1 px-2 whitespace-nowrap">{emojiDoTempo(h.tempo, h.deDia)} <span className="hidden sm:inline">{getWmo(h.tempo).label}</span></td>
+                    <td className="py-1 px-2 text-right font-mono whitespace-nowrap">{grau(h.temperatura)}</td>
+                    <td className="py-1 px-2 text-right font-mono whitespace-nowrap">{mm(h.chuva ?? 0)}</td>
+                    <td className="py-1 px-2 text-right font-mono">{h.probabilidade != null ? `${h.probabilidade}%` : "—"}</td>
+                    <td className="py-1 px-2 text-right font-mono whitespace-nowrap">{Math.round(h.vento)} km/h</td>
+                  </tr>
+                ))}</tbody>
+              </table>
+            </div>
+          </details>
+        )}
+      </div>
+    </section>
+  );
+}
+
 export default function ClimaAgricola() {
   const [local, setLocal] = useState(SANTA_MARIANA);
   const [busca, setBusca] = useState("");
   const [estado, setEstado] = useState({}); // { clima, de } quando chega; { erro } se falhar
+  const [porHora, setPorHora] = useState({}); // { dados, de } da previsão hora a hora; { erro } se falhar
+  const [diaEscolhido, setDiaEscolhido] = useState(null); // dia aberto na previsão do tempo; null = hoje
   const [erroDaBusca, setErroDaBusca] = useState("");
 
   useEffect(() => {
@@ -49,6 +149,9 @@ export default function ClimaAgricola() {
     buscarClima(local)
       .then(clima => { if (ativo) setEstado({ clima, de: local.nome }); })
       .catch(() => { if (ativo) setEstado(anterior => ({ ...anterior, erro: true })); });
+    buscarPrevisao(local)
+      .then(dados => { if (ativo) setPorHora({ dados, de: local.nome }); })
+      .catch(() => { if (ativo) setPorHora(anterior => ({ ...anterior, erro: true })); });
     return () => { ativo = false; };
   }, [local]);
 
@@ -78,7 +181,7 @@ export default function ClimaAgricola() {
     <div className="space-y-4">
       <section className="rounded-xl border bg-white p-3 shadow-sm">
         <h2 className="text-sm font-bold text-green-800">Clima para a lavoura · {estado.de ?? local.nome}</h2>
-        <p className="text-xs text-slate-600 mt-1">Quanto choveu, quanto deve chover, como está a água no solo e se há risco de geada ou calor forte nos próximos 15 dias.</p>
+        <p className="text-xs text-slate-600 mt-1">A previsão do tempo dia a dia, quanto choveu, quanto deve chover, como está a água no solo e se há risco de geada ou calor forte nos próximos 15 dias.</p>
         <form onSubmit={procurar} className="flex gap-1.5 mt-3">
           <label className="relative flex-1 min-w-0">
             <span className="sr-only">Outra cidade</span>
@@ -94,6 +197,10 @@ export default function ClimaAgricola() {
       </section>
 
       {clima && <>
+        {/* a previsão por hora só vale se for da mesma cidade dos dias mostrados */}
+        <PrevisaoDoTempo dias={previsao.slice(0, 7)} hoje={clima.hoje} porHora={porHora.de === estado.de ? porHora.dados : null} semHoras={Boolean(porHora.erro)}
+          escolhido={diaEscolhido} onEscolher={setDiaEscolhido} />
+
         <section className="rounded-xl border bg-white p-3 shadow-sm space-y-2">
           <h3 className="text-sm font-bold" style={{ color: "#14532d" }}>Avisos para os próximos 15 dias</h3>
           {avisos.geada.length
@@ -157,7 +264,7 @@ export default function ClimaAgricola() {
         </section>
 
         <section className="rounded-xl border bg-white p-3 shadow-sm">
-          <h3 className="text-sm font-bold" style={{ color: "#14532d" }}>Previsão dia a dia</h3>
+          <h3 className="text-sm font-bold" style={{ color: "#14532d" }}>Previsão para os próximos 15 dias</h3>
           <div className="mt-2 overflow-x-auto">
             <table className="w-full text-xs">
               <thead><tr style={{ background: "#166534", color: "#fff" }}>

@@ -25,6 +25,9 @@ export const WMO = {
 };
 export const getWmo = (code) => WMO[code] || { label: "Variável", emoji: "🌡️" };
 export const WEEK = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
+// À noite, sol não combina: céu limpo vira lua e "parcialmente nublado" vira nuvem.
+const EMOJI_DA_NOITE = { 0: "🌙", 1: "🌙", 2: "☁️" };
+export const emojiDoTempo = (codigo, deDia = true) => (!deDia && EMOJI_DA_NOITE[codigo]) || getWmo(codigo).emoji;
 
 const CHUVA_QUE_CONTA = 1; // mm: abaixo disso o dia conta como seco
 const soma = valores => valores.reduce((total, v) => total + (v ?? 0), 0);
@@ -82,4 +85,58 @@ export async function buscarClima({ latitude, longitude }) {
   const iAgora = Math.max(0, hourly.time.findLastIndex(t => t <= agora));
   const solo = CAMADAS.map(([chave, camada, papel]) => ({ camada, papel, agora: hourly[chave][iAgora], semanaPassada: hourly[chave][Math.max(0, iAgora - 7 * 24)] }));
   return { dias, hoje, solo };
+}
+
+// Previsão hora a hora da aba Clima: o tempo de agora e os próximos 7 dias, de hora em hora.
+const DIAS_POR_HORA = 7;
+// horas: { 'AAAA-MM-DD': [{ hora: 'AAAA-MM-DDTHH:00', temperatura, chuva, probabilidade, tempo, vento, umidade, deDia }] }
+export function lerPrevisao({ current, hourly }) {
+  const horasPorDia = {};
+  hourly.time.forEach((hora, i) => {
+    (horasPorDia[hora.slice(0, 10)] ??= []).push({
+      hora, temperatura: hourly.temperature_2m[i], chuva: hourly.precipitation[i], probabilidade: hourly.precipitation_probability[i],
+      tempo: hourly.weather_code[i], vento: hourly.wind_speed_10m[i], umidade: hourly.relative_humidity_2m[i], deDia: hourly.is_day[i] === 1,
+    });
+  });
+  return {
+    agora: { hora: current.time, temperatura: current.temperature_2m, sensacao: current.apparent_temperature, umidade: current.relative_humidity_2m,
+      vento: current.wind_speed_10m, tempo: current.weather_code, deDia: current.is_day === 1 },
+    horasPorDia,
+  };
+}
+export async function buscarPrevisao({ latitude, longitude }) {
+  const parametros = new URLSearchParams({
+    latitude, longitude, timezone: "America/Sao_Paulo", forecast_days: DIAS_POR_HORA,
+    current: "temperature_2m,apparent_temperature,relative_humidity_2m,wind_speed_10m,weather_code,is_day",
+    hourly: "temperature_2m,precipitation,precipitation_probability,weather_code,wind_speed_10m,relative_humidity_2m,is_day",
+  });
+  const response = await fetch(`https://api.open-meteo.com/v1/forecast?${parametros}`, { signal: AbortSignal.timeout(30000) });
+  if (!response.ok) throw new Error("indisponível");
+  return lerPrevisao(await response.json());
+}
+
+// Entre os tempos de um período, vale o que mais pesa no dia: trovoada, depois chuva e pancada (pela
+// força), garoa, névoa e, por último, as nuvens. Os códigos já vêm quase nessa ordem; só as pancadas
+// (80 a 82) precisam entrar junto das chuvas de mesma força.
+const PESO_DAS_PANCADAS = { 80: 61.5, 81: 63.5, 82: 65.5 };
+const pesoDoTempo = codigo => PESO_DAS_PANCADAS[codigo] ?? codigo;
+const PERIODOS = [["Madrugada", 0], ["Manhã", 6], ["Tarde", 12], ["Noite", 18]];
+
+// Horas de um dia → madrugada, manhã, tarde e noite, cada um com a temperatura mínima e máxima, a
+// chuva somada, a maior chance de chuva, o vento mais forte e o tempo que mais pesa. Período sem
+// nenhuma hora fica de fora.
+export function periodosDoDia(horas) {
+  return PERIODOS.map(([nome, inicio]) => {
+    const doPeriodo = horas.filter(h => { const hora = Number(h.hora.slice(11, 13)); return hora >= inicio && hora < inicio + 6; });
+    if (!doPeriodo.length) return null;
+    const valores = campo => doPeriodo.map(h => h[campo]).filter(v => v != null);
+    const maior = campo => (valores(campo).length ? Math.max(...valores(campo)) : null);
+    return {
+      nome, de: inicio, ate: inicio + 6,
+      minima: valores("temperatura").length ? Math.min(...valores("temperatura")) : null, maxima: maior("temperatura"),
+      chuva: soma(valores("chuva")), probabilidade: maior("probabilidade"), vento: maior("vento"),
+      tempo: valores("tempo").reduce((a, b) => (pesoDoTempo(b) > pesoDoTempo(a) ? b : a), valores("tempo")[0] ?? null),
+      deDia: doPeriodo.filter(h => h.deDia).length * 2 >= doPeriodo.length,
+    };
+  }).filter(Boolean);
 }

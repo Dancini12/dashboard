@@ -681,7 +681,7 @@ export default function App() {
               <div className="rounded-full border border-white flex items-center justify-center shrink-0" style={{ width: 30, height: 30, background: "radial-gradient(circle, #2E7D32 60%, #1B5E20 100%)" }} aria-hidden="true"><Wheat size={15} color="#fbbf24" /></div>
               <h1 className="text-sm sm:text-base font-bold text-white">C.E.E.P.A. Fernando Costa</h1>
             </div>
-            <div className="text-xs mt-1" style={{ color: "rgba(255,255,255,0.7)" }}><span style={{ color: "#fbbf24", fontWeight: 700 }}>Informativo diário do mercado agrícola</span><span className="hidden sm:inline"> • </span><span className="block sm:inline">Santa Mariana, PR • {new Date().toLocaleDateString("pt-BR")}</span></div>
+            <div className="text-xs mt-1" style={{ color: "rgba(255,255,255,0.7)" }}><span style={{ color: "#fbbf24", fontWeight: 700 }}>Informativo Agrícola</span> • {new Date().toLocaleDateString("pt-BR")}</div>
             <div className="text-xs" style={{ color: "rgba(255,255,255,0.55)" }}>Docente: <strong style={{ color: "rgba(255,255,255,0.8)" }}>{DOCENTE}</strong><span className="hidden sm:inline"> • </span><span className="block sm:inline">{ALUNOS_PARTICIPANTES.length > 1 ? "Estudantes participantes" : "Estudante participante"}: <strong style={{ color: "rgba(255,255,255,0.8)" }}>{ALUNOS_PARTICIPANTES.join(", ")}</strong></span></div>
           </div>
         </div>
@@ -722,7 +722,7 @@ export default function App() {
         {tab === "evolucao" && <EvolucaoTab target={chartTarget} />}
         {tab === "glossario" && <GlossarioTab key={alvo?.termo != null ? alvo.n : "glossario"} inicial={alvo?.termo} />}
       </div>
-      <div className="text-center py-3 text-xs opacity-20">🎓 C.E.E.P.A. Fernando Costa — Santa Mariana, PR • Docente: {DOCENTE} • {ALUNOS_PARTICIPANTES.length > 1 ? "Estudantes participantes" : "Estudante participante"}: {ALUNOS_PARTICIPANTES.join(", ")}</div>
+      <div className="text-center py-3 text-xs opacity-20">🎓 C.E.E.P.A. Fernando Costa • Docente: {DOCENTE} • {ALUNOS_PARTICIPANTES.length > 1 ? "Estudantes participantes" : "Estudante participante"}: {ALUNOS_PARTICIPANTES.join(", ")}</div>
       {mascote && <Mascote onFechar={() => mostrarMascote(false)} assistenteUrl={ASSISTENTE_URL} pergunta={perguntaCastor} dadosPainel={{
         moedas: dataSource === "real"
           ? moedas.map(m => ({ nome: m.nome, valorReais: m.valor, variacaoPct: m.var, fonte: "AwesomeAPI" }))

@@ -254,6 +254,19 @@ function ComercioComPais({ ultimoMes }) {
   );
 }
 
+// "Todos os produtos": a opção que soma os produtos da lista, para ver de uma vez quanto saiu.
+const TODOS = "todos";
+// Séries mensais de vários produtos ([{ mes, kg, fob }]) → uma só, com a soma de cada mês.
+function somarSeries(series) {
+  const porMes = new Map();
+  for (const serie of series) for (const m of serie) {
+    const total = porMes.get(m.mes) ?? { mes: m.mes, kg: 0, fob: 0 };
+    total.kg += m.kg; total.fob += m.fob;
+    porMes.set(m.mes, total);
+  }
+  return [...porMes.values()].sort((a, b) => a.mes.localeCompare(b.mes));
+}
+
 export default function Exportacoes() {
   const [produtos, setProdutos] = useState(null);
   const [destinos, setDestinos] = useState(null);
@@ -269,7 +282,10 @@ export default function Exportacoes() {
     return () => controle.abort();
   }, []);
 
-  const produto = produtos?.produtos.find(p => p.chave === chave) ?? produtos?.produtos[0];
+  const todos = chave === TODOS;
+  const produto = !produtos ? undefined : todos
+    ? { chave: TODOS, nome: "Todos os produtos", brasil: somarSeries(produtos.produtos.map(p => p.brasil)), parana: somarSeries(produtos.produtos.map(p => p.parana)), estados: [] }
+    : produtos.produtos.find(p => p.chave === chave) ?? produtos.produtos[0];
   const ano = produtos ? Number(produtos.ultimoMes.slice(0, 4)) : null;
   const ultimoMes = produtos ? Number(produtos.ultimoMes.slice(5, 7)) : 0;
   const periodo = ultimoMes > 1 ? `jan a ${MESES[ultimoMes - 1]}` : "jan";
@@ -285,6 +301,9 @@ export default function Exportacoes() {
   const temAnterior = grafico.some(g => g.anterior != null);
   const paises = destinos?.produtos.find(p => p.chave === produto?.chave);
   const totalDosEstados = doBrasil?.kg || 1;
+  // com "Todos os produtos": cada produto no período, do maior para o menor volume
+  const porProduto = todos ? produtos.produtos.map(p => ({ chave: p.chave, nome: p.nome, agora: acumulado(p[local], ano), antes: acumulado(p[local], ano - 1) })).sort((a, b) => b.agora.kg - a.agora.kg) : [];
+  const maiorValor = porProduto.reduce((maior, p) => (p.agora.fob > (maior?.agora.fob ?? 0) ? p : maior), null);
 
   return (
     <div className="space-y-4">
@@ -306,18 +325,48 @@ export default function Exportacoes() {
         <section className="rounded-xl border bg-white p-3 shadow-sm">
           <h3 className="text-sm font-bold" style={{ color: "#14532d" }}>Embarques de {ano}</h3>
           <div className="space-y-2 mt-2">
-            <Botoes rotulo="Produto" opcoes={produtos.produtos.map(p => [p.chave, p.nome])} ativo={produto.chave} onEscolher={setChave} />
+            <Botoes rotulo="Produto" opcoes={[[TODOS, "Todos os produtos"], ...produtos.produtos.map(p => [p.chave, p.nome])]} ativo={produto.chave} onEscolher={setChave} />
             <Botoes rotulo="Origem" opcoes={[["brasil", "Brasil"], ["parana", "Paraná"]]} ativo={local} onEscolher={setLocal} />
           </div>
           {agora.kg > 0 ? <>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-3">
               <Numero rotulo={`Volume, ${periodo}`} valor={toneladas(agora.kg)}>{antes.kg > 0 && <><Variacao valor={variacao(agora.kg, antes.kg)} /> sobre {ano - 1}</>}</Numero>
               <Numero rotulo={`Valor, ${periodo}`} valor={dolares(agora.fob)}>{antes.fob > 0 && <><Variacao valor={variacao(agora.fob, antes.fob)} /> sobre {ano - 1}</>}</Numero>
-              <Numero rotulo="Preço médio de venda" valor={`US$ ${decimal(preco(agora), 0)}/t`}>{preco(antes) && <><Variacao valor={variacao(preco(agora), preco(antes))} /> sobre {ano - 1}</>}</Numero>
+              {todos
+                ? <Numero rotulo="Maior volume" valor={porProduto[0].nome}>{decimal(porProduto[0].agora.kg / agora.kg * 100)}% do total embarcado</Numero>
+                : <Numero rotulo="Preço médio de venda" valor={`US$ ${decimal(preco(agora), 0)}/t`}>{preco(antes) && <><Variacao valor={variacao(preco(agora), preco(antes))} /> sobre {ano - 1}</>}</Numero>}
               {local === "parana"
                 ? <Numero rotulo="Parte do Paraná no Brasil" valor={`${decimal(agora.kg / doBrasil.kg * 100)}%`}>do volume embarcado</Numero>
-                : <Numero rotulo="Países compradores" valor={paises ? paises.paises : "…"}>em {destinos?.ano ?? ano}</Numero>}
+                : todos ? <Numero rotulo="Maior valor" valor={maiorValor.nome}>{decimal(maiorValor.agora.fob / agora.fob * 100)}% do valor total</Numero>
+                  : <Numero rotulo="Países compradores" valor={paises ? paises.paises : "…"}>em {destinos?.ano ?? ano}</Numero>}
             </div>
+            {todos && <>
+              <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500 mt-4">Produto por produto · {local === "parana" ? "Paraná" : "Brasil"}, {periodo} de {ano}</h4>
+              <div className="mt-1.5 overflow-x-auto">
+                <table className="w-full text-xs">
+                  <thead><tr style={{ background: "#166534", color: "#fff" }}>
+                    <th className="py-1.5 px-2 text-left">Produto</th><th className="py-1.5 px-2 text-right">Volume</th><th className="py-1.5 px-2 text-right">sobre {ano - 1}</th><th className="py-1.5 px-2 text-right">Valor</th><th className="py-1.5 px-2 text-right">sobre {ano - 1}</th>
+                  </tr></thead>
+                  <tbody>{porProduto.map((p, i) => (
+                    <tr key={p.chave} style={{ background: i % 2 ? "#fff" : "#f8fafc" }}>
+                      <td className="py-1 px-2 whitespace-nowrap"><button type="button" onClick={() => setChave(p.chave)} className="font-semibold underline" style={{ color: "#166534" }}>{p.nome}</button></td>
+                      <td className="py-1 px-2 text-right font-mono whitespace-nowrap">{p.agora.kg > 0 ? toneladas(p.agora.kg) : "—"}</td>
+                      <td className="py-1 px-2 text-right whitespace-nowrap">{p.agora.kg > 0 && p.antes.kg > 0 ? <Variacao valor={variacao(p.agora.kg, p.antes.kg)} /> : "—"}</td>
+                      <td className="py-1 px-2 text-right font-mono whitespace-nowrap">{p.agora.fob > 0 ? dolares(p.agora.fob) : "—"}</td>
+                      <td className="py-1 px-2 text-right whitespace-nowrap">{p.agora.fob > 0 && p.antes.fob > 0 ? <Variacao valor={variacao(p.agora.fob, p.antes.fob)} /> : "—"}</td>
+                    </tr>
+                  ))}</tbody>
+                  <tfoot><tr className="font-bold" style={{ background: "#f0fdf4", borderTop: "2px solid #bbf7d0" }}>
+                    <td className="py-1.5 px-2">Total</td>
+                    <td className="py-1.5 px-2 text-right font-mono whitespace-nowrap">{toneladas(agora.kg)}</td>
+                    <td className="py-1.5 px-2 text-right whitespace-nowrap">{antes.kg > 0 ? <Variacao valor={variacao(agora.kg, antes.kg)} /> : "—"}</td>
+                    <td className="py-1.5 px-2 text-right font-mono whitespace-nowrap">{dolares(agora.fob)}</td>
+                    <td className="py-1.5 px-2 text-right whitespace-nowrap">{antes.fob > 0 ? <Variacao valor={variacao(agora.fob, antes.fob)} /> : "—"}</td>
+                  </tr></tfoot>
+                </table>
+              </div>
+              <p className="text-xs text-slate-500 mt-1.5">Soma dos {produtos.produtos.length} produtos acompanhados nesta aba, não de tudo o que o agro exporta. Toque em um produto para ver os destinos e os estados de origem dele.</p>
+            </>}
             <ul className="flex flex-wrap gap-x-4 gap-y-1 mt-4 mb-1 text-xs text-slate-700">
               <li className="flex items-center gap-1.5"><span className="rounded-full" style={{ width: 14, height: 3, background: AZUL }} aria-hidden="true" />{ano}</li>
               {temAnterior && <li className="flex items-center gap-1.5"><span className="rounded-full" style={{ width: 14, height: 3, background: CINZA }} aria-hidden="true" />{ano - 1}</li>}
@@ -354,7 +403,7 @@ export default function Exportacoes() {
           </> : <p className="text-sm text-slate-500 mt-3">{local === "parana" ? `O Paraná não exportou ${produto.nome.toLowerCase()} em ${ano}. Veja o Brasil.` : `Sem embarques de ${produto.nome.toLowerCase()} em ${ano}.`}</p>}
         </section>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {!todos && <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <section className="rounded-xl border bg-white p-3 shadow-sm">
             <h3 className="text-sm font-bold" style={{ color: "#14532d" }}>Para onde vai · {produto.nome}</h3>
             <p className="text-xs text-slate-600 mt-1">Parte de cada país no volume exportado pelo Brasil{destinos ? ` em ${destinos.ano}` : ""}.</p>
@@ -367,7 +416,7 @@ export default function Exportacoes() {
             <p className="text-xs text-slate-600 mt-1">Estados que mais embarcaram em {ano} e a parte de cada um no total do Brasil.</p>
             <Participacoes itens={produto.estados.map(e => ({ nome: e.estado, kg: e.kg, partePct: e.kg / totalDosEstados * 100 }))} />
           </section>
-        </div>
+        </div>}
       </>}
 
       <p className="text-xs text-slate-500">

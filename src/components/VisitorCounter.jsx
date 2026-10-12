@@ -86,7 +86,6 @@ export default function VisitorCounter({ presencaUrl }) {
           Online agora: <strong style={{ color: "#4ade80" }}>{online.toLocaleString("pt-BR")}</strong>
         </div>
       )}
-      {count !== null && <div style={{ marginTop: 2, fontSize: 11, color: "rgba(255,255,255,0.6)" }}>Nossa meta é chegar a 100 visitantes 🎯</div>}
     </div>
   );
 }

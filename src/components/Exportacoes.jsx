@@ -76,9 +76,12 @@ async function buscar(consulta, sinal, naFrente = false) {
   });
 }
 
-function Variacao({ valor }) {
+// suave: a variação dentro de uma etiqueta arredondada de fundo claro, para as tabelas
+function Variacao({ valor, suave = false }) {
   if (valor == null) return null;
-  return <span className="font-semibold" style={{ color: valor > 0 ? "#15803d" : valor < 0 ? "#b91c1c" : "#64748b" }}>{valor > 0 ? "▲ " : valor < 0 ? "▼ " : ""}{comSinal(valor)}</span>;
+  const cor = valor > 0 ? "#15803d" : valor < 0 ? "#b91c1c" : "#64748b";
+  const estilo = suave ? { color: cor, background: valor > 0 ? "#dcfce7" : valor < 0 ? "#fee2e2" : "#f1f5f9" } : { color: cor };
+  return <span className={suave ? "inline-block rounded-full px-2 py-0.5 font-semibold" : "font-semibold"} style={estilo}>{valor > 0 ? "▲ " : valor < 0 ? "▼ " : ""}{comSinal(valor)}</span>;
 }
 function Numero({ rotulo, valor, children }) {
   return (
@@ -342,26 +345,26 @@ export default function Exportacoes() {
             </div>
             {todos && <>
               <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500 mt-4">Produto por produto · {local === "parana" ? "Paraná" : "Brasil"}, {periodo} de {ano}</h4>
-              <div className="mt-1.5 overflow-x-auto">
-                <table className="w-full text-xs">
-                  <thead><tr style={{ background: "#166534", color: "#fff" }}>
-                    <th className="py-1.5 px-2 text-left">Produto</th><th className="py-1.5 px-2 text-right">Volume</th><th className="py-1.5 px-2 text-right">sobre {ano - 1}</th><th className="py-1.5 px-2 text-right">Valor</th><th className="py-1.5 px-2 text-right">sobre {ano - 1}</th>
+              <div className="mt-2 overflow-x-auto rounded-xl border" style={{ borderColor: "#d1fae5" }}>
+                <table className="w-full text-xs" style={{ fontVariantNumeric: "tabular-nums" }}>
+                  <thead><tr style={{ background: "#f0fdf4", color: "#166534" }}>
+                    <th className="py-2 px-3 text-left font-bold">Produto</th><th className="py-2 px-3 text-right font-bold">Volume</th><th className="py-2 px-3 text-right font-bold">sobre {ano - 1}</th><th className="py-2 px-3 text-right font-bold">Valor</th><th className="py-2 px-3 text-right font-bold">sobre {ano - 1}</th>
                   </tr></thead>
-                  <tbody>{porProduto.map((p, i) => (
-                    <tr key={p.chave} style={{ background: i % 2 ? "#fff" : "#f8fafc" }}>
-                      <td className="py-1 px-2 whitespace-nowrap"><button type="button" onClick={() => setChave(p.chave)} className="font-semibold underline" style={{ color: "#166534" }}>{p.nome}</button></td>
-                      <td className="py-1 px-2 text-right font-mono whitespace-nowrap">{p.agora.kg > 0 ? toneladas(p.agora.kg) : "—"}</td>
-                      <td className="py-1 px-2 text-right whitespace-nowrap">{p.agora.kg > 0 && p.antes.kg > 0 ? <Variacao valor={variacao(p.agora.kg, p.antes.kg)} /> : "—"}</td>
-                      <td className="py-1 px-2 text-right font-mono whitespace-nowrap">{p.agora.fob > 0 ? dolares(p.agora.fob) : "—"}</td>
-                      <td className="py-1 px-2 text-right whitespace-nowrap">{p.agora.fob > 0 && p.antes.fob > 0 ? <Variacao valor={variacao(p.agora.fob, p.antes.fob)} /> : "—"}</td>
+                  <tbody>{porProduto.map(p => (
+                    <tr key={p.chave} style={{ borderTop: "1px solid #ecfdf5" }}>
+                      <td className="py-2 px-3 whitespace-nowrap"><button type="button" onClick={() => setChave(p.chave)} className="font-semibold underline decoration-green-300 underline-offset-2" style={{ color: "#166534" }}>{p.nome}</button></td>
+                      <td className="py-2 px-3 text-right whitespace-nowrap text-slate-900">{p.agora.kg > 0 ? toneladas(p.agora.kg) : "—"}</td>
+                      <td className="py-2 px-3 text-right whitespace-nowrap">{p.agora.kg > 0 && p.antes.kg > 0 ? <Variacao suave valor={variacao(p.agora.kg, p.antes.kg)} /> : "—"}</td>
+                      <td className="py-2 px-3 text-right whitespace-nowrap text-slate-900">{p.agora.fob > 0 ? dolares(p.agora.fob) : "—"}</td>
+                      <td className="py-2 px-3 text-right whitespace-nowrap">{p.agora.fob > 0 && p.antes.fob > 0 ? <Variacao suave valor={variacao(p.agora.fob, p.antes.fob)} /> : "—"}</td>
                     </tr>
                   ))}</tbody>
-                  <tfoot><tr className="font-bold" style={{ background: "#f0fdf4", borderTop: "2px solid #bbf7d0" }}>
-                    <td className="py-1.5 px-2">Total</td>
-                    <td className="py-1.5 px-2 text-right font-mono whitespace-nowrap">{toneladas(agora.kg)}</td>
-                    <td className="py-1.5 px-2 text-right whitespace-nowrap">{antes.kg > 0 ? <Variacao valor={variacao(agora.kg, antes.kg)} /> : "—"}</td>
-                    <td className="py-1.5 px-2 text-right font-mono whitespace-nowrap">{dolares(agora.fob)}</td>
-                    <td className="py-1.5 px-2 text-right whitespace-nowrap">{antes.fob > 0 ? <Variacao valor={variacao(agora.fob, antes.fob)} /> : "—"}</td>
+                  <tfoot><tr className="font-bold" style={{ background: "#f0fdf4", borderTop: "1px solid #bbf7d0" }}>
+                    <td className="py-2.5 px-3" style={{ color: "#166534" }}>Total</td>
+                    <td className="py-2.5 px-3 text-right whitespace-nowrap text-slate-900">{toneladas(agora.kg)}</td>
+                    <td className="py-2.5 px-3 text-right whitespace-nowrap">{antes.kg > 0 ? <Variacao suave valor={variacao(agora.kg, antes.kg)} /> : "—"}</td>
+                    <td className="py-2.5 px-3 text-right whitespace-nowrap text-slate-900">{dolares(agora.fob)}</td>
+                    <td className="py-2.5 px-3 text-right whitespace-nowrap">{antes.fob > 0 ? <Variacao suave valor={variacao(agora.fob, antes.fob)} /> : "—"}</td>
                   </tr></tfoot>
                 </table>
               </div>

@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react";
 import { Bar, BarChart, CartesianGrid, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { MapPin, Search } from "lucide-react";
-import { avisosDaPrevisao, buscarClima, buscarPrevisao, emojiDoTempo, getWmo, periodosDoDia, resumoDaChuva, SANTA_MARIANA, WEEK } from "../clima";
+import { avisosDaPrevisao, buscarClima, buscarPrevisao, emojiDoTempo, getWmo, periodosDoDia, procurarCidade, resumoDaChuva, WEEK } from "../clima";
 
 // Aba "Clima": a previsão do tempo (agora, os próximos 7 dias e cada dia por período), a chuva que já
 // caiu, a chuva prevista, a umidade do solo e os avisos para a lavoura, a partir do Open-Meteo (o
-// mesmo serviço do resumo da página inicial). Os valores passados são estimativas do modelo para o
+// mesmo serviço do Resumo do dia). Os valores passados são estimativas do modelo para o
 // ponto escolhido, não a leitura de um pluviômetro.
 const AZUL = "#2a78d6";      // o que já choveu
 const AZUL_CLARO = "#86b6ef"; // previsão (mesmo tom, mais claro)
@@ -140,9 +140,9 @@ function PrevisaoDoTempo({ dias, hoje, porHora, semHoras, escolhido, onEscolher 
 // a página está aberta, para quem sai da aba e volta não precisar digitar de novo.
 const visita = { cidade: null };
 
-// cidadeDaEscola: quem chega pelo quadro "Tempo em Santa Mariana" da página inicial já escolheu a cidade.
-export default function ClimaAgricola({ cidadeDaEscola = false }) {
-  const [local, setLocal] = useState(() => (cidadeDaEscola ? SANTA_MARIANA : visita.cidade));
+// cidadeInicial: quem chega pelo quadro do tempo do Resumo do dia já escolheu a cidade lá.
+export default function ClimaAgricola({ cidadeInicial = null }) {
+  const [local, setLocal] = useState(() => cidadeInicial ?? visita.cidade);
   const [busca, setBusca] = useState(local?.nome ?? ""); // o campo mostra a cidade escolhida: a aba não tem título com o nome dela
   const [estado, setEstado] = useState({}); // { clima, de } quando chega; { erro } se falhar
   const [porHora, setPorHora] = useState({}); // { dados, de } da previsão hora a hora; { erro } se falhar
@@ -163,16 +163,14 @@ export default function ClimaAgricola({ cidadeDaEscola = false }) {
 
   const procurar = async (evento) => {
     evento.preventDefault();
-    const cidade = busca.split(",")[0].trim(); // "Londrina, Paraná" → "Londrina": o serviço procura só pelo nome
-    if (!cidade) return;
+    if (!busca.trim()) return;
     setErroDaBusca("");
     try {
-      const response = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(cidade)}&count=1&language=pt&format=json`, { signal: AbortSignal.timeout(15000) });
-      const achado = (await response.json()).results?.[0];
-      if (!achado) { setErroDaBusca("Cidade não encontrada. Confira o nome."); return; }
-      visita.cidade = { nome: `${achado.name}${achado.admin1 ? `, ${achado.admin1}` : ""}`, latitude: achado.latitude, longitude: achado.longitude };
-      setLocal(visita.cidade);
-      setBusca(visita.cidade.nome);
+      const achada = await procurarCidade(busca);
+      if (!achada) { setErroDaBusca("Cidade não encontrada. Confira o nome."); return; }
+      visita.cidade = achada;
+      setLocal(achada);
+      setBusca(achada.nome);
     } catch { setErroDaBusca("Não foi possível procurar a cidade agora."); }
   };
 

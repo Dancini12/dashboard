@@ -60,9 +60,31 @@ export function avisosDaPrevisao(dias, hoje) {
   };
 }
 
-// Consulta ao Open-Meteo usada pela aba Clima e pelo resumo da página inicial: 92 dias passados,
-// 16 de previsão e a umidade do solo em três profundidades.
-export const SANTA_MARIANA = { nome: "Santa Mariana, Paraná", latitude: -23.15, longitude: -50.52 };
+// Procura uma cidade pelo nome: { nome: "Londrina, Paraná", latitude, longitude }, ou null se não
+// achar. "Londrina, Paraná" vale como "Londrina", porque o serviço procura só pelo nome.
+export async function procurarCidade(texto) {
+  const nome = texto.split(",")[0].trim();
+  if (!nome) return null;
+  const response = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(nome)}&count=1&language=pt&format=json`, { signal: AbortSignal.timeout(15000) });
+  if (!response.ok) throw new Error("indisponível");
+  const achado = (await response.json()).results?.[0];
+  return achado ? { nome: `${achado.name}${achado.admin1 ? `, ${achado.admin1}` : ""}`, latitude: achado.latitude, longitude: achado.longitude } : null;
+}
+
+// A cidade do Resumo do dia fica lembrada neste navegador, para o resumo abrir completo no dia seguinte.
+const CIDADE_GUARDADA = "agroinfo_cidade";
+export function cidadeGuardada() {
+  try {
+    const cidade = JSON.parse(localStorage.getItem(CIDADE_GUARDADA));
+    return cidade && typeof cidade.nome === "string" && Number.isFinite(cidade.latitude) && Number.isFinite(cidade.longitude) ? cidade : null;
+  } catch { return null; }
+}
+export function guardarCidade(cidade) {
+  try { localStorage.setItem(CIDADE_GUARDADA, JSON.stringify(cidade)); } catch { /* sem armazenamento: vale só nesta visita */ }
+}
+
+// Consulta ao Open-Meteo usada pela aba Clima e pelo Resumo do dia: 92 dias passados, 16 de previsão
+// e a umidade do solo em três profundidades.
 const DIAS_PASSADOS = 92;
 const CAMADAS = [["soil_moisture_0_to_7cm", "0 a 7 cm", "onde a semente germina"], ["soil_moisture_7_to_28cm", "7 a 28 cm", "onde está a maior parte das raízes"], ["soil_moisture_28_to_100cm", "28 a 100 cm", "reserva para os dias secos"]];
 

@@ -28,7 +28,7 @@ const ASSISTENTE_URL = import.meta.env.VITE_ASSISTENTE_URL
   || "https://script.google.com/macros/s/AKfycbyDYcrR3XX5bqo0rKCp1c1ZgDHf4GCHsJv7jesNPo5PEtJT6qYMLCyUV6OGmB1ur-jrBA/exec";
 const API_MOEDAS_URL = "https://economia.awesomeapi.com.br/json/last/USD-BRL,EUR-BRL,GBP-BRL,ARS-BRL";
 const TABS = ["inicio", "bolsas", "cooperativas", "safra", "exportacoes", "clima", "calculadoras", "aprender", "noticias", "tv", "evolucao", "glossario"];
-const TAB_LABELS = { inicio: "Início", bolsas: "Bolsas", cooperativas: "Cotações Cooperativas", safra: "Safra", exportacoes: "Exportações", clima: "Clima", calculadoras: "Calculadoras", aprender: "Aprender", noticias: "Notícias", tv: "TV Agro", evolucao: "Evolução", glossario: "Glossário" };
+const TAB_LABELS = { inicio: "Resumo do dia", bolsas: "Bolsas", cooperativas: "Cotações Cooperativas", safra: "Safra", exportacoes: "Exportações", clima: "Clima", calculadoras: "Calculadoras", aprender: "Aprender", noticias: "Notícias", tv: "TV Agro", evolucao: "Evolução", glossario: "Glossário" };
 const TAB_ICONS = { inicio: House, bolsas: Landmark, cooperativas: Warehouse, safra: Sprout, exportacoes: Ship, clima: CloudRain, calculadoras: Calculator, aprender: GraduationCap, noticias: Newspaper, tv: Tv, evolucao: BarChart3, glossario: BookOpen };
 
 const INIT_MOEDAS = [
@@ -486,7 +486,7 @@ function GlossarioTab({ inicial }) {
 // Tudo o que a busca do topo encontra: título, onde fica (grupo e detalhe), palavras extras e o destino.
 const SINONIMOS_PARANA = { "Suíno": "porco", Boi: "gado arroba", Vaca: "gado arroba", "Erva-mate": "chimarrão", Mandioca: "aipim macaxeira", "Café em coco": "café", "Café beneficiado": "café" };
 const DESCRICAO_ABA = {
-  inicio: "Resumo do dia: mercado, clima, safra, notícias, moedas, indicadores da economia e atalhos para a aula",
+  inicio: "O dia em uma página: cotações, tempo da sua cidade, lavouras, notícias, moedas, indicadores da economia e atalhos para a aula",
   bolsas: "Soja, milho, café, boi e mais nas bolsas de Chicago e Nova Iorque, com vencimentos e valor em reais, e as ações da B3",
   safra: "Produção do Paraná, da região e de Santa Mariana, andamento do plantio e calendário agrícola",
   exportacoes: "Quanto o Brasil e o Paraná exportam de soja, milho, carnes e outros, para quais países, e o que o Brasil vende e compra de cada país",
@@ -507,8 +507,8 @@ const INDICE_BUSCA = [
   ...Object.keys(CL).map(k => ({ titulo: `Gráfico de ${CL[k]}`, detalhe: "Evolução do preço de 2020 a 2026", grupo: "Evolução",
     termos: `${k} historico evolucao`, acao: { grafico: k } })),
   ...GLOSSARIO.map((g, i) => ({ titulo: g.termo, detalhe: g.def, grupo: "Glossário", termos: `${g.def} significado`, acao: { aba: "glossario", termo: i, ancora: `glossario-${i}` } })),
-  ...INIT_MOEDAS.map(m => ({ titulo: m.nome, detalhe: "Cotação em reais · Início", grupo: "Início", termos: "moeda cambio", acao: { aba: "inicio", ancora: "card-moedas" } })),
-  ...INDICADORES.map(ind => ({ titulo: ind.nome, detalhe: ind.desc, grupo: "Início", termos: "indicador economia juros", acao: { aba: "inicio", ancora: "card-indicadores" } })),
+  ...INIT_MOEDAS.map(m => ({ titulo: m.nome, detalhe: "Cotação em reais · Resumo do dia", grupo: "Resumo do dia", termos: "moeda cambio", acao: { aba: "inicio", ancora: "card-moedas" } })),
+  ...INDICADORES.map(ind => ({ titulo: ind.nome, detalhe: ind.desc, grupo: "Resumo do dia", termos: "indicador economia juros", acao: { aba: "inicio", ancora: "card-indicadores" } })),
   ...CALCULADORAS.map(c => ({ titulo: `Calculadora: ${c.nome}`, detalhe: "Faça a conta com os seus números · Calculadoras", grupo: "Calculadoras",
     termos: `calcular conta ${c.termos}`, acao: { aba: "calculadoras", calculadora: c.id, ancora: "calculadora" } })),
   { titulo: "Safra do Paraná e de Santa Mariana", detalhe: DESCRICAO_ABA.safra, grupo: "Safra", termos: "producao area rendimento produtividade colheita plantio deral ibge brasil estimativa", acao: { aba: "safra" } },
@@ -526,7 +526,7 @@ const INDICE_BUSCA = [
   { titulo: "Ações e fundos da B3", detalhe: "Consultar empresas da Bolsa brasileira · Bolsas", grupo: "Bolsas", termos: "acoes bolsa empresa etf investimento b3", acao: { aba: "bolsas", ancora: "consultar-acao" } },
   ...CANAIS_AGRO.filter(c => c.channelId).map(c => ({ titulo: `${c.nome} · ao vivo`, detalhe: `${c.descricao} · TV Agro`, grupo: "TV Agro",
     termos: "tv televisao canal assistir video programa transmissao youtube", acao: { aba: "tv", canal: c.id } })),
-  ...TABS.map(t => ({ titulo: `Aba ${TAB_LABELS[t]}`, detalhe: DESCRICAO_ABA[t], grupo: "Abas", termos: DESCRICAO_ABA[t], acao: { aba: t } })),
+  ...TABS.map(t => ({ titulo: `Aba ${TAB_LABELS[t]}`, detalhe: DESCRICAO_ABA[t], grupo: "Abas", termos: `${DESCRICAO_ABA[t]}${t === "inicio" ? " inicio pagina inicial" : ""}`, acao: { aba: t } })),
 ];
 
 // Cada aba tem endereço próprio (…/#tv, …/#exportacoes), para mandar o link de uma aba e para o
@@ -710,7 +710,7 @@ export default function App() {
         </Bolsas>}
         {tab === "safra" && <SafraTab />}
         {tab === "exportacoes" && <Exportacoes />}
-        {tab === "clima" && <ClimaAgricola key={alvo?.cidadeDaEscola ? alvo.n : "clima"} cidadeDaEscola={Boolean(alvo?.cidadeDaEscola)} />}
+        {tab === "clima" && <ClimaAgricola key={alvo?.cidade ? alvo.n : "clima"} cidadeInicial={alvo?.cidade ?? null} />}
         {tab === "calculadoras" && <Calculadoras key={alvo?.calculadora ? alvo.n : "calculadoras"} inicial={alvo?.calculadora} dolar={dolar} />}
         {tab === "aprender" && <Aprender onPerguntar={ASSISTENTE_URL ? (texto => irPara({ castor: texto })) : null} />}
         {tab === "cooperativas" && <CotacoesCooperativas key={alvo?.produto ? alvo.n : "pr"} produtoInicial={alvo?.produto}>

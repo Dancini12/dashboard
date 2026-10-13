@@ -4,7 +4,7 @@ import { buscar } from "../busca";
 import { TICKER_RE } from "./MarketQuotes";
 
 const CORES = {
-  Cooperativas: ["#dcfce7", "#166534"], "Início": ["#dbeafe", "#1e40af"], Bolsas: ["#ccfbf1", "#115e59"],
+  Cooperativas: ["#dcfce7", "#166534"], "Resumo do dia": ["#dbeafe", "#1e40af"], Bolsas: ["#ccfbf1", "#115e59"],
   "Evolução": ["#ecfccb", "#3f6212"], Calculadoras: ["#fae8ff", "#86198f"], Clima: ["#e0f2fe", "#075985"], Safra: ["#dcfce7", "#14532d"], "Exportações": ["#e0e7ff", "#3730a3"], Aprender: ["#ffe4e6", "#9f1239"], "Glossário": ["#fef3c7", "#92400e"], Abas: ["#f1f5f9", "#334155"],
   "Notícias": ["#ffedd5", "#9a3412"], "TV Agro": ["#fee2e2", "#991b1b"], "Ações": ["#e0f2fe", "#075985"], Castor: ["#fde68a", "#78350f"],
 };

@@ -1,13 +1,15 @@
 import { useEffect, useState } from "react";
-import { Calculator, ChevronRight, GitCompareArrows, GraduationCap, MessageCircleQuestion } from "lucide-react";
+import { Calculator, ChevronRight, GitCompareArrows, GraduationCap, MapPin, MessageCircleQuestion, Search } from "lucide-react";
 import { CHICAGO } from "../catalogo";
 import { sacaPorChicago } from "../calculos";
-import { avisosDaPrevisao, buscarClima, getWmo, resumoDaChuva, SANTA_MARIANA } from "../clima";
-import { operacoesEmAndamento, precoNaRegiao } from "../inicio";
+import { avisosDaPrevisao, buscarClima, cidadeGuardada, getWmo, guardarCidade, procurarCidade, resumoDaChuva, WEEK } from "../clima";
+import { frasesDoDia, operacoesEmAndamento, precoNaRegiao } from "../inicio";
 
-// Aba "Início": o resumo do dia. Poucos números, cada um levando à aba onde está o detalhe:
-// mercado (dólar, Chicago, preços da região, diesel), campo (clima e safra), atalhos para a aula,
-// manchetes e, no fim, os cartões de moedas e de indicadores da economia (children). Cada parte carrega sozinha e, se a fonte falhar, avisa sem travar o resto.
+// "Resumo do dia", a página que abre o site: uma abertura em texto e poucos números, cada um levando
+// à aba onde está o detalhe: mercado (dólar, Chicago, preços da região, diesel), o tempo da cidade que
+// o visitante escolher (lembrada neste navegador) e as lavouras, atalhos para a aula, manchetes e, no
+// fim, os cartões de moedas e de indicadores da economia (children). Cada parte carrega sozinha e, se
+// a fonte falhar, avisa sem travar o resto.
 const REGIAO = "Cornélio Procópio";
 const UNIDADES = { "sc 60 kg": "saca", arroba: "arroba", kg: "kg", tonelada: "tonelada" };
 const SOJA_EM_CHICAGO = CHICAGO.find(item => item.key === "soja");
@@ -68,27 +70,53 @@ export default function Inicio({ dolar, variacaoDoDolar, onIr, onCastor, childre
   const combustiveis = useConsulta("/api/market?type=combustiveis");
   const safra = useConsulta("/api/market?type=safra");
   const noticias = useConsulta("/api/news?feed=agro");
-  const [clima, setClima] = useState({});
+  const mercado = useConsulta("/api/news?feed=mercado");
+  // A cidade do tempo é a última que o visitante digitou neste navegador; sem nenhuma, o quadro pede uma.
+  const [cidade, setCidade] = useState(cidadeGuardada);
+  const [busca, setBusca] = useState(cidade?.nome ?? "");
+  const [erroDaBusca, setErroDaBusca] = useState("");
+  const [clima, setClima] = useState({}); // { dados, de } quando chega; { erro, de } se falhar
   useEffect(() => {
+    if (!cidade) return;
     let ativo = true;
-    buscarClima(SANTA_MARIANA).then(dados => { if (ativo) setClima({ dados }); }).catch(() => { if (ativo) setClima({ erro: true }); });
+    buscarClima(cidade).then(dados => { if (ativo) setClima({ dados, de: cidade.nome }); }).catch(() => { if (ativo) setClima({ erro: true, de: cidade.nome }); });
     return () => { ativo = false; };
-  }, []);
+  }, [cidade]);
+  const procurar = async (evento) => {
+    evento.preventDefault();
+    if (!busca.trim()) return;
+    setErroDaBusca("");
+    try {
+      const achada = await procurarCidade(busca);
+      if (!achada) { setErroDaBusca("Cidade não encontrada. Confira o nome."); return; }
+      guardarCidade(achada);
+      setCidade(achada);
+      setBusca(achada.nome);
+    } catch { setErroDaBusca("Não foi possível procurar a cidade agora."); }
+  };
   const estadoDe = consulta => (consulta.erro ? "erro" : "carregando");
 
   const sojaNaBolsa = chicago.dados?.contratos.find(c => c.symbol === SOJA_EM_CHICAGO.symbol);
   const sojaEmReais = sojaNaBolsa && dolar ? sacaPorChicago({ chicago: sojaNaBolsa.value, dolar, kgDoBushel: SOJA_EM_CHICAGO.kg }).noPorto : null;
   const daRegiao = ["Soja", "Milho", "Boi"].map(produto => ({ produto, preco: precoNaRegiao(parana.dados, produto, REGIAO) }));
   const diesel = combustiveis.dados?.produtos.find(p => p.nome === "Diesel S10");
-  const hoje = clima.dados?.dias.find(d => d.data === clima.dados.hoje);
-  const chuva = clima.dados && resumoDaChuva(clima.dados.dias, clima.dados.hoje);
-  const avisos = clima.dados && avisosDaPrevisao(clima.dados.dias, clima.dados.hoje);
+  // o tempo só vale se for da cidade que está escolhida agora
+  const doTempo = cidade && clima.de === cidade.nome ? clima : {};
+  const iHoje = doTempo.dados ? doTempo.dados.dias.findIndex(d => d.data === doTempo.dados.hoje) : -1;
+  const hoje = iHoje >= 0 ? doTempo.dados.dias[iHoje] : null;
+  const proximosDias = hoje ? doTempo.dados.dias.slice(iHoje + 1, iHoje + 5) : [];
+  const chuva = doTempo.dados && resumoDaChuva(doTempo.dados.dias, doTempo.dados.hoje);
+  const avisos = doTempo.dados && avisosDaPrevisao(doTempo.dados.dias, doTempo.dados.hoje);
   const noCampo = safra.dados?.parana ? operacoesEmAndamento(safra.dados.parana.culturas).slice(0, 4) : [];
-  const manchetes = noticias.dados?.items?.slice(0, 3) ?? [];
+  const frases = frasesDoDia({ dolar, variacaoDoDolar, variacaoDaSoja: sojaNaBolsa?.change, cidade: hoje ? cidade.nome : null, hoje, avisos });
 
   return (
     <div className="space-y-5">
-      <p className="text-sm text-slate-600">Resumo de <strong className="text-slate-900">{hojePorExtenso()}</strong>. Toque em um quadro para ver o detalhe.</p>
+      <section className="rounded-xl border bg-white p-3 shadow-sm" style={{ borderColor: "rgba(0,0,0,0.08)" }}>
+        <h2 className="text-sm font-bold text-green-800">Resumo do dia · {hojePorExtenso()}</h2>
+        {frases.length > 0 && <p className="text-sm text-slate-800 mt-1.5">{frases.join(" ")}</p>}
+        <p className="text-xs text-slate-500 mt-1.5">Toque em um quadro para ver o detalhe.</p>
+      </section>
 
       <section>
         <Titulo>Hoje no mercado</Titulo>
@@ -116,9 +144,18 @@ export default function Inicio({ dolar, variacaoDoDolar, onIr, onCastor, childre
         <Titulo>No campo</Titulo>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mt-2">
           <div className="rounded-xl border bg-white p-3 shadow-sm" style={{ borderColor: "rgba(0,0,0,0.08)" }}>
-            <h3 className="text-sm font-bold" style={{ color: "#14532d" }}>Tempo em Santa Mariana</h3>
-            {hoje ? <>
-              <div className="flex items-center gap-3 mt-2">
+            <h3 className="text-sm font-bold" style={{ color: "#14532d" }}>Previsão do tempo</h3>
+            <form onSubmit={procurar} className="flex gap-1.5 mt-2">
+              <label className="relative flex-1 min-w-0">
+                <span className="sr-only">Cidade</span>
+                <MapPin size={13} className="absolute" style={{ left: 9, top: "50%", transform: "translateY(-50%)", color: "#64748b" }} aria-hidden="true" />
+                <input value={busca} onChange={e => setBusca(e.target.value)} onFocus={e => e.target.select()} placeholder="Digite sua cidade (ex.: Londrina)" className="block w-full rounded-lg border bg-white text-base sm:text-sm" style={{ padding: "6px 10px 6px 28px" }} />
+              </label>
+              <button type="submit" className="flex items-center gap-1 rounded-lg px-3 text-xs font-bold text-white" style={{ background: "#166534" }}><Search size={12} aria-hidden="true" />Buscar</button>
+            </form>
+            {erroDaBusca && <p role="alert" className="text-xs text-amber-800 mt-1.5">{erroDaBusca}</p>}
+            {!cidade ? <p className="text-xs text-slate-500 mt-2">Escolha a cidade para ver o tempo de hoje e dos próximos dias. O site lembra a cidade neste aparelho.</p> : hoje ? <>
+              <div className="flex items-center gap-3 mt-3">
                 <span style={{ fontSize: 34, lineHeight: 1 }} aria-hidden="true">{getWmo(hoje.tempo).emoji}</span>
                 <div>
                   <div className="text-sm font-bold text-slate-900">{getWmo(hoje.tempo).label}, {Math.round(hoje.minima)}° a {Math.round(hoje.maxima)}°</div>
@@ -126,14 +163,24 @@ export default function Inicio({ dolar, variacaoDoDolar, onIr, onCastor, childre
                   <div className="text-xs text-slate-600">Últimos 30 dias: {mm(chuva.ultimos30)}</div>
                 </div>
               </div>
+              <ol className="grid grid-cols-4 gap-1.5 mt-2" aria-label="Próximos dias">
+                {proximosDias.map(d => (
+                  <li key={d.data} className="rounded-lg px-1 py-1.5 text-center" style={{ background: "#f8fafc" }} title={getWmo(d.tempo).label}>
+                    <span className="block text-xs font-bold text-slate-700">{WEEK[new Date(`${d.data}T12:00:00`).getDay()]}</span>
+                    <span className="block" style={{ fontSize: 20, lineHeight: 1.3 }} aria-hidden="true">{getWmo(d.tempo).emoji}</span>
+                    <span className="block text-xs"><strong className="text-slate-900">{Math.round(d.maxima)}°</strong> <span className="text-slate-500">{Math.round(d.minima)}°</span></span>
+                    <span className="block text-slate-600" style={{ fontSize: 10 }}>{mm(d.chuva ?? 0)}</span>
+                  </li>
+                ))}
+              </ol>
               <p className="rounded-lg px-2 py-1.5 mt-2 text-xs" style={avisos.geada.length || avisos.calor.length || avisos.chuvaForte.length ? { background: "#fef2f2", border: "1px solid #fecaca", color: "#7f1d1d" } : { background: "#f0fdf4", border: "1px solid #bbf7d0", color: "#14532d" }}>
                 {avisos.geada.length ? <><strong>❄️ Risco de geada</strong> em {avisos.geada.map(d => diaMes(d.data)).join(", ")}.</>
                   : avisos.chuvaForte.length ? <><strong>⛈️ Chuva forte</strong> prevista em {avisos.chuvaForte.map(d => diaMes(d.data)).join(", ")}.</>
                     : avisos.calor.length ? <><strong>🌡️ Calor forte</strong> previsto em {avisos.calor.map(d => diaMes(d.data)).join(", ")}.</>
                       : <><strong>✅ Sem avisos</strong> de geada, calor forte ou chuva forte para os próximos 15 dias.</>}
               </p>
-            </> : <p className="text-xs text-slate-500 mt-2">{clima.erro ? "Previsão indisponível agora." : "Buscando a previsão…"}</p>}
-            <VerMais onClick={() => onIr({ aba: "clima", cidadeDaEscola: true })}>Ver o clima completo</VerMais>
+            </> : <p className="text-xs text-slate-500 mt-2">{doTempo.erro ? "Previsão indisponível agora." : `Buscando a previsão de ${cidade.nome}…`}</p>}
+            {cidade && <VerMais onClick={() => onIr({ aba: "clima", cidade })}>Ver o clima completo</VerMais>}
           </div>
           <div className="rounded-xl border bg-white p-3 shadow-sm" style={{ borderColor: "rgba(0,0,0,0.08)" }}>
             <h3 className="text-sm font-bold" style={{ color: "#14532d" }}>Lavouras do Paraná</h3>
@@ -171,20 +218,28 @@ export default function Inicio({ dolar, variacaoDoDolar, onIr, onCastor, childre
       </section>
 
       <section>
-        <Titulo>Notícias do agro</Titulo>
-        <div className="rounded-xl border bg-white p-3 mt-2 shadow-sm" style={{ borderColor: "rgba(0,0,0,0.08)" }}>
-          {manchetes.length ? (
-            <ul className="divide-y">
-              {manchetes.map(item => (
-                <li key={item.link} className="py-2 first:pt-0">
-                  <a href={item.link} target="_blank" rel="noopener noreferrer" className="block text-sm font-semibold text-slate-900 hover:underline">{item.title}</a>
-                  <span className="text-xs text-slate-500">{item.author}{item.pubDate && ` · ${haQuanto(item.pubDate)}`}</span>
-                </li>
-              ))}
-            </ul>
-          ) : <p className="text-xs text-slate-500">{noticias.erro || noticias.dados ? "Notícias indisponíveis agora." : "Buscando as notícias…"}</p>}
-          <VerMais onClick={() => onIr({ aba: "noticias" })}>Ver todas as notícias</VerMais>
+        <Titulo>Notícias para começar o dia</Titulo>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mt-2">
+          {[["Agronegócio", noticias], ["Mercado", mercado]].map(([assunto, consulta]) => {
+            const manchetes = consulta.dados?.items?.slice(0, 3) ?? [];
+            return (
+              <div key={assunto} className="rounded-xl border bg-white p-3 shadow-sm" style={{ borderColor: "rgba(0,0,0,0.08)" }}>
+                <h3 className="text-sm font-bold" style={{ color: "#14532d" }}>{assunto}</h3>
+                {manchetes.length ? (
+                  <ul className="divide-y mt-1">
+                    {manchetes.map(item => (
+                      <li key={item.link} className="py-2">
+                        <a href={item.link} target="_blank" rel="noopener noreferrer" className="block text-sm font-semibold text-slate-900 hover:underline">{item.title}</a>
+                        <span className="text-xs text-slate-500">{item.author}{item.pubDate && ` · ${haQuanto(item.pubDate)}`}</span>
+                      </li>
+                    ))}
+                  </ul>
+                ) : <p className="text-xs text-slate-500 mt-2">{consulta.erro || consulta.dados ? "Notícias indisponíveis agora." : "Buscando as notícias…"}</p>}
+              </div>
+            );
+          })}
         </div>
+        <VerMais onClick={() => onIr({ aba: "noticias" })}>Ver todas as notícias</VerMais>
       </section>
 
       <section>

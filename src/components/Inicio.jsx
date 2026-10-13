@@ -1,9 +1,9 @@
-import { Calculator, ChevronRight, GitCompareArrows, GraduationCap, MapPin, MessageCircleQuestion, Printer, Search } from "lucide-react";
+import { Calculator, ChevronRight, GitCompareArrows, GraduationCap, MapPin, MessageCircleQuestion, Search } from "lucide-react";
 import { getWmo, WEEK } from "../clima";
 import useResumoDoDia, { REGIAO } from "./useResumoDoDia";
 
-// "Resumo do dia", a página que abre o site: uma abertura em texto e poucos números, cada um levando
-// à aba onde está o detalhe: mercado (dólar, Chicago, preços da região, diesel), o tempo da cidade que
+// "Resumo do dia", a página que abre o site: poucos números, cada um levando à aba onde está o
+// detalhe: mercado (dólar, Chicago, preços da região, diesel), o tempo da cidade que
 // o visitante escolher (lembrada neste navegador) e as lavouras, atalhos para a aula, manchetes e, no
 // fim, os cartões de moedas e de indicadores da economia (children). Os dados vêm de useResumoDoDia,
 // o mesmo do Jornal do dia: cada parte carrega sozinha e, se a fonte falhar, avisa sem travar o resto.
@@ -18,7 +18,6 @@ function haQuanto(data) {
   if (!Number.isFinite(minutos)) return "";
   return minutos < 60 ? `há ${Math.max(1, minutos)} min` : minutos < 1440 ? `há ${Math.floor(minutos / 60)} h` : new Date(data).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" });
 }
-const hojePorExtenso = () => new Date().toLocaleDateString("pt-BR", { weekday: "long", day: "numeric", month: "long" });
 
 function Variacao({ valor, sufixo, altaERuim }) {
   if (valor == null || !Number.isFinite(valor)) return null;
@@ -47,21 +46,13 @@ const VerMais = ({ onClick, children }) => (
 
 export default function Inicio({ dolar, variacaoDoDolar, onIr, onCastor, children }) {
   const { chicago, parana, combustiveis, safra, noticias, mercado, cidade, busca, setBusca, procurar, erroDaBusca,
-    sojaNaBolsa, sojaEmReais, daRegiao, diesel, doTempo, hoje, proximosDias, chuva, avisos, noCampo, frases } = useResumoDoDia({ dolar, variacaoDoDolar });
+    sojaNaBolsa, sojaEmReais, daRegiao, diesel, doTempo, hoje, proximosDias, chuva, avisos, noCampo } = useResumoDoDia({ dolar, variacaoDoDolar });
   const estadoDe = consulta => (consulta.erro ? "erro" : "carregando");
 
   return (
     <div className="space-y-5">
-      <section className="rounded-xl border bg-white p-3 shadow-sm" style={{ borderColor: "rgba(0,0,0,0.08)" }}>
-        <h2 className="text-sm font-bold text-green-800">Resumo do dia · {hojePorExtenso()}</h2>
-        {frases.length > 0 && <p className="text-sm text-slate-800 mt-1.5">{frases.join(" ")}</p>}
-        <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 mt-1.5">
-          <p className="text-xs text-slate-500">Toque em um quadro para ver o detalhe.</p>
-          <button type="button" onClick={() => onIr({ aba: "jornal" })} className="inline-flex items-center gap-1 text-xs font-bold text-green-800"><Printer size={13} aria-hidden="true" />Imprimir ou salvar em modo jornal</button>
-        </div>
-      </section>
-
       <section>
+        <h2 className="sr-only">Resumo do dia</h2>
         <Titulo>Hoje no mercado</Titulo>
         <div className="grid grid-cols-2 md:grid-cols-3 gap-2 mt-2">
           <Quadro rotulo="Dólar comercial" valor={dolar ? reais(dolar) : null} estado={dolar === null ? "erro" : "carregando"} onClick={() => onIr({ aba: "inicio", ancora: "card-moedas" })}>

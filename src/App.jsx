@@ -11,6 +11,7 @@ import SafraTab from "./components/SafraTab";
 import Exportacoes from "./components/Exportacoes";
 import Combustiveis from "./components/Combustiveis";
 import Inicio from "./components/Inicio";
+import Jornal from "./components/Jornal";
 import TvAgro from "./components/TvAgro";
 import { StockQuotes, CommodityQuotes, TICKER_RE } from "./components/MarketQuotes";
 import { COMMODITIES, FUTURES, CALCULADORAS, APELIDOS_FUTUROS, PRODUTOS_PARANA } from "./catalogo";
@@ -18,7 +19,7 @@ import { CANAIS_AGRO } from "./canaisAgro";
 import BuscaAgro from "./components/BuscaAgro";
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
-import { RefreshCw, BookOpen, BarChart3, Clock, Wheat, DollarSign, ChevronDown, ChevronUp, ArrowRight, Newspaper, ExternalLink, Warehouse, Landmark, CloudRain, Calculator, GraduationCap, Sprout, Ship, House, Tv } from "lucide-react";
+import { RefreshCw, BookOpen, BarChart3, Clock, Wheat, DollarSign, ChevronDown, ChevronUp, ArrowRight, Newspaper, ExternalLink, Warehouse, Landmark, CloudRain, Calculator, GraduationCap, Sprout, Ship, House, Tv, Printer } from "lucide-react";
 
 const UPDATE_SEC = 60;
 const DOCENTE = "Marcel Dancini Rodrigues";
@@ -27,9 +28,9 @@ const ALUNOS_PARTICIPANTES = ["Pietra Sanguini"]; // para incluir mais alunos, a
 const ASSISTENTE_URL = import.meta.env.VITE_ASSISTENTE_URL
   || "https://script.google.com/macros/s/AKfycbyDYcrR3XX5bqo0rKCp1c1ZgDHf4GCHsJv7jesNPo5PEtJT6qYMLCyUV6OGmB1ur-jrBA/exec";
 const API_MOEDAS_URL = "https://economia.awesomeapi.com.br/json/last/USD-BRL,EUR-BRL,GBP-BRL,ARS-BRL";
-const TABS = ["inicio", "bolsas", "cooperativas", "safra", "exportacoes", "clima", "calculadoras", "aprender", "noticias", "tv", "evolucao", "glossario"];
-const TAB_LABELS = { inicio: "Resumo do dia", bolsas: "Bolsas", cooperativas: "Cotações Cooperativas", safra: "Safra", exportacoes: "Exportações", clima: "Clima", calculadoras: "Calculadoras", aprender: "Aprender", noticias: "Notícias", tv: "TV Agro", evolucao: "Evolução", glossario: "Glossário" };
-const TAB_ICONS = { inicio: House, bolsas: Landmark, cooperativas: Warehouse, safra: Sprout, exportacoes: Ship, clima: CloudRain, calculadoras: Calculator, aprender: GraduationCap, noticias: Newspaper, tv: Tv, evolucao: BarChart3, glossario: BookOpen };
+const TABS = ["inicio", "jornal", "bolsas", "cooperativas", "safra", "exportacoes", "clima", "calculadoras", "aprender", "noticias", "tv", "evolucao", "glossario"];
+const TAB_LABELS = { inicio: "Resumo do dia", jornal: "Jornal do dia", bolsas: "Bolsas", cooperativas: "Cotações Cooperativas", safra: "Safra", exportacoes: "Exportações", clima: "Clima", calculadoras: "Calculadoras", aprender: "Aprender", noticias: "Notícias", tv: "TV Agro", evolucao: "Evolução", glossario: "Glossário" };
+const TAB_ICONS = { inicio: House, jornal: Printer, bolsas: Landmark, cooperativas: Warehouse, safra: Sprout, exportacoes: Ship, clima: CloudRain, calculadoras: Calculator, aprender: GraduationCap, noticias: Newspaper, tv: Tv, evolucao: BarChart3, glossario: BookOpen };
 
 const INIT_MOEDAS = [
   // valor e variação só existem depois que a fonte responde: nada de número inventado
@@ -487,6 +488,7 @@ function GlossarioTab({ inicial }) {
 const SINONIMOS_PARANA = { "Suíno": "porco", Boi: "gado arroba", Vaca: "gado arroba", "Erva-mate": "chimarrão", Mandioca: "aipim macaxeira", "Café em coco": "café", "Café beneficiado": "café" };
 const DESCRICAO_ABA = {
   inicio: "O dia em uma página: cotações, tempo da sua cidade, lavouras, notícias, moedas, indicadores da economia e atalhos para a aula",
+  jornal: "O resumo do dia em formato de jornal, em uma folha só, para imprimir, salvar em PDF ou guardar como imagem",
   bolsas: "Soja, milho, café, boi e mais nas bolsas de Chicago e Nova Iorque, com vencimentos e valor em reais, e as ações da B3",
   safra: "Produção do Paraná, da região e de Santa Mariana, andamento do plantio e calendário agrícola",
   exportacoes: "Quanto o Brasil e o Paraná exportam de soja, milho, carnes e outros, para quais países, e o que o Brasil vende e compra de cada país",
@@ -526,7 +528,7 @@ const INDICE_BUSCA = [
   { titulo: "Ações e fundos da B3", detalhe: "Consultar empresas da Bolsa brasileira · Bolsas", grupo: "Bolsas", termos: "acoes bolsa empresa etf investimento b3", acao: { aba: "bolsas", ancora: "consultar-acao" } },
   ...CANAIS_AGRO.filter(c => c.channelId).map(c => ({ titulo: `${c.nome} · ao vivo`, detalhe: `${c.descricao} · TV Agro`, grupo: "TV Agro",
     termos: "tv televisao canal assistir video programa transmissao youtube", acao: { aba: "tv", canal: c.id } })),
-  ...TABS.map(t => ({ titulo: `Aba ${TAB_LABELS[t]}`, detalhe: DESCRICAO_ABA[t], grupo: "Abas", termos: `${DESCRICAO_ABA[t]}${t === "inicio" ? " inicio pagina inicial" : ""}`, acao: { aba: t } })),
+  ...TABS.map(t => ({ titulo: `Aba ${TAB_LABELS[t]}`, detalhe: DESCRICAO_ABA[t], grupo: "Abas", termos: `${DESCRICAO_ABA[t]}${t === "inicio" ? " inicio pagina inicial" : t === "jornal" ? " impressao foto captura de tela compartilhar" : ""}`, acao: { aba: t } })),
 ];
 
 // Cada aba tem endereço próprio (…/#tv, …/#exportacoes), para mandar o link de uma aba e para o
@@ -673,8 +675,9 @@ export default function App() {
   }, []);
 
   return (
-    <div className="min-h-screen" style={{ background: "linear-gradient(180deg,#f8fafc 0%,#ecfdf5 50%,#f0f9ff 100%)", fontFamily: "system-ui, sans-serif" }}>
-      <div className="max-w-4xl mx-auto px-3 pt-3 pb-2">
+    <div className="min-h-screen print:min-h-0 print:!bg-none print:!bg-white" style={{ background: "linear-gradient(180deg,#f8fafc 0%,#ecfdf5 50%,#f0f9ff 100%)", fontFamily: "system-ui, sans-serif" }}>
+      {/* na impressão (aba Jornal do dia) sai só o conteúdo: cabeçalho, menu, rodapé, mascote e contador ficam de fora */}
+      <div className="max-w-4xl mx-auto px-3 pt-3 pb-2 print:hidden">
         <div className="rounded-xl overflow-hidden" style={{ background: "linear-gradient(135deg,#0c2340 0%,#1a5276 40%,#1e8449 100%)" }}>
           <div className="px-4 py-2.5 flex flex-col items-center text-center">
             <div className="flex items-center justify-center gap-2">
@@ -686,7 +689,7 @@ export default function App() {
           </div>
         </div>
       </div>
-      <div className="sticky top-0 z-50 border-b" style={{ background: "rgba(255,255,255,0.92)", backdropFilter: "blur(12px)", borderColor: "rgba(0,0,0,0.06)" }}>
+      <div className="sticky top-0 z-50 border-b print:hidden" style={{ background: "rgba(255,255,255,0.92)", backdropFilter: "blur(12px)", borderColor: "rgba(0,0,0,0.06)" }}>
         <div className="relative max-w-4xl mx-auto px-3">
           <div className="flex items-center gap-2 sm:gap-3 py-2">
             <div className="flex items-center gap-2 shrink-0"><div className="rounded-full flex items-center justify-center" style={{ width: 26, height: 26, background: "#2E7D32" }}><span style={{ fontSize: 7, color: "#fff", fontWeight: 900 }}>CEEP</span></div><span className="text-sm font-bold" style={{ color: "#166534" }}>AgroInfo</span></div>
@@ -699,12 +702,14 @@ export default function App() {
           <div className="-mb-px overflow-x-auto"><div className="flex gap-0.5 w-max sm:w-auto sm:flex-wrap sm:justify-center">{TABS.map(t => { const I = TAB_ICONS[t]; return (<button key={t} onClick={() => trocarAba(t)} className="flex items-center gap-1 px-2.5 py-2 text-xs font-semibold rounded-t-lg whitespace-nowrap" style={{ background: tab === t ? "#fff" : "transparent", color: tab === t ? "#166534" : "#94a3b8", borderBottom: tab === t ? "2px solid #166534" : "2px solid transparent" }}><I size={12} />{TAB_LABELS[t]}</button>); })}</div></div>
         </div>
       </div>
-      <div id="conteudo" className="max-w-4xl mx-auto px-3 py-4" style={{ scrollMarginTop: 100 }}>
+      <div id="conteudo" className="max-w-4xl mx-auto px-3 py-4 print:max-w-none print:p-0" style={{ scrollMarginTop: 100 }}>
         {tab === "inicio" && <Inicio onIr={irPara} onCastor={ASSISTENTE_URL ? () => mostrarMascote(true) : null}
           dolar={dolar ?? (dataSource === "indisponivel" ? null : undefined)} variacaoDoDolar={dataSource === "real" ? moedas.find(m => m.id === "usd")?.var : null}>
           <MoedasCard moedas={moedas} pm={pm} flash={flash} situacao={dataSource} atualizadoEm={moedasEm} />
           <IndicadoresCard indicadores={indicadores} />
         </Inicio>}
+        {tab === "jornal" && <Jornal dolar={dolar ?? (dataSource === "indisponivel" ? null : undefined)} variacaoDoDolar={dataSource === "real" ? moedas.find(m => m.id === "usd")?.var : null}
+          moedas={moedas} indicadores={indicadores} docente={DOCENTE} alunos={ALUNOS_PARTICIPANTES} />}
         {tab === "bolsas" && <Bolsas key={alvo?.contrato ? alvo.n : "bolsas"} inicial={alvo?.contrato} dolar={dolar}>
           <StockQuotes key={alvo?.acao ? alvo.n : "acoes"} buscaInicial={alvo?.acao} refresh={count} onViewChart={viewChart} onCommodity={termo => irPara({ aba: "cooperativas", buscaCommodity: termo, ancora: "consultar-commodity" })} />
         </Bolsas>}
@@ -722,16 +727,18 @@ export default function App() {
         {tab === "evolucao" && <EvolucaoTab target={chartTarget} />}
         {tab === "glossario" && <GlossarioTab key={alvo?.termo != null ? alvo.n : "glossario"} inicial={alvo?.termo} />}
       </div>
-      <div className="text-center py-3 text-xs opacity-20">🎓 C.E.E.P.A. Fernando Costa • Docente: {DOCENTE} • {ALUNOS_PARTICIPANTES.length > 1 ? "Estudantes participantes" : "Estudante participante"}: {ALUNOS_PARTICIPANTES.join(", ")}</div>
-      {mascote && <Mascote onFechar={() => mostrarMascote(false)} assistenteUrl={ASSISTENTE_URL} pergunta={perguntaCastor} dadosPainel={{
-        moedas: dataSource === "real"
-          ? moedas.map(m => ({ nome: m.nome, valorReais: m.valor, variacaoPct: m.var, fonte: "AwesomeAPI" }))
-          : "indisponíveis no momento",
-        selic: selic.value != null ? { metaPctAoAno: selic.value, data: selic.date, fonte: selic.source } : "indisponível",
-        indicadores: indicadores.filter(i => i.nome !== "Selic").map(i => ({ nome: i.nome, valor: i.valor, periodo: i.periodo, descricao: i.desc, fonte: "Banco Central" })),
-        historicoAnual: { descricao: "Tabela Histórico 2020–2026 do painel (CEPEA/ESALQ, Farmnews; R$ nominais)", linhas: HISTORICO },
-      }} />}
-      <VisitorCounter presencaUrl={ASSISTENTE_URL} />
+      <div className="text-center py-3 text-xs opacity-20 print:hidden">🎓 C.E.E.P.A. Fernando Costa • Docente: {DOCENTE} • {ALUNOS_PARTICIPANTES.length > 1 ? "Estudantes participantes" : "Estudante participante"}: {ALUNOS_PARTICIPANTES.join(", ")}</div>
+      <div className="print:hidden">
+        {mascote && <Mascote onFechar={() => mostrarMascote(false)} assistenteUrl={ASSISTENTE_URL} pergunta={perguntaCastor} dadosPainel={{
+          moedas: dataSource === "real"
+            ? moedas.map(m => ({ nome: m.nome, valorReais: m.valor, variacaoPct: m.var, fonte: "AwesomeAPI" }))
+            : "indisponíveis no momento",
+          selic: selic.value != null ? { metaPctAoAno: selic.value, data: selic.date, fonte: selic.source } : "indisponível",
+          indicadores: indicadores.filter(i => i.nome !== "Selic").map(i => ({ nome: i.nome, valor: i.valor, periodo: i.periodo, descricao: i.desc, fonte: "Banco Central" })),
+          historicoAnual: { descricao: "Tabela Histórico 2020–2026 do painel (CEPEA/ESALQ, Farmnews; R$ nominais)", linhas: HISTORICO },
+        }} />}
+        <VisitorCounter presencaUrl={ASSISTENTE_URL} />
+      </div>
     </div>
   );
 }

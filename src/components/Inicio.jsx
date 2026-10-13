@@ -1,18 +1,13 @@
-import { useEffect, useState } from "react";
-import { Calculator, ChevronRight, GitCompareArrows, GraduationCap, MapPin, MessageCircleQuestion, Search } from "lucide-react";
-import { CHICAGO } from "../catalogo";
-import { sacaPorChicago } from "../calculos";
-import { avisosDaPrevisao, buscarClima, cidadeGuardada, getWmo, guardarCidade, procurarCidade, resumoDaChuva, WEEK } from "../clima";
-import { frasesDoDia, operacoesEmAndamento, precoNaRegiao } from "../inicio";
+import { Calculator, ChevronRight, GitCompareArrows, GraduationCap, MapPin, MessageCircleQuestion, Printer, Search } from "lucide-react";
+import { getWmo, WEEK } from "../clima";
+import useResumoDoDia, { REGIAO } from "./useResumoDoDia";
 
 // "Resumo do dia", a página que abre o site: uma abertura em texto e poucos números, cada um levando
 // à aba onde está o detalhe: mercado (dólar, Chicago, preços da região, diesel), o tempo da cidade que
 // o visitante escolher (lembrada neste navegador) e as lavouras, atalhos para a aula, manchetes e, no
-// fim, os cartões de moedas e de indicadores da economia (children). Cada parte carrega sozinha e, se
-// a fonte falhar, avisa sem travar o resto.
-const REGIAO = "Cornélio Procópio";
+// fim, os cartões de moedas e de indicadores da economia (children). Os dados vêm de useResumoDoDia,
+// o mesmo do Jornal do dia: cada parte carrega sozinha e, se a fonte falhar, avisa sem travar o resto.
 const UNIDADES = { "sc 60 kg": "saca", arroba: "arroba", kg: "kg", tonelada: "tonelada" };
-const SOJA_EM_CHICAGO = CHICAGO.find(item => item.key === "soja");
 
 const reais = v => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 const decimal = (v, casas = 1) => v.toLocaleString("pt-BR", { minimumFractionDigits: 0, maximumFractionDigits: casas });
@@ -24,20 +19,6 @@ function haQuanto(data) {
   return minutos < 60 ? `há ${Math.max(1, minutos)} min` : minutos < 1440 ? `há ${Math.floor(minutos / 60)} h` : new Date(data).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" });
 }
 const hojePorExtenso = () => new Date().toLocaleDateString("pt-BR", { weekday: "long", day: "numeric", month: "long" });
-
-// Busca uma parte do resumo; devolve { dados } ou { erro }.
-function useConsulta(url) {
-  const [estado, setEstado] = useState({});
-  useEffect(() => {
-    let ativo = true;
-    fetch(url, { signal: AbortSignal.timeout(45000) })
-      .then(r => (r.ok ? r.json() : Promise.reject(new Error("indisponível"))))
-      .then(dados => { if (ativo) setEstado({ dados }); })
-      .catch(() => { if (ativo) setEstado({ erro: true }); });
-    return () => { ativo = false; };
-  }, [url]);
-  return estado;
-}
 
 function Variacao({ valor, sufixo, altaERuim }) {
   if (valor == null || !Number.isFinite(valor)) return null;
@@ -65,57 +46,19 @@ const VerMais = ({ onClick, children }) => (
 );
 
 export default function Inicio({ dolar, variacaoDoDolar, onIr, onCastor, children }) {
-  const chicago = useConsulta("/api/market?type=bolsas");
-  const parana = useConsulta("/api/market?type=pr");
-  const combustiveis = useConsulta("/api/market?type=combustiveis");
-  const safra = useConsulta("/api/market?type=safra");
-  const noticias = useConsulta("/api/news?feed=agro");
-  const mercado = useConsulta("/api/news?feed=mercado");
-  // A cidade do tempo é a última que o visitante digitou neste navegador; sem nenhuma, o quadro pede uma.
-  const [cidade, setCidade] = useState(cidadeGuardada);
-  const [busca, setBusca] = useState(cidade?.nome ?? "");
-  const [erroDaBusca, setErroDaBusca] = useState("");
-  const [clima, setClima] = useState({}); // { dados, de } quando chega; { erro, de } se falhar
-  useEffect(() => {
-    if (!cidade) return;
-    let ativo = true;
-    buscarClima(cidade).then(dados => { if (ativo) setClima({ dados, de: cidade.nome }); }).catch(() => { if (ativo) setClima({ erro: true, de: cidade.nome }); });
-    return () => { ativo = false; };
-  }, [cidade]);
-  const procurar = async (evento) => {
-    evento.preventDefault();
-    if (!busca.trim()) return;
-    setErroDaBusca("");
-    try {
-      const achada = await procurarCidade(busca);
-      if (!achada) { setErroDaBusca("Cidade não encontrada. Confira o nome."); return; }
-      guardarCidade(achada);
-      setCidade(achada);
-      setBusca(achada.nome);
-    } catch { setErroDaBusca("Não foi possível procurar a cidade agora."); }
-  };
+  const { chicago, parana, combustiveis, safra, noticias, mercado, cidade, busca, setBusca, procurar, erroDaBusca,
+    sojaNaBolsa, sojaEmReais, daRegiao, diesel, doTempo, hoje, proximosDias, chuva, avisos, noCampo, frases } = useResumoDoDia({ dolar, variacaoDoDolar });
   const estadoDe = consulta => (consulta.erro ? "erro" : "carregando");
-
-  const sojaNaBolsa = chicago.dados?.contratos.find(c => c.symbol === SOJA_EM_CHICAGO.symbol);
-  const sojaEmReais = sojaNaBolsa && dolar ? sacaPorChicago({ chicago: sojaNaBolsa.value, dolar, kgDoBushel: SOJA_EM_CHICAGO.kg }).noPorto : null;
-  const daRegiao = ["Soja", "Milho", "Boi"].map(produto => ({ produto, preco: precoNaRegiao(parana.dados, produto, REGIAO) }));
-  const diesel = combustiveis.dados?.produtos.find(p => p.nome === "Diesel S10");
-  // o tempo só vale se for da cidade que está escolhida agora
-  const doTempo = cidade && clima.de === cidade.nome ? clima : {};
-  const iHoje = doTempo.dados ? doTempo.dados.dias.findIndex(d => d.data === doTempo.dados.hoje) : -1;
-  const hoje = iHoje >= 0 ? doTempo.dados.dias[iHoje] : null;
-  const proximosDias = hoje ? doTempo.dados.dias.slice(iHoje + 1, iHoje + 5) : [];
-  const chuva = doTempo.dados && resumoDaChuva(doTempo.dados.dias, doTempo.dados.hoje);
-  const avisos = doTempo.dados && avisosDaPrevisao(doTempo.dados.dias, doTempo.dados.hoje);
-  const noCampo = safra.dados?.parana ? operacoesEmAndamento(safra.dados.parana.culturas).slice(0, 4) : [];
-  const frases = frasesDoDia({ dolar, variacaoDoDolar, variacaoDaSoja: sojaNaBolsa?.change, cidade: hoje ? cidade.nome : null, hoje, avisos });
 
   return (
     <div className="space-y-5">
       <section className="rounded-xl border bg-white p-3 shadow-sm" style={{ borderColor: "rgba(0,0,0,0.08)" }}>
         <h2 className="text-sm font-bold text-green-800">Resumo do dia · {hojePorExtenso()}</h2>
         {frases.length > 0 && <p className="text-sm text-slate-800 mt-1.5">{frases.join(" ")}</p>}
-        <p className="text-xs text-slate-500 mt-1.5">Toque em um quadro para ver o detalhe.</p>
+        <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 mt-1.5">
+          <p className="text-xs text-slate-500">Toque em um quadro para ver o detalhe.</p>
+          <button type="button" onClick={() => onIr({ aba: "jornal" })} className="inline-flex items-center gap-1 text-xs font-bold text-green-800"><Printer size={13} aria-hidden="true" />Imprimir ou salvar em modo jornal</button>
+        </div>
       </section>
 
       <section>

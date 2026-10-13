@@ -13,3 +13,16 @@ body {
 #root {
   width: 100%;
 }
+
+/* Impressão (aba "Jornal do dia"): folha A4 com margem pequena. */
+@page {
+  size: A4;
+  margin: 10mm;
+}
+
+/* A biblioteca que transforma o Jornal do dia em imagem (html2canvas) mede a altura das letras com
+   esta imagem de teste, de 1 ponto. O estilo base do Tailwind põe toda imagem em bloco, a medida sai
+   errada e o texto desce na imagem gerada; em linha, a medida sai certa. */
+img[src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"] {
+  display: inline;
+}

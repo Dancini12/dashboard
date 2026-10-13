@@ -7,6 +7,7 @@ Painel educacional gratuito do **C.E.E.P.A. Fernando Costa** (Santa Mariana, PR)
 - **Link direto para cada aba:** o endereço muda com a aba (`…/#tv`, `…/#exportacoes`, `…/#clima`), então dá para mandar o link de uma aba e usar o botão "voltar" do navegador entre elas.
 - **Busca no topo:** digite um produto, moeda, termo ou dúvida (ex.: "soja", "porco", "dólar", "o que é hedge") e vá direto à cotação, ao gráfico, ao glossário, às notícias ou ao Castor.
 - **Resumo do dia** (a página que abre o site): uma abertura em texto com o dólar, a soja e o tempo; dólar, soja em Chicago, preços da região e diesel; a previsão do tempo da cidade que o visitante digitar (o site lembra a cidade naquele aparelho); andamento da safra; manchetes de agronegócio e de mercado; atalhos para as atividades, todas as moedas e os indicadores do Banco Central (Selic, IPCA, INPC, IGP-M, CDI, poupança).
+- **Jornal do dia:** o resumo do dia diagramado como a primeira página de um jornal, em uma folha só, para imprimir, salvar em PDF ou guardar como imagem (PNG) e compartilhar.
 - **Bolsas:** os 17 contratos agrícolas de Chicago (CBOT e CME) e de Nova Iorque (ICE) em tabelas, com variação do dia, próximos vencimentos e o valor convertido para saca, arroba, tonelada ou kg, em dólares e em reais; e a consulta de ações e fundos da B3.
 - **Cotações Cooperativas:** cotação diária do Paraná (DERAL/SEAB), por região, com mapa de onde se paga mais e menos; indicadores de preço do Brasil (CEPEA) e preço dos combustíveis no Paraná (ANP).
 - **Safra:** produção, área e rendimento por safra no Paraná e na região de Cornélio Procópio, andamento de plantio e colheita, calendário agrícola (DERAL), produção de Santa Mariana e safra do Brasil (IBGE).
@@ -37,6 +38,11 @@ Projeto em React + Vite, hospedado na Vercel. Notas técnicas abaixo.
 - `npm run build` gera o frontend; a hospedagem precisa executar também `api/market.js`. Um servidor apenas estático (inclusive `vite preview`) não fornece essa API.
 
 Fontes: https://dadosabertos.bcb.gov.br/dataset/432-taxa-de-juros---meta-selic-definida-pelo-copom, https://brapi.dev/docs/acoes e https://www.noticiasagricolas.com.br/widgets/.
+
+## Jornal do dia
+
+- Usa os mesmos dados do Resumo do dia (`src/components/useResumoDoDia.js`). O PDF sai pela impressão do navegador: na impressão, o cabeçalho, o menu, o mascote e o contador somem (classes `print:` do Tailwind) e a folha é A4 (`@page` em `src/index.css`).
+- A imagem é gerada no próprio navegador pela biblioteca `html2canvas`, baixada só quando alguém pede. Em `src/index.css` há uma regra para a imagem de teste que ela usa: sem essa regra, o estilo base do Tailwind faz o texto sair deslocado para baixo na imagem.
 
 ## Exportações prontas
 

@@ -60,14 +60,29 @@ export function avisosDaPrevisao(dias, hoje) {
   };
 }
 
+// Um pedido ao Open-Meteo (previsão ou busca de cidade). O serviço às vezes responde "sobrecarregado"
+// (503) por alguns segundos e aceita o mesmo pedido logo depois: insiste 4 vezes, com espera
+// crescente (uns 9 segundos ao todo), antes de desistir.
+const ESPERAS_DO_OPEN_METEO = [1000, 2500, 5000];
+async function pedirAoOpenMeteo(url, prazo = 30000) {
+  for (let tentativa = 0; ; tentativa++) {
+    let erro;
+    try {
+      const response = await fetch(url, { signal: AbortSignal.timeout(prazo) });
+      if (response.ok) return await response.json();
+      erro = new Error("indisponível");
+    } catch (falha) { erro = falha; }
+    if (tentativa >= ESPERAS_DO_OPEN_METEO.length) throw erro;
+    await new Promise(seguir => setTimeout(seguir, ESPERAS_DO_OPEN_METEO[tentativa]));
+  }
+}
+
 // Procura uma cidade pelo nome: { nome: "Londrina, Paraná", latitude, longitude }, ou null se não
 // achar. "Londrina, Paraná" vale como "Londrina", porque o serviço procura só pelo nome.
 export async function procurarCidade(texto) {
   const nome = texto.split(",")[0].trim();
   if (!nome) return null;
-  const response = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(nome)}&count=1&language=pt&format=json`, { signal: AbortSignal.timeout(15000) });
-  if (!response.ok) throw new Error("indisponível");
-  const achado = (await response.json()).results?.[0];
+  const achado = (await pedirAoOpenMeteo(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(nome)}&count=1&language=pt&format=json`, 15000)).results?.[0];
   return achado ? { nome: `${achado.name}${achado.admin1 ? `, ${achado.admin1}` : ""}`, latitude: achado.latitude, longitude: achado.longitude } : null;
 }
 
@@ -83,8 +98,25 @@ export function guardarCidade(cidade) {
   try { localStorage.setItem(CIDADE_GUARDADA, JSON.stringify(cidade)); } catch { /* sem armazenamento: vale só nesta visita */ }
 }
 
-// Consulta ao Open-Meteo usada pela aba Clima e pelo Resumo do dia: 92 dias passados, 16 de previsão
-// e a umidade do solo em três profundidades.
+// A última previsão que chegou também fica neste navegador. Enquanto for do dia, ela aparece na hora
+// na visita seguinte e cobre os momentos em que o serviço de clima não responde.
+const CLIMA_GUARDADO = "agroinfo_clima";
+const lugarDe = ({ latitude, longitude }) => `${latitude},${longitude}`;
+const dataDeHoje = () => new Date().toLocaleDateString("sv-SE", { timeZone: "America/Sao_Paulo" }); // AAAA-MM-DD
+export function climaGuardado(cidade) {
+  try {
+    const guardado = JSON.parse(localStorage.getItem(CLIMA_GUARDADO));
+    return guardado?.lugar === lugarDe(cidade) && guardado.dados?.hoje === dataDeHoje() && Array.isArray(guardado.dados.dias) ? guardado.dados : null;
+  } catch { return null; }
+}
+function guardarClima(cidade, dados) {
+  try { localStorage.setItem(CLIMA_GUARDADO, JSON.stringify({ lugar: lugarDe(cidade), dados })); } catch { /* sem armazenamento: vale só nesta visita */ }
+}
+
+const doOpenMeteo = parametros => pedirAoOpenMeteo(`https://api.open-meteo.com/v1/forecast?${parametros}`);
+
+// Consulta ao Open-Meteo usada pela aba Clima, pelo Resumo do dia e pelo Jornal do dia: 92 dias
+// passados, 16 de previsão e a umidade do solo em três profundidades.
 const DIAS_PASSADOS = 92;
 const CAMADAS = [["soil_moisture_0_to_7cm", "0 a 7 cm", "onde a semente germina"], ["soil_moisture_7_to_28cm", "7 a 28 cm", "onde está a maior parte das raízes"], ["soil_moisture_28_to_100cm", "28 a 100 cm", "reserva para os dias secos"]];
 
@@ -94,9 +126,7 @@ export async function buscarClima({ latitude, longitude }) {
     daily: "precipitation_sum,temperature_2m_max,temperature_2m_min,et0_fao_evapotranspiration,precipitation_probability_max,weather_code",
     hourly: CAMADAS.map(([chave]) => chave).join(","),
   });
-  const response = await fetch(`https://api.open-meteo.com/v1/forecast?${parametros}`, { signal: AbortSignal.timeout(30000) });
-  if (!response.ok) throw new Error("indisponível");
-  const { daily, hourly } = await response.json();
+  const { daily, hourly } = await doOpenMeteo(parametros);
   const dias = daily.time.map((data, i) => ({
     data, chuva: daily.precipitation_sum[i], et0: daily.et0_fao_evapotranspiration[i], maxima: daily.temperature_2m_max[i],
     minima: daily.temperature_2m_min[i], probabilidade: daily.precipitation_probability_max[i], tempo: daily.weather_code[i],
@@ -106,7 +136,9 @@ export async function buscarClima({ latitude, longitude }) {
   const agora = `${hoje}T${String(new Date().getHours()).padStart(2, "0")}:00`;
   const iAgora = Math.max(0, hourly.time.findLastIndex(t => t <= agora));
   const solo = CAMADAS.map(([chave, camada, papel]) => ({ camada, papel, agora: hourly[chave][iAgora], semanaPassada: hourly[chave][Math.max(0, iAgora - 7 * 24)] }));
-  return { dias, hoje, solo };
+  const clima = { dias, hoje, solo };
+  guardarClima({ latitude, longitude }, clima);
+  return clima;
 }
 
 // Previsão hora a hora da aba Clima: o tempo de agora e os próximos 7 dias, de hora em hora.
@@ -132,9 +164,7 @@ export async function buscarPrevisao({ latitude, longitude }) {
     current: "temperature_2m,apparent_temperature,relative_humidity_2m,wind_speed_10m,weather_code,is_day",
     hourly: "temperature_2m,precipitation,precipitation_probability,weather_code,wind_speed_10m,relative_humidity_2m,is_day",
   });
-  const response = await fetch(`https://api.open-meteo.com/v1/forecast?${parametros}`, { signal: AbortSignal.timeout(30000) });
-  if (!response.ok) throw new Error("indisponível");
-  return lerPrevisao(await response.json());
+  return lerPrevisao(await doOpenMeteo(parametros));
 }
 
 // Entre os tempos de um período, vale o que mais pesa no dia: trovoada, depois chuva e pancada (pela

@@ -122,7 +122,7 @@ export default function Inicio({ dolar, variacaoDoDolar, onIr, onCastor, childre
                     : avisos.calor.length ? <><strong>🌡️ Calor forte</strong> previsto em {avisos.calor.map(d => diaMes(d.data)).join(", ")}.</>
                       : <><strong>✅ Sem avisos</strong> de geada, calor forte ou chuva forte para os próximos 15 dias.</>}
               </p>
-            </> : <p className="text-xs text-slate-500 mt-2">{doTempo.erro ? "Previsão indisponível agora." : `Buscando a previsão de ${cidade.nome}…`}</p>}
+            </> : <p className="text-xs text-slate-500 mt-2">{doTempo.erro && doTempo.desistiu ? "Previsão indisponível agora. Toque em “Buscar” para tentar de novo." : doTempo.erro ? `O serviço de clima está demorando a responder. Tentando de novo a previsão de ${cidade.nome}…` : `Buscando a previsão de ${cidade.nome}…`}</p>}
             {cidade && <VerMais onClick={() => onIr({ aba: "clima", cidade })}>Ver o clima completo</VerMais>}
           </div>
           <div className="rounded-xl border bg-white p-3 shadow-sm" style={{ borderColor: "rgba(0,0,0,0.08)" }}>

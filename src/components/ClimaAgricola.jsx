@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Bar, BarChart, CartesianGrid, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { MapPin, Search } from "lucide-react";
-import { avisosDaPrevisao, buscarClima, buscarPrevisao, emojiDoTempo, getWmo, periodosDoDia, procurarCidade, resumoDaChuva, WEEK } from "../clima";
+import { avisosDaPrevisao, buscarClima, buscarPrevisao, emojiDoTempo, getWmo, guardarCidade, periodosDoDia, procurarCidade, resumoDaChuva, WEEK } from "../clima";
 
 // Aba "Clima": a previsão do tempo (agora, os próximos 7 dias e cada dia por período), a chuva que já
 // caiu, a chuva prevista, a umidade do solo e os avisos para a lavoura, a partir do Open-Meteo (o
@@ -169,6 +169,7 @@ export default function ClimaAgricola({ cidadeInicial = null }) {
       const achada = await procurarCidade(busca);
       if (!achada) { setErroDaBusca("Cidade não encontrada. Confira o nome."); return; }
       visita.cidade = achada;
+      guardarCidade(achada); // o Resumo do dia e o Jornal do dia usam a última cidade escolhida
       setLocal(achada);
       setBusca(achada.nome);
     } catch { setErroDaBusca("Não foi possível procurar a cidade agora."); }

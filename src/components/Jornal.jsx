@@ -1,38 +1,45 @@
 import { useEffect, useRef, useState } from "react";
 import { Download, Image, MapPin, Printer, Search, Share2, X } from "lucide-react";
 import { getWmo, WEEK } from "../clima";
+import { textosDoJornal } from "../inicio";
 import useResumoDoDia, { REGIAO } from "./useResumoDoDia";
 
-// Aba "Jornal do dia": o Resumo do dia diagramado como a primeira página de um jornal, em uma folha
-// só, para imprimir, salvar em PDF (pela impressão do navegador) ou guardar como imagem. Os dados são
-// os mesmos do Resumo do dia (useResumoDoDia); a cidade do tempo é a lembrada neste navegador e pode
-// ser trocada aqui. Na impressão, o resto do site some (classes print: no App) e sai só a folha.
-const SERIFA = 'Georgia, "Times New Roman", Times, serif';
-const VERDE = "#14532d";
+// Aba "Jornal do dia": o Resumo do dia diagramado como a primeira página de um jornal clássico, em
+// preto e branco e em uma folha só, para imprimir, salvar em PDF (pela impressão do navegador) ou
+// guardar como imagem. De cima para baixo: título do jornal, manchete, o corpo em três colunas (texto
+// corrido, quadro de cotações e notícias) e o quadro cinza com a previsão do tempo de 7 dias da cidade
+// escolhida. Os dados são os do Resumo do dia (useResumoDoDia); a cidade é a lembrada neste navegador
+// e pode ser trocada aqui. Na impressão, o resto do site some (classes print: no App) e sai só a folha.
+const TITULO = '"Times New Roman", Times, Georgia, serif';
+const TEXTO = 'Georgia, "Times New Roman", Times, serif';
+const SEM_SERIFA = "system-ui, sans-serif";
+const PRETO = "#111111";
+const FIO = `1px solid ${PRETO}`;
 const UNIDADES = { "sc 60 kg": "saca", arroba: "arroba", kg: "kg", tonelada: "tonelada" };
 
 const reais = v => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 const decimal = (v, casas = 1) => v.toLocaleString("pt-BR", { minimumFractionDigits: 0, maximumFractionDigits: casas });
 const mm = v => `${decimal(v)} mm`;
 const diaMes = data => `${data.slice(8, 10)}/${data.slice(5, 7)}`;
+const comMaiuscula = texto => texto.charAt(0).toUpperCase() + texto.slice(1);
 function haQuanto(data) {
   const minutos = Math.floor((Date.now() - new Date(data).getTime()) / 60000);
   if (!Number.isFinite(minutos)) return "";
   return minutos < 60 ? `há ${Math.max(1, minutos)} min` : minutos < 1440 ? `há ${Math.floor(minutos / 60)} h` : new Date(data).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" });
 }
-
-function Variacao({ valor, sufixo = "", altaERuim }) {
-  if (valor == null || !Number.isFinite(valor)) return null;
-  const parado = Math.abs(valor) < 0.005;
-  const cor = parado ? "#475569" : (valor > 0) !== Boolean(altaERuim) ? "#15803d" : "#b91c1c";
-  return <span className="whitespace-nowrap font-bold" style={{ color: cor }}>{parado ? "" : valor > 0 ? "▲ " : "▼ "}{decimal(Math.abs(valor), 2)}%{sufixo}</span>;
-}
-// Título de seção do jornal: letras pequenas e espaçadas sobre um fio.
-const Secao = ({ children }) => <h3 className="border-b font-bold uppercase" style={{ fontSize: 11, lineHeight: 1.3, paddingBottom: 4, letterSpacing: "0.14em", color: VERDE, borderColor: VERDE, fontFamily: "system-ui, sans-serif" }}>{children}</h3>;
+// Variação em preto, como o resto da folha: a seta diz se subiu ou caiu.
+const variacao = valor => (valor == null || !Number.isFinite(valor) ? "" : Math.abs(valor) < 0.005 ? "estável" : `${valor > 0 ? "▲" : "▼"} ${decimal(Math.abs(valor), 2)}%`);
+// Losango do enfeite do alto da folha: desenhado, porque símbolo de fonte falta em alguns aparelhos, e
+// feito só de borda, porque a impressão costuma sair sem as cores de fundo.
+const Losango = ({ lado }) => <span className="block shrink-0" style={{ width: 0, height: 0, border: `${lado / 2}px solid ${PRETO}`, transform: "rotate(45deg)" }} />;
+// Manchete de notícia comprida demais é cortada em palavra inteira, para a folha caber em uma página.
+const encurtar = (texto, limite = 110) => (texto.length <= limite ? texto : `${texto.slice(0, limite).replace(/\s+\S*$/, "")}…`);
+// Trecho do texto corrido, com o assunto em destaque no começo, como nos jornais.
+const Trecho = ({ assunto, children }) => <p style={{ marginBottom: 8 }}><strong className="uppercase" style={{ fontSize: "0.86em", letterSpacing: "0.06em" }}>{assunto} — </strong>{children}</p>;
 
 export default function Jornal({ dolar, variacaoDoDolar, moedas, indicadores, docente, alunos }) {
   const { chicago, parana, combustiveis, safra, noticias, mercado, cidade, busca, setBusca, procurar, erroDaBusca,
-    sojaNaBolsa, sojaEmReais, daRegiao, diesel, doTempo, hoje, proximosDias, chuva, avisos, noCampo, frases } = useResumoDoDia({ dolar, variacaoDoDolar });
+    sojaNaBolsa, sojaEmReais, daRegiao, diesel, doTempo, hoje, semana, chuva, avisos, noCampo, frases } = useResumoDoDia({ dolar, variacaoDoDolar });
   const [fechamento] = useState(() => new Date()); // a edição leva a data e a hora em que a aba foi aberta
   const [imagem, setImagem] = useState(null); // { url, arquivo } da imagem gerada; { erro } se não deu
   const [gerando, setGerando] = useState(false);
@@ -48,27 +55,25 @@ export default function Jornal({ dolar, variacaoDoDolar, moedas, indicadores, do
     setGerando(true);
     try {
       const { default: html2canvas } = await import("html2canvas");
-      const tela = await html2canvas(folha.current, { scale: 2, backgroundColor: "#ffffff", logging: false });
+      // windowWidth: a folha é desenhada como em tela larga, e a imagem sai em página inteira até no celular
+      const tela = await html2canvas(folha.current, { scale: 2, backgroundColor: "#ffffff", logging: false, windowWidth: 1024 });
       const blob = await new Promise((entregar, falhar) => tela.toBlob(b => (b ? entregar(b) : falhar(new Error("sem imagem"))), "image/png"));
       setImagem({ url: URL.createObjectURL(blob), arquivo: new File([blob], nomeDoArquivo, { type: "image/png" }) });
     } catch { setImagem({ erro: true }); }
     setGerando(false);
   };
   const podeCompartilhar = Boolean(imagem?.arquivo) && typeof navigator.canShare === "function" && navigator.canShare({ files: [imagem.arquivo] });
-  const compartilhar = () => navigator.share({ files: [imagem.arquivo], title: "AgroInfo · Jornal do dia" }).catch(() => { /* a pessoa desistiu de compartilhar */ });
+  const compartilhar = () => navigator.share({ files: [imagem.arquivo], title: "Informativo Agrícola · Jornal do dia" }).catch(() => { /* a pessoa desistiu de compartilhar */ });
 
   const [manchete, ...complemento] = frases.length ? frases : ["O dia no campo e no mercado."];
-  const temAviso = avisos && (avisos.geada.length || avisos.chuvaForte.length || avisos.calor.length);
+  const textos = textosDoJornal({ dolar, variacaoDoDolar, sojaEmReais, variacaoDaSoja: sojaNaBolsa?.change, daRegiao, regiao: REGIAO, diesel, noCampo, moedas, indicadores });
   const cotacoes = [
-    ["Dólar comercial", dolar ? reais(dolar) : null, <Variacao key="v" valor={variacaoDoDolar} />],
-    ["Soja em Chicago", sojaEmReais != null ? `${reais(sojaEmReais)}/saca` : sojaNaBolsa ? `${decimal(sojaNaBolsa.value, 2)} US¢/bushel` : null, sojaNaBolsa && <Variacao key="v" valor={sojaNaBolsa.change} />],
-    ...daRegiao.map(({ produto, preco }) => [
-      `${produto} ${preco && !preco.daRegiao ? "no Paraná (média)" : "na região"}`,
-      preco ? `${reais(preco.valor)}/${UNIDADES[preco.unidade.toLowerCase()] ?? preco.unidade}` : null,
-      preco && <Variacao key="v" valor={preco.variacaoPct} />,
-    ]),
-    ["Diesel S10 no Paraná", diesel ? `${reais(diesel.parana.medio)}/litro` : null, diesel?.semanaAnterior && <Variacao key="v" valor={(diesel.parana.medio - diesel.semanaAnterior) / diesel.semanaAnterior * 100} altaERuim />],
+    ["Dólar comercial", dolar ? reais(dolar) : null, "", variacao(variacaoDoDolar)],
+    ["Soja em Chicago", sojaEmReais != null ? reais(sojaEmReais) : sojaNaBolsa ? decimal(sojaNaBolsa.value, 2) : null, sojaEmReais != null ? "por saca" : "US¢/bushel", variacao(sojaNaBolsa?.change)],
+    ["Diesel S10 no Paraná", diesel ? reais(diesel.parana.medio) : null, "por litro", diesel?.semanaAnterior ? variacao((diesel.parana.medio - diesel.semanaAnterior) / diesel.semanaAnterior * 100) : ""],
+    ...daRegiao.map(({ produto, preco }) => [`${produto} ${preco && !preco.daRegiao ? "no Paraná" : "na região"}`, preco ? reais(preco.valor) : null, preco ? `por ${UNIDADES[preco.unidade.toLowerCase()] ?? preco.unidade}` : "", variacao(preco?.variacaoPct)]),
   ];
+  const aviso = !avisos ? null : avisos.geada.length ? ["Risco de geada", avisos.geada] : avisos.chuvaForte.length ? ["Chuva forte prevista", avisos.chuvaForte] : avisos.calor.length ? ["Calor forte previsto", avisos.calor] : null;
   const BOTAO = "inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs sm:text-sm font-bold disabled:opacity-50";
 
   return (
@@ -85,7 +90,8 @@ export default function Jornal({ dolar, variacaoDoDolar, moedas, indicadores, do
           <button type="submit" className="flex items-center gap-1 rounded-lg px-3 text-xs font-bold" style={{ border: "1px solid #bbf7d0", color: "#166534", background: "#fff" }}><Search size={12} aria-hidden="true" />Buscar</button>
         </form>
         {erroDaBusca && <p role="alert" className="text-xs text-amber-800 mt-1.5">{erroDaBusca}</p>}
-        {!cidade && <p className="text-xs text-slate-500 mt-1.5">Sem cidade escolhida, o jornal sai sem a previsão do tempo.</p>}
+        {!cidade && <p className="text-xs text-amber-800 mt-1.5">Digite a cidade acima para o jornal trazer a previsão do tempo de 7 dias.</p>}
+        {cidade && doTempo.erro && <p role="alert" className="text-xs text-amber-800 mt-1.5">{doTempo.desistiu ? "O serviço de clima não respondeu. Toque em “Buscar” para tentar de novo." : "O serviço de clima está demorando a responder. O jornal continua tentando sozinho: a previsão entra na folha assim que chegar."}</p>}
         <div className="flex flex-wrap gap-2 mt-3">
           <button type="button" onClick={() => window.print()} disabled={carregando} className={BOTAO} style={{ background: "#166534", color: "#fff" }}><Printer size={14} aria-hidden="true" />Imprimir ou salvar em PDF</button>
           <button type="button" onClick={gerarImagem} disabled={carregando || gerando} className={BOTAO} style={{ border: "1px solid #bbf7d0", color: "#166534", background: "#fff" }}><Image size={14} aria-hidden="true" />{gerando ? "Gerando a imagem…" : "Salvar como imagem"}</button>
@@ -96,7 +102,7 @@ export default function Jornal({ dolar, variacaoDoDolar, moedas, indicadores, do
         {imagem?.url && (
           <div className="rounded-xl p-3 mt-3" style={{ background: "#f0fdf4", border: "1px solid #bbf7d0" }}>
             <div className="flex items-start justify-between gap-2">
-              <p className="text-sm font-bold" style={{ color: VERDE }}>A imagem está pronta</p>
+              <p className="text-sm font-bold" style={{ color: "#14532d" }}>A imagem está pronta</p>
               <button type="button" onClick={() => setImagem(null)} aria-label="Fechar a imagem" className="rounded-full p-1" style={{ color: "#166534" }}><X size={16} aria-hidden="true" /></button>
             </div>
             <div className="flex flex-wrap gap-2 mt-2">
@@ -109,109 +115,97 @@ export default function Jornal({ dolar, variacaoDoDolar, moedas, indicadores, do
         )}
       </section>
 
-      <article ref={folha} className="mx-auto rounded-lg bg-white text-slate-900 shadow-md print:!mt-0 print:max-w-none print:rounded-none print:!p-0 print:shadow-none" style={{ maxWidth: 794, padding: "26px 30px", fontFamily: SERIFA }}>
-        <header className="text-center">
-          <p className="uppercase text-slate-600" style={{ fontSize: 10, letterSpacing: "0.22em", fontFamily: "system-ui, sans-serif" }}>C.E.E.P.A. Fernando Costa · Informativo Agrícola</p>
-          <h2 className="font-black" style={{ fontSize: 52, lineHeight: 1.1, paddingBottom: 6, color: VERDE }}>AgroInfo</h2>
-          <div className="flex flex-wrap items-center justify-between gap-x-3 py-1 uppercase" style={{ fontSize: 10.5, letterSpacing: "0.08em", borderTop: "3px double #0f172a", borderBottom: "1px solid #0f172a", fontFamily: "system-ui, sans-serif" }}>
-            <span>{fechamento.toLocaleDateString("pt-BR", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}</span>
-            <span className="font-bold">Jornal do dia</span>
-            <span>Fechado às {fechamento.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}</span>
+      <article ref={folha} className="mx-auto rounded-lg bg-white p-4 shadow-md [container-type:inline-size] sm:p-8 print:!mt-0 print:max-w-none print:rounded-none print:!p-0 print:shadow-none" style={{ maxWidth: 794, fontFamily: TEXTO, color: PRETO }}>
+        <header>
+          <div className="flex items-center gap-2" style={{ height: 14 }} aria-hidden="true">
+            <span className="flex-1" style={{ borderTop: FIO }} />
+            <Losango lado={5} /><Losango lado={9} /><Losango lado={5} />
+            <span className="flex-1" style={{ borderTop: FIO }} />
+          </div>
+          {/* tamanho pela largura da folha (cqw), para caber em uma linha também no celular; vw é a reserva dos navegadores antigos */}
+          <h2 className="text-center font-bold uppercase text-[length:min(54px,6.4vw)] supports-[width:1cqw]:text-[length:min(54px,7.4cqw)]" style={{ fontFamily: TITULO, lineHeight: 1.2, paddingBottom: 4 }}>Informativo Agrícola</h2>
+          <div className="flex flex-wrap justify-between gap-x-3 py-1.5" style={{ fontSize: 13, borderTop: FIO, borderBottom: `4px solid ${PRETO}` }}>
+            <span>C.E.E.P.A. Fernando Costa</span>
+            <span>{comMaiuscula(fechamento.toLocaleDateString("pt-BR", { weekday: "long", day: "numeric", month: "long", year: "numeric" }))}</span>
           </div>
         </header>
 
-        <section className="mt-3 pb-3" style={{ borderBottom: "1px solid #cbd5e1" }}>
-          <h3 className="font-black" style={{ fontSize: 27, lineHeight: 1.15 }}>{manchete.replace(/\.$/, "")}</h3>
-          {complemento.length > 0 && <p className="mt-1.5 text-slate-700" style={{ fontSize: 15, lineHeight: 1.4 }}>{complemento.join(" ")}</p>}
+        <section className="text-center" style={{ marginTop: 16 }}>
+          <h3 className="font-bold" style={{ fontFamily: TITULO, fontSize: manchete.length > 36 ? "min(28px, 6vw)" : "min(42px, 8vw)", lineHeight: 1.1 }}>{manchete.replace(/\.$/, "")}</h3>
+          {complemento.length > 0 && <p className="font-bold" style={{ fontSize: 13.5, lineHeight: 1.35, marginTop: 8 }}>{complemento.join(" ")}</p>}
         </section>
 
-        <div className="grid grid-cols-1 gap-x-6 gap-y-4 mt-3 sm:grid-cols-2 print:grid-cols-2">
-          <section>
-            <Secao>Mercado</Secao>
-            <table className="w-full mt-1" style={{ fontSize: 13 }}>
-              <tbody>{cotacoes.map(([nome, valor, variacao]) => (
-                <tr key={nome} style={{ borderBottom: "1px solid #e2e8f0" }}>
-                  <td className="py-1.5 pr-2 whitespace-nowrap">{nome}</td>
-                  <td className="py-1.5 text-right font-bold whitespace-nowrap">{valor ?? "—"}</td>
-                  <td className="py-1.5 pl-2 text-right" style={{ fontSize: 11.5 }}>{valor != null && variacao}</td>
-                </tr>
-              ))}</tbody>
-            </table>
-            <p className="mt-1 text-slate-500" style={{ fontSize: 10.5 }}>Região: {REGIAO} (DERAL). Variação do dia; a do diesel é da semana. Chicago convertida para saca de 60 kg no porto.</p>
+        <div className="grid grid-cols-1 gap-x-5 gap-y-4 sm:grid-cols-3 print:grid-cols-3" style={{ marginTop: 16 }}>
+          <section style={{ fontSize: 12.5, lineHeight: 1.42, textAlign: "justify" }}>
+            {textos.mercado.length > 0 && <Trecho assunto="Mercado">{textos.mercado.join(" ")}</Trecho>}
+            {textos.campo && <Trecho assunto="No campo">{textos.campo}</Trecho>}
+            {textos.economia.length > 0 && <Trecho assunto="Economia">{textos.economia.join(" ")}</Trecho>}
+            {!textos.mercado.length && !textos.campo && <p style={{ color: "#555" }}>Os dados do dia ainda estão chegando.</p>}
           </section>
 
-          <div className="space-y-4 sm:border-l sm:pl-6 print:border-l print:pl-6" style={{ borderColor: "#cbd5e1" }}>
-            {cidade && (
-              <section>
-                <Secao>Tempo em {cidade.nome}</Secao>
-                {hoje ? <>
-                  <p className="mt-1.5" style={{ fontSize: 14 }}><span aria-hidden="true">{getWmo(hoje.tempo).emoji} </span><strong>{getWmo(hoje.tempo).label}</strong>, de {Math.round(hoje.minima)}° a {Math.round(hoje.maxima)}°. Chuva hoje: {mm(hoje.chuva ?? 0)}; nos próximos 7 dias, {mm(chuva.proximos7)}.</p>
-                  <table className="w-full mt-1.5 text-center" style={{ fontSize: 12 }}>
-                    <tbody>
-                      <tr>{proximosDias.map(d => <td key={d.data} className="font-bold" style={{ fontFamily: "system-ui, sans-serif" }}>{WEEK[new Date(`${d.data}T12:00:00`).getDay()]} {diaMes(d.data)}</td>)}</tr>
-                      <tr>{proximosDias.map(d => <td key={d.data} style={{ fontSize: 18 }} aria-hidden="true">{getWmo(d.tempo).emoji}</td>)}</tr>
-                      <tr>{proximosDias.map(d => <td key={d.data}><strong>{Math.round(d.maxima)}°</strong> {Math.round(d.minima)}°</td>)}</tr>
-                      <tr className="text-slate-600">{proximosDias.map(d => <td key={d.data}>{mm(d.chuva ?? 0)}</td>)}</tr>
-                    </tbody>
-                  </table>
-                  <p className="mt-1.5" style={{ fontSize: 12.5, color: temAviso ? "#991b1b" : "#334155" }}>
-                    {avisos.geada.length ? <><strong>Risco de geada</strong> em {avisos.geada.map(d => diaMes(d.data)).join(", ")}.</>
-                      : avisos.chuvaForte.length ? <><strong>Chuva forte</strong> prevista em {avisos.chuvaForte.map(d => diaMes(d.data)).join(", ")}.</>
-                        : avisos.calor.length ? <><strong>Calor forte</strong> previsto em {avisos.calor.map(d => diaMes(d.data)).join(", ")}.</>
-                          : "Sem avisos de geada, calor forte ou chuva forte para os próximos 15 dias."}
-                  </p>
-                </> : <p className="mt-1.5 text-slate-500" style={{ fontSize: 12.5 }}>{doTempo.erro ? "Previsão indisponível agora." : "Buscando a previsão…"}</p>}
-              </section>
-            )}
-            <section>
-              <Secao>Lavouras do Paraná</Secao>
-              {noCampo.length ? (
-                <table className="w-full mt-1" style={{ fontSize: 13 }}>
-                  <tbody>{noCampo.map(item => (
-                    <tr key={`${item.cultura}-${item.operacao}`} style={{ borderBottom: "1px solid #e2e8f0" }}>
-                      <td className="py-1 pr-2">{item.operacao} · {item.cultura} {item.safra}</td>
-                      <td className="py-1 text-right whitespace-nowrap"><strong>{decimal(item.pct)}%</strong> até {item.mes}</td>
-                    </tr>
-                  ))}</tbody>
-                </table>
-              ) : <p className="mt-1.5 text-slate-500" style={{ fontSize: 12.5 }}>{safra.erro ? "Andamento da safra indisponível agora." : safra.dados ? "Nenhum plantio ou colheita em andamento no último levantamento." : "Buscando o andamento da safra…"}</p>}
-            </section>
+          <div className="sm:col-span-2 print:col-span-2">
+            <div className="grid grid-cols-2 sm:grid-cols-3 print:grid-cols-3" style={{ border: FIO }}>
+              {cotacoes.map(([nome, valor, unidade, mudou]) => (
+                <div key={nome} className="p-2 text-center">
+                  <div className="uppercase" style={{ fontSize: 9.5, letterSpacing: "0.08em", fontFamily: SEM_SERIFA }}>{nome}</div>
+                  <div className="font-bold" style={{ fontFamily: TITULO, fontSize: 23, lineHeight: 1.2 }}>{valor ?? "—"}</div>
+                  <div style={{ fontSize: 11 }}>{valor != null ? [unidade, mudou].filter(Boolean).join(" · ") : " "}</div>
+                </div>
+              ))}
+            </div>
+            <p className="italic" style={{ fontSize: 11, color: "#555", marginTop: 4 }}>Cotações do dia. Região de {REGIAO} (DERAL); diesel: variação da semana.</p>
+
+            <div className="grid grid-cols-1 gap-x-5 gap-y-3 sm:grid-cols-2 print:grid-cols-2" style={{ marginTop: 12 }}>
+              {[["Agronegócio", noticias], ["Mercado", mercado]].map(([assunto, consulta]) => {
+                const manchetes = consulta.dados?.items?.slice(0, 3) ?? [];
+                return (
+                  <section key={assunto}>
+                    <h4 className="font-bold uppercase" style={{ fontSize: 11, letterSpacing: "0.1em", borderBottom: FIO, paddingBottom: 2, fontFamily: SEM_SERIFA }}>{assunto}</h4>
+                    {manchetes.length ? manchetes.map(item => (
+                      <p key={item.link} style={{ fontSize: 12.5, lineHeight: 1.3, marginTop: 6 }}>
+                        <a href={item.link} target="_blank" rel="noopener noreferrer" className="font-bold">{encurtar(item.title)}</a>
+                        <span className="block italic" style={{ fontSize: 10.5, color: "#555" }}>{item.author}{item.pubDate && ` · ${haQuanto(item.pubDate)}`}</span>
+                      </p>
+                    )) : <p style={{ fontSize: 12.5, color: "#555", marginTop: 6 }}>{consulta.erro || consulta.dados ? "Notícias indisponíveis agora." : "Buscando as notícias…"}</p>}
+                  </section>
+                );
+              })}
+            </div>
           </div>
         </div>
 
-        <section className="mt-4">
-          <Secao>Notícias para começar o dia</Secao>
-          <div className="grid grid-cols-1 gap-x-6 gap-y-3 mt-1.5 sm:grid-cols-2 print:grid-cols-2">
-            {[["Agronegócio", noticias], ["Mercado", mercado]].map(([assunto, consulta]) => {
-              const manchetes = consulta.dados?.items?.slice(0, 3) ?? [];
-              return (
-                <div key={assunto}>
-                  <p className="font-bold uppercase text-slate-500" style={{ fontSize: 10, letterSpacing: "0.12em", fontFamily: "system-ui, sans-serif" }}>{assunto}</p>
-                  {manchetes.length ? manchetes.map(item => (
-                    <p key={item.link} className="mt-1.5" style={{ fontSize: 13.5, lineHeight: 1.3 }}>
-                      <a href={item.link} target="_blank" rel="noopener noreferrer" className="font-bold">{item.title}</a>
-                      <span className="block text-slate-500" style={{ fontSize: 10.5, fontFamily: "system-ui, sans-serif" }}>{item.author}{item.pubDate && ` · ${haQuanto(item.pubDate)}`}</span>
-                    </p>
-                  )) : <p className="mt-1.5 text-slate-500" style={{ fontSize: 12.5 }}>{consulta.erro || consulta.dados ? "Notícias indisponíveis agora." : "Buscando as notícias…"}</p>}
-                </div>
-              );
-            })}
+        <section style={{ marginTop: 14, padding: "12px 16px", borderTop: FIO, background: "#e8e8e8", printColorAdjust: "exact", WebkitPrintColorAdjust: "exact", breakInside: "avoid" }}>
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <h3 className="font-bold" style={{ fontFamily: TITULO, fontSize: "min(34px, 7vw)", lineHeight: 1.1, color: "#6b6b6b" }}>Previsão do tempo</h3>
+              {cidade && hoje && (
+                <p style={{ fontSize: 13, lineHeight: 1.35, color: "#333", marginTop: 4 }}>
+                  <strong>{cidade.nome}.</strong> Hoje, {getWmo(hoje.tempo).label.toLowerCase()}, de {Math.round(hoje.minima)}° a {Math.round(hoje.maxima)}°. Chuva prevista para os próximos 7 dias: {mm(chuva.proximos7)}.
+                  {aviso && <strong> {aviso[0]} em {aviso[1].slice(0, 3).map(d => diaMes(d.data)).join(", ")}.</strong>}
+                </p>
+              )}
+            </div>
+            {hoje && <span className="shrink-0" style={{ fontSize: 46, lineHeight: 1 }} aria-hidden="true">{getWmo(hoje.tempo).emoji}</span>}
           </div>
+          {!cidade ? <p style={{ fontSize: 13, color: "#333", marginTop: 6 }}>Escolha a cidade no campo acima da folha para ver aqui a previsão de 7 dias.</p>
+            : !hoje ? <p style={{ fontSize: 13, color: "#333", marginTop: 6 }}>{doTempo.erro && doTempo.desistiu ? `A previsão de ${cidade.nome} não está disponível agora.` : `Buscando a previsão de ${cidade.nome}…`}</p>
+              : (
+                <ol className="grid grid-cols-4 gap-y-3 text-center sm:grid-cols-7 print:grid-cols-7" style={{ marginTop: 8, fontSize: 12, color: "#222" }} aria-label="Previsão de 7 dias">
+                  {semana.map((d, i) => (
+                    <li key={d.data} title={getWmo(d.tempo).label}>
+                      <span className="block" style={{ fontFamily: SEM_SERIFA }}><strong>{i === 0 ? "Hoje" : WEEK[new Date(`${d.data}T12:00:00`).getDay()]}</strong> <span style={{ fontSize: 10.5, color: "#555" }}>{diaMes(d.data)}</span></span>
+                      <span className="block" style={{ fontSize: 22, lineHeight: 1.3 }} aria-hidden="true">{getWmo(d.tempo).emoji}</span>
+                      <span className="block"><strong>{Math.round(d.maxima)}°</strong> {Math.round(d.minima)}°</span>
+                      <span className="block">{mm(d.chuva ?? 0)}</span>
+                      <span className="block" style={{ fontSize: 10.5, color: "#555" }}>{d.probabilidade != null ? `${d.probabilidade}% de chance` : " "}</span>
+                    </li>
+                  ))}
+                </ol>
+              )}
         </section>
 
-        <section className="mt-4">
-          <Secao>Moedas e indicadores</Secao>
-          <p className="mt-1.5" style={{ fontSize: 12.5, lineHeight: 1.5 }}>
-            {moedas.filter(m => m.valor != null).map((m, i) => <span key={m.id}>{i > 0 && " · "}{m.nome} <strong>R$ {decimal(m.valor, m.valor < 1 ? 4 : 2)}</strong></span>)}
-            {moedas.every(m => m.valor == null) && <span className="text-slate-500">Moedas indisponíveis agora.</span>}
-          </p>
-          <p className="mt-0.5" style={{ fontSize: 12.5, lineHeight: 1.5 }}>
-            {indicadores.map((ind, i) => <span key={ind.nome}>{i > 0 && " · "}{ind.nome}{ind.periodo && ` (${ind.periodo})`} <strong>{ind.valor}</strong></span>)}
-          </p>
-        </section>
-
-        <footer className="mt-3 pt-2 text-slate-500" style={{ fontSize: 10, lineHeight: 1.45, borderTop: "1px solid #0f172a", fontFamily: "system-ui, sans-serif" }}>
-          <p>Fontes: AwesomeAPI (dólar), Yahoo Finance (Chicago, com atraso), DERAL/SEAB-PR (preços e safra), ANP (diesel), Open-Meteo (tempo), Google Notícias e Banco Central.</p>
+        <footer style={{ marginTop: 8, fontSize: 9.5, lineHeight: 1.4, color: "#555", fontFamily: SEM_SERIFA, breakInside: "avoid" }}>
+          <p>Fontes: AwesomeAPI (dólar), Yahoo Finance (Chicago, com atraso), DERAL/SEAB-PR (preços e safra), ANP (diesel), Open-Meteo (tempo), Google Notícias e Banco Central. Edição fechada às {fechamento.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}.</p>
           <p>Docente: {docente} · {alunos.length > 1 ? "Estudantes participantes" : "Estudante participante"}: {alunos.join(", ")} · agroinfo-dashboard.vercel.app</p>
         </footer>
       </article>

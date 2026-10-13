@@ -51,3 +51,24 @@ export function frasesDoDia({ dolar, variacaoDoDolar, variacaoDaSoja, cidade, ho
   }
   return frases;
 }
+
+const reais = v => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+const minuscula = texto => texto.charAt(0).toLowerCase() + texto.slice(1);
+const POR_UNIDADE = { 'sc 60 kg': 'a saca', arroba: 'a arroba', kg: 'o quilo', tonelada: 'a tonelada' };
+
+// Textos corridos do Jornal do dia, montados com os mesmos números do Resumo do dia. Devolve
+// { mercado: [frases], campo: frase ou null, economia: [frases] }; o que ainda não chegou fica de fora.
+export function textosDoJornal({ dolar, variacaoDoDolar, sojaEmReais, variacaoDaSoja, daRegiao = [], regiao, diesel, noCampo = [], moedas = [], indicadores = [] }) {
+  const mercado = [];
+  if (dolar != null) mercado.push(`O dólar comercial vale ${reais(dolar)}${variacaoDoDolar != null ? `, ${rumo(variacaoDoDolar)} no dia` : ''}.`);
+  if (sojaEmReais != null) mercado.push(`Na Bolsa de Chicago, a soja equivale a ${reais(sojaEmReais)} por saca no porto${variacaoDaSoja != null ? `, ${rumo(variacaoDaSoja)}` : ''}.`);
+  const precos = daRegiao.filter(item => item.preco).map(({ produto, preco }) => `${produto.toLowerCase()}, ${reais(preco.valor)} ${POR_UNIDADE[preco.unidade.toLowerCase()] ?? `por ${preco.unidade}`}${preco.daRegiao ? '' : ' (média do Paraná)'}`);
+  if (precos.length) mercado.push(`Na região de ${regiao}, os preços do dia são: ${precos.join('; ')}.`);
+  if (diesel) mercado.push(`O diesel S10 custa em média ${reais(diesel.parana.medio)} o litro nos postos do Paraná.`);
+  const campo = noCampo.length
+    ? `Nas lavouras do Paraná: ${noCampo.map(o => `${o.operacao.toLowerCase()} de ${minuscula(o.cultura)} ${o.safra} em ${o.pct.toLocaleString('pt-BR', { maximumFractionDigits: 1 })}% até ${o.mes}`).join('; ')}.` : null;
+  const outras = moedas.filter(m => m.id !== 'usd' && m.valor != null).map(m => `${m.nome.toLowerCase()} a R$ ${m.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: m.valor < 1 ? 4 : 2 })}`);
+  const taxas = indicadores.filter(i => i.valor && !/carregando|indispon/i.test(i.valor)).map(i => `${i.nome}${i.periodo ? ` (${i.periodo})` : ''}, ${i.valor}`);
+  const economia = [outras.length ? `Outras moedas: ${outras.join('; ')}.` : null, taxas.length ? `Indicadores: ${taxas.join('; ').replace(/\.$/, '')}.` : null].filter(Boolean); // "a.a." no fim não ganha outro ponto
+  return { mercado, campo, economia };
+}

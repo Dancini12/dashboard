@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { resumoDaChuva, avisosDaPrevisao, lerPrevisao, periodosDoDia, emojiDoTempo } from '../src/clima.js';
+import { resumoDaChuva, avisosDaPrevisao, lerPrevisao, periodosDoDia, emojiDoTempo, buscarClima, climaGuardado, procurarCidade } from '../src/clima.js';
 
 const dia = (data, chuva, extra = {}) => ({ data, chuva, et0: 4, ...extra });
 
@@ -59,4 +59,37 @@ test('clima: o dia dividido em madrugada, manhã, tarde e noite', () => {
 test('clima: à noite o céu limpo não mostra sol', () => {
   assert.equal(emojiDoTempo(0), '☀️'); assert.equal(emojiDoTempo(0, false), '🌙'); assert.equal(emojiDoTempo(2, false), '☁️');
   assert.equal(emojiDoTempo(63, false), '🌧️', 'chuva é igual de dia e de noite');
+});
+
+// Serviço de clima sobrecarregado: o pedido é repetido, e a última previsão do dia fica no navegador.
+test('clima: insiste quando o serviço responde sobrecarregado e guarda a previsão do dia', async (t) => {
+  const guardados = new Map();
+  const hoje = new Date().toLocaleDateString('sv-SE', { timeZone: 'America/Sao_Paulo' });
+  const datas = Array.from({ length: 108 }, (_, i) => new Date(Date.parse(`${hoje}T12:00:00Z`) + (i - 92) * 86400000).toISOString().slice(0, 10));
+  const horas = datas.flatMap(data => Array.from({ length: 24 }, (_, h) => `${data}T${String(h).padStart(2, '0')}:00`));
+  const previsao = {
+    daily: { time: datas, precipitation_sum: datas.map(() => 2), et0_fao_evapotranspiration: datas.map(() => 4), temperature_2m_max: datas.map(() => 28),
+      temperature_2m_min: datas.map(() => 17), precipitation_probability_max: datas.map(() => 40), weather_code: datas.map(() => 3) },
+    hourly: { time: horas, soil_moisture_0_to_7cm: horas.map(() => 0.3), soil_moisture_7_to_28cm: horas.map(() => 0.3), soil_moisture_28_to_100cm: horas.map(() => 0.3) },
+  };
+  const respostas = [{ ok: false, status: 503 }, { ok: true, json: async () => previsao }];
+  const pedidos = [];
+  t.mock.method(globalThis, 'fetch', async (url) => { pedidos.push(String(url)); return respostas.shift() ?? { ok: false, status: 503 }; });
+  globalThis.localStorage = { getItem: chave => guardados.get(chave) ?? null, setItem: (chave, valor) => guardados.set(chave, valor) };
+  t.after(() => { delete globalThis.localStorage; });
+
+  const londrina = { nome: 'Londrina, Paraná', latitude: -23.31, longitude: -51.16 };
+  assert.equal(climaGuardado(londrina), null, 'nada guardado antes da primeira previsão');
+  const clima = await buscarClima(londrina);
+  assert.equal(pedidos.length, 2, 'o pedido recusado foi repetido');
+  assert.equal(clima.hoje, hoje);
+  assert.equal(clima.dias.length, 108);
+  assert.deepEqual(climaGuardado(londrina), clima, 'a previsão que chegou fica guardada');
+  assert.equal(climaGuardado({ ...londrina, latitude: -23.42 }), null, 'e vale só para a cidade dela');
+  guardados.set('agroinfo_clima', JSON.stringify({ lugar: '-23.31,-51.16', dados: { ...clima, hoje: '2020-01-01' } }));
+  assert.equal(climaGuardado(londrina), null, 'previsão de outro dia não serve');
+
+  respostas.push({ ok: false, status: 503 }, { ok: true, json: async () => ({ results: [{ name: 'Maringá', admin1: 'Paraná', latitude: -23.4, longitude: -51.9 }] }) });
+  assert.deepEqual(await procurarCidade('Maringá, Paraná'), { nome: 'Maringá, Paraná', latitude: -23.4, longitude: -51.9 }, 'a busca da cidade também insiste');
+  assert.match(pedidos.at(-1), /name=Maring%C3%A1&/, 'procura só pelo nome da cidade');
 });

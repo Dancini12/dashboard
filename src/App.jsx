@@ -23,7 +23,7 @@ import { RefreshCw, BookOpen, BarChart3, Clock, Wheat, DollarSign, ChevronDown, 
 
 const UPDATE_SEC = 60;
 const DOCENTE = "Marcel Dancini Rodrigues";
-const ALUNOS_PARTICIPANTES = ["Pietra Sanguini"]; // para incluir mais alunos, acrescente os nomes aqui
+const ALUNOS_PARTICIPANTES = ["Pietra Sanguini", "Marcella Vitoria da Silva"]; // para incluir mais alunos, acrescente os nomes aqui
 // URL do App da Web do assistente (Apps Script, termina em /exec). Passo a passo em apps-script/LEIA-ME.md.
 const ASSISTENTE_URL = import.meta.env.VITE_ASSISTENTE_URL
   || "https://script.google.com/macros/s/AKfycbyDYcrR3XX5bqo0rKCp1c1ZgDHf4GCHsJv7jesNPo5PEtJT6qYMLCyUV6OGmB1ur-jrBA/exec";
@@ -685,7 +685,7 @@ export default function App() {
               <h1 className="text-sm sm:text-base font-bold text-white">C.E.E.P.A. Fernando Costa</h1>
             </div>
             <div className="text-xs mt-1" style={{ color: "rgba(255,255,255,0.7)" }}><span style={{ color: "#fbbf24", fontWeight: 700 }}>Informativo Agrícola</span> • {new Date().toLocaleDateString("pt-BR")}</div>
-            <div className="text-xs" style={{ color: "rgba(255,255,255,0.55)" }}>Docente: <strong style={{ color: "rgba(255,255,255,0.8)" }}>{DOCENTE}</strong><span className="hidden sm:inline"> • </span><span className="block sm:inline">{ALUNOS_PARTICIPANTES.length > 1 ? "Estudantes participantes" : "Estudante participante"}: <strong style={{ color: "rgba(255,255,255,0.8)" }}>{ALUNOS_PARTICIPANTES.join(", ")}</strong></span></div>
+            <div className="text-xs" style={{ color: "rgba(255,255,255,0.55)" }}>Docente: <strong style={{ color: "rgba(255,255,255,0.8)" }}>{DOCENTE}</strong><span className="hidden sm:inline"> • </span><span className="block sm:inline">{ALUNOS_PARTICIPANTES.length > 1 ? "Estudantes participantes" : "Estudante participante"}: <strong style={{ color: "rgba(255,255,255,0.8)" }}>{ALUNOS_PARTICIPANTES.map((nome, i) => <span key={nome} className="inline-block">{nome}{i < ALUNOS_PARTICIPANTES.length - 1 && ",\u00a0"}</span>)}</strong></span></div>
           </div>
         </div>
       </div>

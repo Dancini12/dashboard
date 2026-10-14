@@ -8,8 +8,8 @@ import { ETAPAS, contas, resultado, sortear } from "../simulacao";
 const COR_SEM_HEDGE = "#2a78d6";
 const COR_COM_HEDGE = "#eb6834";
 const NIVEIS = {
-  boa: { rotulo: "Boa prática", marca: "✓", fundo: "#f0fdf4", borda: "#86efac", cor: "#14532d" },
-  aceitavel: { rotulo: "Dá para melhorar", marca: "≈", fundo: "#fffbeb", borda: "#fde68a", cor: "#78350f" },
+  boa: { rotulo: "Boa prática", marca: "✓", fundo: "#f2f2f2", borda: "#9e9e9e", cor: "#111111" },
+  aceitavel: { rotulo: "Dá para melhorar", marca: "≈", fundo: "#f6f6f6", borda: "#bdbdbd", cor: "#111111" },
   arriscada: { rotulo: "Decisão arriscada", marca: "!", fundo: "#fef2f2", borda: "#fecaca", cor: "#7f1d1d" },
 };
 const CLIMA = { normal: "choveu na hora certa", seca: "houve um veranico em dezembro" };
@@ -24,10 +24,10 @@ const porSaca = v => v.toLocaleString("pt-BR", { style: "currency", currency: "B
 
 function Campo({ rotulo, valor, onChange, sufixo }) {
   return (
-    <label className="block text-xs text-slate-600">{rotulo}
+    <label className="block text-xs text-neutral-600">{rotulo}
       <span className="flex items-center gap-1.5 mt-1">
-        <input value={valor} onChange={e => onChange(e.target.value)} inputMode="decimal" className="block w-full min-w-0 rounded-lg border bg-white p-2 text-sm text-slate-900" />
-        <span className="shrink-0 text-slate-500">{sufixo}</span>
+        <input value={valor} onChange={e => onChange(e.target.value)} inputMode="decimal" className="block w-full min-w-0 rounded-lg border bg-white p-2 text-sm text-neutral-900" />
+        <span className="shrink-0 text-neutral-500">{sufixo}</span>
       </span>
     </label>
   );
@@ -36,12 +36,12 @@ function Campo({ rotulo, valor, onChange, sufixo }) {
 function DicaDoHedge({ active, payload, label }) {
   if (!active || !payload?.length) return null;
   return (
-    <div className="rounded-lg border bg-white px-2.5 py-2 text-xs shadow-md" style={{ borderColor: "#e2e8f0" }}>
-      <div className="font-semibold text-slate-500">Saca a {porSaca(label)} na colheita</div>
+    <div className="rounded-lg border bg-white px-2.5 py-2 text-xs shadow-md" style={{ borderColor: "#e0e0e0" }}>
+      <div className="font-semibold text-neutral-500">Saca a {porSaca(label)} na colheita</div>
       {payload.map(p => (
         <div key={p.dataKey} className="flex items-center gap-2 mt-1">
           <span className="shrink-0 rounded-full" style={{ width: 12, height: 3, background: p.color }} />
-          <strong className="text-slate-900">{reais(p.value)}</strong><span className="text-slate-600">{p.name}</span>
+          <strong className="text-neutral-900">{reais(p.value)}</strong><span className="text-neutral-600">{p.name}</span>
         </div>
       ))}
     </div>
@@ -66,8 +66,8 @@ function SimuladorDeHedge() {
 
   return (
     <section id="simulador-hedge" className="rounded-xl border bg-white p-3 shadow-sm" style={{ scrollMarginTop: 100 }}>
-      <h3 className="text-sm font-bold" style={{ color: "#14532d" }}>Simulador de hedge</h3>
-      <p className="text-xs text-slate-600 mt-1">
+      <h3 className="text-sm font-bold" style={{ color: "#111111" }}>Simulador de hedge</h3>
+      <p className="text-xs text-neutral-600 mt-1">
         Você é produtor e trava hoje, no mercado futuro, o preço de venda da sua safra. Mova a barra para ver o que acontece
         com a sua receita se, na colheita, o preço tiver caído ou subido.
       </p>
@@ -76,52 +76,52 @@ function SimuladorDeHedge() {
         <Campo rotulo="Preço travado hoje" valor={travado} onChange={setTravado} sufixo="R$/saca" />
         <Campo rotulo="Custo de produção" valor={custo} onChange={setCusto} sufixo="R$/saca" />
       </div>
-      {!pronto ? <p className="text-sm text-slate-500 mt-3">Preencha os três campos com números para simular.</p> : <>
-        <label className="block mt-4 text-xs text-slate-600">
-          Preço no dia da colheita: <strong className="text-sm text-slate-900">{porSaca(naColheita)} por saca</strong> ({mudanca > 0 ? "+" : ""}{mudanca}% em relação ao preço travado)
-          <input type="range" min={-50} max={50} step={5} value={mudanca} onChange={e => setMudanca(Number(e.target.value))} className="block w-full mt-2" style={{ accentColor: "#166534" }} />
-          <span className="flex justify-between text-slate-500"><span>caiu pela metade</span><span>igual</span><span>subiu 50%</span></span>
+      {!pronto ? <p className="text-sm text-neutral-500 mt-3">Preencha os três campos com números para simular.</p> : <>
+        <label className="block mt-4 text-xs text-neutral-600">
+          Preço no dia da colheita: <strong className="text-sm text-neutral-900">{porSaca(naColheita)} por saca</strong> ({mudanca > 0 ? "+" : ""}{mudanca}% em relação ao preço travado)
+          <input type="range" min={-50} max={50} step={5} value={mudanca} onChange={e => setMudanca(Number(e.target.value))} className="block w-full mt-2" style={{ accentColor: "#111111" }} />
+          <span className="flex justify-between text-neutral-500"><span>caiu pela metade</span><span>igual</span><span>subiu 50%</span></span>
         </label>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-3">
-          <div className="rounded-lg p-2.5" style={{ background: "#f8fafc" }}>
-            <div className="flex items-center gap-1.5 text-xs font-bold text-slate-700"><span className="rounded-full" style={{ width: 14, height: 4, background: COR_SEM_HEDGE }} aria-hidden="true" />Sem hedge</div>
-            <div className="text-xl font-black text-slate-900 mt-1">{reais(r.semHedge)}</div>
-            <div className="text-xs text-slate-500">vende tudo pelo preço do dia</div>
+          <div className="rounded-lg p-2.5" style={{ background: "#f6f6f6" }}>
+            <div className="flex items-center gap-1.5 text-xs font-bold text-neutral-700"><span className="rounded-full" style={{ width: 14, height: 4, background: COR_SEM_HEDGE }} aria-hidden="true" />Sem hedge</div>
+            <div className="text-xl font-black text-neutral-900 mt-1">{reais(r.semHedge)}</div>
+            <div className="text-xs text-neutral-500">vende tudo pelo preço do dia</div>
             <div className="text-xs mt-1.5 font-semibold" style={{ color: r.lucroSemHedge >= 0 ? "#15803d" : "#b91c1c" }}>{r.lucroSemHedge >= 0 ? "Lucro" : "Prejuízo"} de {reais(Math.abs(r.lucroSemHedge))}</div>
           </div>
-          <div className="rounded-lg p-2.5" style={{ background: "#f8fafc" }}>
-            <div className="flex items-center gap-1.5 text-xs font-bold text-slate-700"><span className="rounded-full" style={{ width: 14, height: 4, background: COR_COM_HEDGE }} aria-hidden="true" />Com hedge</div>
-            <div className="text-xl font-black text-slate-900 mt-1">{reais(r.comHedge)}</div>
-            <div className="text-xs text-slate-500">{reais(r.fisico)} da venda {r.ajusteDaBolsa >= 0 ? "+" : "−"} {reais(Math.abs(r.ajusteDaBolsa))} {r.ajusteDaBolsa >= 0 ? "recebidos da" : "pagos à"} bolsa</div>
+          <div className="rounded-lg p-2.5" style={{ background: "#f6f6f6" }}>
+            <div className="flex items-center gap-1.5 text-xs font-bold text-neutral-700"><span className="rounded-full" style={{ width: 14, height: 4, background: COR_COM_HEDGE }} aria-hidden="true" />Com hedge</div>
+            <div className="text-xl font-black text-neutral-900 mt-1">{reais(r.comHedge)}</div>
+            <div className="text-xs text-neutral-500">{reais(r.fisico)} da venda {r.ajusteDaBolsa >= 0 ? "+" : "−"} {reais(Math.abs(r.ajusteDaBolsa))} {r.ajusteDaBolsa >= 0 ? "recebidos da" : "pagos à"} bolsa</div>
             <div className="text-xs mt-1.5 font-semibold" style={{ color: r.lucroComHedge >= 0 ? "#15803d" : "#b91c1c" }}>{r.lucroComHedge >= 0 ? "Lucro" : "Prejuízo"} de {reais(Math.abs(r.lucroComHedge))}</div>
           </div>
         </div>
-        <p className="rounded-lg p-2.5 mt-2 text-xs" style={{ background: "#fffbeb", border: "1px solid #fde68a", color: "#78350f" }}>
+        <p className="rounded-lg p-2.5 mt-2 text-xs" style={{ background: "#f6f6f6", border: "1px solid #bdbdbd", color: "#111111" }}>
           {diferenca > 0 && <><strong>O preço caiu e o hedge protegeu:</strong> você recebeu {reais(diferenca)} a mais do que receberia sem a trava.</>}
           {diferenca < 0 && <><strong>O preço subiu e o hedge custou:</strong> você deixou de ganhar {reais(-diferenca)}. É o preço da segurança: a receita já estava garantida antes de plantar.</>}
           {diferenca === 0 && <><strong>O preço ficou igual:</strong> com ou sem hedge, a receita é a mesma.</>}
         </p>
 
-        <ul className="flex flex-wrap gap-x-4 gap-y-1 mt-4 mb-1 text-xs text-slate-700">
+        <ul className="flex flex-wrap gap-x-4 gap-y-1 mt-4 mb-1 text-xs text-neutral-700">
           <li className="flex items-center gap-1.5"><span className="rounded-full" style={{ width: 14, height: 3, background: COR_SEM_HEDGE }} aria-hidden="true" />Receita sem hedge</li>
           <li className="flex items-center gap-1.5"><span className="rounded-full" style={{ width: 14, height: 3, background: COR_COM_HEDGE }} aria-hidden="true" />Receita com hedge</li>
-          <li className="text-slate-500">Em reais</li>
+          <li className="text-neutral-500">Em reais</li>
         </ul>
         <div style={{ height: 240 }}>
           <ResponsiveContainer>
             <LineChart data={curva} margin={{ top: 14, right: 12, bottom: 4, left: 0 }}>
-              <CartesianGrid stroke="#e5e7eb" vertical={false} />
-              <XAxis dataKey="preco" type="number" domain={["dataMin", "dataMax"]} tick={{ fontSize: 10, fill: "#64748b" }} tickLine={false} axisLine={{ stroke: "#cbd5e1" }} tickFormatter={v => `R$ ${Math.round(v)}`} />
-              <YAxis width={50} tick={{ fontSize: 10, fill: "#64748b" }} tickLine={false} axisLine={false} tickFormatter={v => (v ? `${Math.round(v / 1000)} mil` : "0")} />
-              <Tooltip cursor={{ stroke: "#94a3b8" }} content={<DicaDoHedge />} />
-              <ReferenceLine x={Math.round(naColheita * 100) / 100} stroke="#64748b" label={{ value: "colheita", position: "top", fontSize: 10, fill: "#64748b" }} />
+              <CartesianGrid stroke="#e5e5e5" vertical={false} />
+              <XAxis dataKey="preco" type="number" domain={["dataMin", "dataMax"]} tick={{ fontSize: 10, fill: "#666666" }} tickLine={false} axisLine={{ stroke: "#cccccc" }} tickFormatter={v => `R$ ${Math.round(v)}`} />
+              <YAxis width={50} tick={{ fontSize: 10, fill: "#666666" }} tickLine={false} axisLine={false} tickFormatter={v => (v ? `${Math.round(v / 1000)} mil` : "0")} />
+              <Tooltip cursor={{ stroke: "#8a8a8a" }} content={<DicaDoHedge />} />
+              <ReferenceLine x={Math.round(naColheita * 100) / 100} stroke="#666666" label={{ value: "colheita", position: "top", fontSize: 10, fill: "#666666" }} />
               <Line type="linear" dataKey="semHedge" name="sem hedge" stroke={COR_SEM_HEDGE} strokeWidth={2} dot={false} isAnimationActive={false} />
               <Line type="linear" dataKey="comHedge" name="com hedge" stroke={COR_COM_HEDGE} strokeWidth={2} dot={false} isAnimationActive={false} />
             </LineChart>
           </ResponsiveContainer>
         </div>
-        <p className="text-xs text-slate-500 mt-2">
+        <p className="text-xs text-neutral-500 mt-2">
           Eixo de baixo: preço da saca no dia da colheita. A linha do hedge é reta porque a receita não depende mais do mercado.
           Simulação simplificada: não inclui a diferença entre o preço da região e o da bolsa (base), a corretagem nem o depósito de garantia que a bolsa exige.
         </p>
@@ -153,15 +153,15 @@ function SimulacaoDaSafra({ onPerguntar }) {
 
   return (
     <section id="simulacao-safra" className="rounded-xl border bg-white p-3 shadow-sm" style={{ scrollMarginTop: 100 }}>
-      <h3 className="text-sm font-bold" style={{ color: "#14532d" }}>Simulação: uma safra na prática</h3>
+      <h3 className="text-sm font-bold" style={{ color: "#111111" }}>Simulação: uma safra na prática</h3>
 
       {!partida && <>
-        <p className="text-xs text-slate-600 mt-1">
+        <p className="text-xs text-neutral-600 mt-1">
           Você é produtor de soja em Santa Mariana, com 50 alqueires e R$ 300.000 em caixa. Do pedido da semente à venda da colheita, são {ETAPAS.length} situações
           em que é você quem decide: comprar, financiar, negociar o preço, travar na bolsa, vender ou guardar. Cada decisão mexe no seu resultado.
         </p>
-        <p className="text-xs text-slate-600 mt-1">O clima e o mercado são sorteados a cada partida: a mesma decisão pode dar resultados diferentes, como na vida real.</p>
-        <button type="button" onClick={comecar} className="rounded-lg px-4 py-2 mt-3 text-sm font-bold text-white" style={{ background: "#166534" }}>Começar a safra</button>
+        <p className="text-xs text-neutral-600 mt-1">O clima e o mercado são sorteados a cada partida: a mesma decisão pode dar resultados diferentes, como na vida real.</p>
+        <button type="button" onClick={comecar} className="rounded-lg px-4 py-2 mt-3 text-sm font-bold text-white" style={{ background: "#111111" }}>Começar a safra</button>
       </>}
 
       {etapa && (() => {
@@ -170,24 +170,24 @@ function SimulacaoDaSafra({ onPerguntar }) {
         const escolhida = partida.escolhas[etapa.id];
         return <>
           <div className="flex items-center gap-2 mt-2" aria-label={`Situação ${partida.etapa + 1} de ${ETAPAS.length}`}>
-            {ETAPAS.map((e, i) => <span key={e.id} className="h-1.5 flex-1 rounded-full" style={{ background: i < partida.etapa || (i === partida.etapa && partida.respondida) ? "#166534" : i === partida.etapa ? "#86efac" : "#e2e8f0" }} />)}
+            {ETAPAS.map((e, i) => <span key={e.id} className="h-1.5 flex-1 rounded-full" style={{ background: i < partida.etapa || (i === partida.etapa && partida.respondida) ? "#111111" : i === partida.etapa ? "#9e9e9e" : "#e0e0e0" }} />)}
           </div>
-          <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 mt-2 text-xs text-slate-500">
+          <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 mt-2 text-xs text-neutral-500">
             <span>Situação {partida.etapa + 1} de {ETAPAS.length} · {etapa.quando}</span>
             <span className="flex flex-wrap gap-x-3">
-              {feito("custeio") && <span>Lavoura: <strong className="text-slate-700">{Math.round(c.area)} ha</strong></span>}
-              {feito("custeio") && <span>Dívida: <strong className="text-slate-700">{c.divida > 0 ? reais(c.divida) : "nenhuma"}</strong></span>}
-              {feito("trava") && <span>Travado: <strong className="text-slate-700">{Math.round(c.travadas).toLocaleString("pt-BR")} sacas a {reais(c.precoTravado)}</strong></span>}
+              {feito("custeio") && <span>Lavoura: <strong className="text-neutral-700">{Math.round(c.area)} ha</strong></span>}
+              {feito("custeio") && <span>Dívida: <strong className="text-neutral-700">{c.divida > 0 ? reais(c.divida) : "nenhuma"}</strong></span>}
+              {feito("trava") && <span>Travado: <strong className="text-neutral-700">{Math.round(c.travadas).toLocaleString("pt-BR")} sacas a {reais(c.precoTravado)}</strong></span>}
             </span>
           </div>
-          <h4 className="text-base font-bold text-slate-900 mt-2">{etapa.titulo}</h4>
-          <p className="text-sm text-slate-700 mt-1 leading-relaxed">{situacao.texto}</p>
+          <h4 className="text-base font-bold text-neutral-900 mt-2">{etapa.titulo}</h4>
+          <p className="text-sm text-neutral-700 mt-1 leading-relaxed">{situacao.texto}</p>
           <dl className="grid grid-cols-2 gap-2 mt-3">
             {situacao.dados.map(([rotulo, valor]) => (
-              <div key={rotulo} className="rounded-lg p-2" style={{ background: "#f8fafc" }}><dt className="text-xs text-slate-500">{rotulo}</dt><dd className="text-sm font-bold text-slate-900">{valor}</dd></div>
+              <div key={rotulo} className="rounded-lg p-2" style={{ background: "#f6f6f6" }}><dt className="text-xs text-neutral-500">{rotulo}</dt><dd className="text-sm font-bold text-neutral-900">{valor}</dd></div>
             ))}
           </dl>
-          <p className="text-xs font-bold uppercase tracking-wider text-slate-500 mt-4">O que você faz?</p>
+          <p className="text-xs font-bold uppercase tracking-wider text-neutral-500 mt-4">O que você faz?</p>
           <div className="grid grid-cols-1 gap-2 mt-1.5">
             {etapa.opcoes(c, partida.sorteio).map(([id, texto]) => {
               const esta = partida.respondida && id === escolhida;
@@ -195,7 +195,7 @@ function SimulacaoDaSafra({ onPerguntar }) {
                 <button key={id} type="button" disabled={partida.respondida} aria-pressed={esta}
                   onClick={() => setPartida(p => ({ ...p, escolhas: { ...p.escolhas, [etapa.id]: id }, respondida: true }))}
                   className="rounded-lg border p-2.5 text-left text-sm"
-                  style={esta ? { background: "#14532d", borderColor: "#14532d", color: "#fff", fontWeight: 700 } : { background: "#f8fafc", borderColor: "#e2e8f0", color: partida.respondida ? "#94a3b8" : "#0f172a" }}>
+                  style={esta ? { background: "#111111", borderColor: "#111111", color: "#fff", fontWeight: 700 } : { background: "#f6f6f6", borderColor: "#e0e0e0", color: partida.respondida ? "#8a8a8a" : "#111111" }}>
                   {texto}
                 </button>
               );
@@ -208,81 +208,81 @@ function SimulacaoDaSafra({ onPerguntar }) {
               <p className="mt-1.5 text-xs"><strong>O que fica de lição:</strong> {etapa.licao}</p>
             </div>
             <div className="flex flex-wrap gap-2 mt-2">
-              <button type="button" onClick={avancar} className="rounded-lg px-4 py-2 text-sm font-bold text-white" style={{ background: "#166534" }}>
+              <button type="button" onClick={avancar} className="rounded-lg px-4 py-2 text-sm font-bold text-white" style={{ background: "#111111" }}>
                 {partida.etapa + 1 < ETAPAS.length ? "Próxima situação" : "Ver o resultado da safra"}
               </button>
-              {onPerguntar && <button type="button" onClick={() => onPerguntar(`Explique melhor para um aluno: ${etapa.licao}`)} className="rounded-lg border px-3 py-2 text-xs font-bold" style={{ borderColor: "#fde68a", background: "#fffbeb", color: "#78350f" }}>Pedir ao Castor para explicar melhor</button>}
+              {onPerguntar && <button type="button" onClick={() => onPerguntar(`Explique melhor para um aluno: ${etapa.licao}`)} className="rounded-lg border px-3 py-2 text-xs font-bold" style={{ borderColor: "#bdbdbd", background: "#f6f6f6", color: "#111111" }}>Pedir ao Castor para explicar melhor</button>}
             </div>
           </>}
         </>;
       })()}
 
       {final && <>
-        <p className="text-xs text-slate-500 mt-2">Resultado da safra</p>
-        <p className="text-3xl font-black" style={{ color: final.lucro >= 0 ? "#166534" : "#b91c1c" }}>{final.lucro >= 0 ? "Lucro" : "Prejuízo"} de {reais(Math.abs(final.lucro))}</p>
-        <p className="text-sm text-slate-600">{reais(Math.abs(final.lucroPorAlqueire))} de {final.lucro >= 0 ? "lucro" : "prejuízo"} por alqueire · {final.boas} de {ETAPAS.length} decisões seguiram a boa prática</p>
-        <p className="rounded-lg p-2.5 mt-2 text-xs" style={{ background: "#eff6ff", border: "1px solid #bfdbfe", color: "#1e3a8a" }}>
+        <p className="text-xs text-neutral-500 mt-2">Resultado da safra</p>
+        <p className="text-3xl font-black" style={{ color: final.lucro >= 0 ? "#15803d" : "#b91c1c" }}>{final.lucro >= 0 ? "Lucro" : "Prejuízo"} de {reais(Math.abs(final.lucro))}</p>
+        <p className="text-sm text-neutral-600">{reais(Math.abs(final.lucroPorAlqueire))} de {final.lucro >= 0 ? "lucro" : "prejuízo"} por alqueire · {final.boas} de {ETAPAS.length} decisões seguiram a boa prática</p>
+        <p className="rounded-lg p-2.5 mt-2 text-xs" style={{ background: "#f2f2f2", border: "1px solid #bdbdbd", color: "#111111" }}>
           Nesta safra {CLIMA[partida.sorteio.clima]} e {MERCADO[partida.sorteio.mercado]}. Isso foi sorteado: decisão boa não garante resultado bom, mas protege quando a sorte não ajuda.
         </p>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-3">
           <div>
-            <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500">As contas da safra</h4>
+            <h4 className="text-xs font-bold uppercase tracking-wider text-neutral-500">As contas da safra</h4>
             <table className="w-full text-xs mt-1.5">
               <tbody>
                 {final.linhas.map(([nome, valor], i) => (
-                  <tr key={nome} style={{ background: i % 2 ? "#fff" : "#f8fafc" }}><td className="py-1 px-2">{nome}</td><td className="py-1 px-2 text-right font-mono" style={{ color: valor < 0 ? "#b91c1c" : "#0f172a" }}>{valor < 0 ? "−" : "+"} {reais(Math.abs(valor))}</td></tr>
+                  <tr key={nome} style={{ background: i % 2 ? "#fff" : "#f6f6f6" }}><td className="py-1 px-2">{nome}</td><td className="py-1 px-2 text-right font-mono" style={{ color: valor < 0 ? "#b91c1c" : "#111111" }}>{valor < 0 ? "−" : "+"} {reais(Math.abs(valor))}</td></tr>
                 ))}
-                <tr style={{ borderTop: "2px solid #166534" }}><td className="py-1.5 px-2 font-bold">{final.lucro >= 0 ? "Lucro" : "Prejuízo"}</td><td className="py-1.5 px-2 text-right font-mono font-bold">{reais(Math.abs(final.lucro))}</td></tr>
+                <tr style={{ borderTop: "2px solid #111111" }}><td className="py-1.5 px-2 font-bold">{final.lucro >= 0 ? "Lucro" : "Prejuízo"}</td><td className="py-1.5 px-2 text-right font-mono font-bold">{reais(Math.abs(final.lucro))}</td></tr>
               </tbody>
             </table>
-            <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500 mt-3">E se a trava fosse outra?</h4>
+            <h4 className="text-xs font-bold uppercase tracking-wider text-neutral-500 mt-3">E se a trava fosse outra?</h4>
             <table className="w-full text-xs mt-1.5">
               <tbody>{final.comparacao.map((linha, i) => (
-                <tr key={linha.trava} style={{ background: linha.trava === final.e.trava ? "#fef9c3" : i % 2 ? "#fff" : "#f8fafc" }}>
-                  <td className="py-1 px-2">{linha.nome}{linha.trava === final.e.trava && <span className="text-amber-800"> · a sua escolha</span>}</td>
-                  <td className="py-1 px-2 text-right font-mono font-bold" style={{ color: linha.lucro < 0 ? "#b91c1c" : "#0f172a" }}>{linha.lucro < 0 ? "−" : ""}{reais(Math.abs(linha.lucro))}</td>
+                <tr key={linha.trava} style={{ background: linha.trava === final.e.trava ? "#ececec" : i % 2 ? "#fff" : "#f6f6f6" }}>
+                  <td className="py-1 px-2">{linha.nome}{linha.trava === final.e.trava && <span className="text-neutral-800"> · a sua escolha</span>}</td>
+                  <td className="py-1 px-2 text-right font-mono font-bold" style={{ color: linha.lucro < 0 ? "#b91c1c" : "#111111" }}>{linha.lucro < 0 ? "−" : ""}{reais(Math.abs(linha.lucro))}</td>
                 </tr>
               ))}</tbody>
             </table>
-            <p className="text-xs text-slate-500 mt-1">Com as mesmas outras decisões, no mesmo clima e no mesmo mercado.</p>
-            <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500 mt-3">Sorte ou boa decisão?</h4>
+            <p className="text-xs text-neutral-500 mt-1">Com as mesmas outras decisões, no mesmo clima e no mesmo mercado.</p>
+            <h4 className="text-xs font-bold uppercase tracking-wider text-neutral-500 mt-3">Sorte ou boa decisão?</h4>
             <table className="w-full text-xs mt-1.5">
               <tbody>
                 {[[`As suas decisões, se o preço tivesse ${partida.sorteio.mercado === "alta" ? "caído" : "subido"}`, final.comOMercadoAoContrario],
                   ["As sete boas práticas, neste mesmo clima e mercado", final.comBoasPraticas]].map(([nome, valor], i) => (
-                  <tr key={nome} style={{ background: i % 2 ? "#fff" : "#f8fafc" }}>
+                  <tr key={nome} style={{ background: i % 2 ? "#fff" : "#f6f6f6" }}>
                     <td className="py-1 px-2">{nome}</td>
-                    <td className="py-1 px-2 text-right font-mono font-bold whitespace-nowrap" style={{ color: valor < 0 ? "#b91c1c" : "#0f172a" }}>{valor < 0 ? "−" : ""}{reais(Math.abs(valor))}</td>
+                    <td className="py-1 px-2 text-right font-mono font-bold whitespace-nowrap" style={{ color: valor < 0 ? "#b91c1c" : "#111111" }}>{valor < 0 ? "−" : ""}{reais(Math.abs(valor))}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
-            <p className="text-xs text-slate-500 mt-1">
+            <p className="text-xs text-neutral-500 mt-1">
               {final.boas === ETAPAS.length ? "Você seguiu todas as boas práticas."
                 : final.lucro > final.comBoasPraticas ? "Você ficou acima das boas práticas porque arriscou e o mercado ajudou. Veja na primeira linha como a conta muda com o mercado ao contrário."
                   : `Seguindo as boas práticas, o resultado seria ${reais(final.comBoasPraticas - final.lucro)} melhor.`}
             </p>
           </div>
           <div>
-            <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500">As suas decisões</h4>
+            <h4 className="text-xs font-bold uppercase tracking-wider text-neutral-500">As suas decisões</h4>
             <ol className="mt-1.5 space-y-1.5">
               {ETAPAS.map(e => {
                 const retorno = e.retorno(final, partida.sorteio);
                 const [, texto] = e.opcoes(final, partida.sorteio).find(([id]) => id === final.e[e.id]);
                 return (
-                  <li key={e.id} className="rounded-lg p-2 text-xs" style={{ background: "#f8fafc" }}>
-                    <div className="flex flex-wrap items-center justify-between gap-1"><strong className="text-slate-800">{e.titulo}</strong><Marca nivel={retorno.nivel} /></div>
-                    <div className="text-slate-600 mt-0.5">{texto}</div>
-                    {retorno.nivel !== "boa" && <div className="text-slate-500 mt-0.5">{e.licao}</div>}
+                  <li key={e.id} className="rounded-lg p-2 text-xs" style={{ background: "#f6f6f6" }}>
+                    <div className="flex flex-wrap items-center justify-between gap-1"><strong className="text-neutral-800">{e.titulo}</strong><Marca nivel={retorno.nivel} /></div>
+                    <div className="text-neutral-600 mt-0.5">{texto}</div>
+                    {retorno.nivel !== "boa" && <div className="text-neutral-500 mt-0.5">{e.licao}</div>}
                   </li>
                 );
               })}
             </ol>
           </div>
         </div>
-        <button type="button" onClick={comecar} className="rounded-lg px-4 py-2 mt-3 text-sm font-bold text-white" style={{ background: "#166534" }}>Plantar outra safra</button>
-        <p className="text-xs text-slate-500 mt-2">Valores, juros e custos de exemplo, para estudo; seguro agrícola e impostos não entram na conta. O sorteio muda a cada partida: experimente decisões diferentes e compare.</p>
+        <button type="button" onClick={comecar} className="rounded-lg px-4 py-2 mt-3 text-sm font-bold text-white" style={{ background: "#111111" }}>Plantar outra safra</button>
+        <p className="text-xs text-neutral-500 mt-2">Valores, juros e custos de exemplo, para estudo; seguro agrícola e impostos não entram na conta. O sorteio muda a cada partida: experimente decisões diferentes e compare.</p>
       </>}
     </section>
   );
@@ -292,8 +292,8 @@ export default function Aprender({ onPerguntar }) {
   return (
     <div className="space-y-4">
       <section className="rounded-xl border bg-white p-3 shadow-sm">
-        <h2 className="text-sm font-bold text-green-800">Aprender na prática</h2>
-        <p className="text-xs text-slate-600 mt-1">Duas atividades para a sala de aula: tocar uma safra inteira tomando as decisões do produtor e, abaixo, treinar só a proteção de preço.</p>
+        <h2 className="text-sm font-bold text-neutral-900">Aprender na prática</h2>
+        <p className="text-xs text-neutral-600 mt-1">Duas atividades para a sala de aula: tocar uma safra inteira tomando as decisões do produtor e, abaixo, treinar só a proteção de preço.</p>
       </section>
       <SimulacaoDaSafra onPerguntar={onPerguntar} />
       <SimuladorDeHedge />

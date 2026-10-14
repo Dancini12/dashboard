@@ -17,9 +17,10 @@ import { StockQuotes, CommodityQuotes, TICKER_RE } from "./components/MarketQuot
 import { COMMODITIES, FUTURES, CALCULADORAS, APELIDOS_FUTUROS, PRODUTOS_PARANA } from "./catalogo";
 import { CANAIS_AGRO } from "./canaisAgro";
 import BuscaAgro from "./components/BuscaAgro";
+import Enfeite from "./components/Enfeite";
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
-import { RefreshCw, BookOpen, BarChart3, Clock, Wheat, DollarSign, ChevronDown, ChevronUp, ArrowRight, Newspaper, ExternalLink, Warehouse, Landmark, CloudRain, Calculator, GraduationCap, Sprout, Ship, House, Tv, Printer } from "lucide-react";
+import { RefreshCw, BookOpen, BarChart3, Clock, DollarSign, ChevronDown, ChevronUp, ArrowRight, Newspaper, ExternalLink, Warehouse, Landmark, CloudRain, Calculator, GraduationCap, Sprout, Ship, House, Tv, Printer } from "lucide-react";
 
 const UPDATE_SEC = 60;
 const DOCENTE = "Marcel Dancini Rodrigues";
@@ -97,13 +98,13 @@ function VarBadge({ val }) {
 function Card({ children, className = "", style = {}, id }) {
   return <div id={id} className={`rounded-xl border shadow-sm ${className}`} style={{ scrollMarginTop: 100, background: "rgba(255,255,255,0.9)", borderColor: "rgba(0,0,0,0.06)", ...style }}>{children}</div>;
 }
-function SecTitle({ icon: I, title, color = "#1a3a5c" }) {
+function SecTitle({ icon: I, title, color = "#111111" }) {
   return <div className="flex items-center gap-2 mb-3"><div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: color }}><I size={13} color="#fff" /></div><h2 className="text-sm font-bold" style={{ color }}>{title}</h2></div>;
 }
 
 function PriceRow({ emoji, nome, sub, valor, prev, varPct, unidade, flash, alt, semValor = "…" }) {
   if (valor == null) return (
-    <div className="flex items-center justify-between py-2 px-3 rounded-lg" style={{ background: alt ? "#f0f7ff" : "transparent" }}>
+    <div className="flex items-center justify-between py-2 px-3 rounded-lg" style={{ background: alt ? "#f6f6f6" : "transparent" }}>
       <div className="flex items-center gap-1.5 min-w-0"><span className="text-sm shrink-0">{emoji}</span><span className="text-sm font-semibold truncate">{nome}</span></div>
       <span className="text-xs opacity-50">{semValor}</span>
     </div>
@@ -113,11 +114,11 @@ function PriceRow({ emoji, nome, sub, valor, prev, varPct, unidade, flash, alt, 
   const changed = prev != null && Math.abs(diff) > 0.0001;
   const dec = valor < 1 ? 4 : 2;
   return (
-    <div className="flex items-center justify-between py-2 px-3 rounded-lg transition-all duration-700" style={{ background: flash ? (up ? "rgba(34,197,94,0.15)" : "rgba(239,68,68,0.15)") : alt ? "#f0f7ff" : "transparent" }}>
+    <div className="flex items-center justify-between py-2 px-3 rounded-lg transition-all duration-700" style={{ background: flash ? (up ? "rgba(34,197,94,0.15)" : "rgba(239,68,68,0.15)") : alt ? "#f6f6f6" : "transparent" }}>
       <div className="flex items-center gap-1.5 min-w-0"><span className="text-sm shrink-0">{emoji}</span><span className="text-sm font-semibold truncate">{nome}</span>{sub && <span className="text-xs opacity-40 hidden sm:inline">{sub}</span>}</div>
       <div className="flex items-center gap-2 shrink-0">
         {changed && <span className="hidden sm:flex items-center gap-1 text-xs opacity-35"><span className="line-through">R$ {fmt(prev, dec)}</span><ArrowRight size={9} /></span>}
-        <span className="text-sm font-bold" style={{ color: "#1a3a5c" }}>{unidade === "pts" ? `${fmtInt(valor)} pts` : `R$ ${fmt(valor, dec)}`}</span>
+        <span className="text-sm font-bold" style={{ color: "#111111" }}>{unidade === "pts" ? `${fmtInt(valor)} pts` : `R$ ${fmt(valor, dec)}`}</span>
         {changed && <span className="font-bold" style={{ color: up ? "#16a34a" : "#dc2626", fontSize: 10 }}>{up ? "▲" : "▼"}</span>}
         {varPct != null && <VarBadge val={varPct} />}
       </div>
@@ -128,19 +129,19 @@ function PriceRow({ emoji, nome, sub, valor, prev, varPct, unidade, flash, alt, 
 // Cartões de moedas e de indicadores da economia, mostrados no fim da página inicial.
 function MoedasCard({ moedas, pm, flash, situacao, atualizadoEm }) {
   return (
-    <Card id="card-moedas" className="p-3"><SecTitle icon={DollarSign} title="Moedas" color="#1a5276" />{moedas.map((m, i) => <PriceRow key={m.id} emoji={m.emoji} nome={m.nome} valor={m.valor} prev={pm[m.id]} varPct={m.var} flash={flash.has(m.id)} alt={i % 2 === 0} semValor={situacao === "indisponivel" ? "indisponível agora" : "buscando…"} />)}<div className="mt-2 text-xs opacity-50 text-right">{situacao === "desatualizado" ? `🟡 A fonte não respondeu agora: valores das ${atualizadoEm}` : situacao === "indisponivel" ? "🟡 Fonte das moedas indisponível agora" : atualizadoEm ? `Atualizado às ${atualizadoEm} · nova consulta a cada 60 segundos` : "Buscando as cotações…"} · Fonte: AwesomeAPI</div></Card>
+    <Card id="card-moedas" className="p-3"><SecTitle icon={DollarSign} title="Moedas" color="#111111" />{moedas.map((m, i) => <PriceRow key={m.id} emoji={m.emoji} nome={m.nome} valor={m.valor} prev={pm[m.id]} varPct={m.var} flash={flash.has(m.id)} alt={i % 2 === 0} semValor={situacao === "indisponivel" ? "indisponível agora" : "buscando…"} />)}<div className="mt-2 text-xs opacity-50 text-right">{situacao === "desatualizado" ? `🟡 A fonte não respondeu agora: valores das ${atualizadoEm}` : situacao === "indisponivel" ? "🟡 Fonte das moedas indisponível agora" : atualizadoEm ? `Atualizado às ${atualizadoEm} · nova consulta a cada 60 segundos` : "Buscando as cotações…"} · Fonte: AwesomeAPI</div></Card>
   );
 }
 function IndicadoresCard({ indicadores }) {
   return (
-    <Card id="card-indicadores" className="p-3"><SecTitle icon={BarChart3} title="Indicadores Econômicos" color="#6b21a8" /><div className="grid grid-cols-2 md:grid-cols-3 gap-2">{indicadores.map((ind, i) => (<div key={i} className="rounded-lg p-2 text-center" style={{ background: i % 2 === 0 ? "#faf5ff" : "#f5f3ff" }}><div className="text-xs font-semibold opacity-60">{ind.nome} {ind.periodo && `(${ind.periodo})`}</div><div className="text-base font-bold" style={{ color: "#6b21a8" }}>{ind.valor}</div><div className="text-xs opacity-40">{ind.desc}</div></div>))}</div><div className="mt-2 text-xs opacity-50 text-right">Fonte: Banco Central (SGS), com dados do IBGE e da FGV · atualização automática</div></Card>
+    <Card id="card-indicadores" className="p-3"><SecTitle icon={BarChart3} title="Indicadores Econômicos" color="#111111" /><div className="grid grid-cols-2 md:grid-cols-3 gap-2">{indicadores.map((ind, i) => (<div key={i} className="rounded-lg p-2 text-center" style={{ background: i % 2 === 0 ? "#f6f6f6" : "#efefef" }}><div className="text-xs font-semibold opacity-60">{ind.nome} {ind.periodo && `(${ind.periodo})`}</div><div className="text-base font-bold" style={{ color: "#111111" }}>{ind.valor}</div><div className="text-xs opacity-40">{ind.desc}</div></div>))}</div><div className="mt-2 text-xs opacity-50 text-right">Fonte: Banco Central (SGS), com dados do IBGE e da FGV · atualização automática</div></Card>
   );
 }
 
 const NEWS_FEEDS = {
-  agro:    { label: "🌾 Agronegócio", cor: "#166534", bg: "#f0fdf4" },
-  mercado: { label: "💰 Mercado",      cor: "#1a5276", bg: "#f0f7ff" },
-  internacional: { label: "🌎 Mercado internacional", cor: "#0f766e", bg: "#f0fdfa",
+  agro:    { label: "🌾 Agronegócio", cor: "#111111", bg: "#f2f2f2" },
+  mercado: { label: "💰 Mercado",      cor: "#111111", bg: "#f6f6f6" },
+  internacional: { label: "🌎 Mercado internacional", cor: "#111111", bg: "#f2f2f2",
     desc: "O que acontece nos maiores mercados do mundo (Bolsa de Chicago, USDA, China, Estados Unidos, Argentina, Europa e Índia) e mexe com o preço do produto aqui no Brasil." },
 };
 
@@ -194,7 +195,7 @@ const NEWS_INTERVAL = 5 * 60;
 function NoticiasTab({ busca }) {
   // quem buscou um assunto no topo do site vê primeiro as notícias sobre ele
   const feeds = useMemo(() => (busca ? {
-    busca: { label: `🔎 ${busca}`, cor: "#9a3412", bg: "#fff7ed", desc: `Notícias dos últimos 30 dias sobre "${busca}".`, url: `/api/news?feed=busca&q=${encodeURIComponent(busca)}` },
+    busca: { label: `🔎 ${busca}`, cor: "#111111", bg: "#f6f6f6", desc: `Notícias dos últimos 30 dias sobre "${busca}".`, url: `/api/news?feed=busca&q=${encodeURIComponent(busca)}` },
     ...NEWS_FEEDS,
   } : NEWS_FEEDS), [busca]);
   const [feed, setFeed] = useState(busca ? "busca" : "agro");
@@ -241,16 +242,16 @@ function NoticiasTab({ busca }) {
     <div className="space-y-3">
       <Card className="p-3">
         <div className="flex items-center gap-2 mb-2">
-          <Newspaper size={13} style={{ color: "#166534" }} />
+          <Newspaper size={13} style={{ color: "#111111" }} />
           <div className="flex-1">
-            <div className="h-2 rounded-full overflow-hidden" style={{ background: "#e5e7eb" }}>
-              <div className="h-full rounded-full transition-all duration-1000" style={{ width: `${pct}%`, background: "#22c55e" }} />
+            <div className="h-2 rounded-full overflow-hidden" style={{ background: "#e5e5e5" }}>
+              <div className="h-full rounded-full transition-all duration-1000" style={{ width: `${pct}%`, background: "#111111" }} />
             </div>
           </div>
-          <span className="font-mono font-bold px-2 py-0.5 rounded text-xs" style={{ background: "#f0fdf4", color: "#166534" }}>
+          <span className="font-mono font-bold px-2 py-0.5 rounded text-xs" style={{ background: "#f2f2f2", color: "#111111" }}>
             {String(mm).padStart(2, "0")}:{String(ss).padStart(2, "0")}
           </span>
-          <button onClick={fetchNews} title="Atualizar agora" className="p-1 rounded-md" style={{ background: "#f1f5f9" }}>
+          <button onClick={fetchNews} title="Atualizar agora" className="p-1 rounded-md" style={{ background: "#efefef" }}>
             <RefreshCw size={12} style={{ animation: loading ? "spin 1s linear infinite" : "none" }} />
           </button>
         </div>
@@ -312,12 +313,12 @@ function TabelaDoHistorico() {
   const lb = NOMES_DO_HISTORICO;
   return (
     <Card className="p-3 overflow-x-auto">
-      <SecTitle icon={Clock} title="Os números, ano a ano · 2020–2026" color="#166534" />
+      <SecTitle icon={Clock} title="Os números, ano a ano · 2020–2026" color="#111111" />
       <p className="text-xs opacity-40 mb-2">Fonte: CEPEA/ESALQ, Farmnews • R$ nominais</p>
       <table className="w-full text-xs" style={{ minWidth: 550 }}>
-        <thead><tr style={{ background: "#166534", color: "#fff" }}><th className="py-1.5 px-1 text-left">Commodity</th>{HISTORICO.map(h => <th key={h.ano} className="py-1.5 px-1 text-center">{h.ano}</th>)}<th className="py-1.5 px-1 text-center">Var%</th></tr></thead>
+        <thead><tr style={{ background: "#111111", color: "#fff" }}><th className="py-1.5 px-1 text-left">Commodity</th>{HISTORICO.map(h => <th key={h.ano} className="py-1.5 px-1 text-center">{h.ano}</th>)}<th className="py-1.5 px-1 text-center">Var%</th></tr></thead>
         <tbody>{cols.map((c, i) => { const pct = ((HISTORICO[6][c] - HISTORICO[0][c]) / HISTORICO[0][c] * 100); return (
-          <tr key={c} style={{ background: i % 2 === 0 ? "#f0fdf4" : "#fff" }}><td className="py-1 px-1 font-semibold whitespace-nowrap">{lb[c]}</td>{HISTORICO.map(h => <td key={h.ano} className="py-1 px-1 text-center font-mono" style={{ color: h.ano === "Mar/26" ? "#166534" : "#333", fontWeight: h.ano === "Mar/26" ? 700 : 400 }}>{fmt(h[c])}</td>)}<td className="py-1 px-1 text-center"><VarBadge val={parseFloat(pct.toFixed(1))} /></td></tr>); })}</tbody>
+          <tr key={c} style={{ background: i % 2 === 0 ? "#f2f2f2" : "#fff" }}><td className="py-1 px-1 font-semibold whitespace-nowrap">{lb[c]}</td>{HISTORICO.map(h => <td key={h.ano} className="py-1 px-1 text-center font-mono" style={{ color: h.ano === "Mar/26" ? "#111111" : "#333", fontWeight: h.ano === "Mar/26" ? 700 : 400 }}>{fmt(h[c])}</td>)}<td className="py-1 px-1 text-center"><VarBadge val={parseFloat(pct.toFixed(1))} /></td></tr>); })}</tbody>
       </table>
     </Card>
   );
@@ -333,13 +334,13 @@ function GraficosCommoditiesPanel({ target }) {
   const opts = Object.keys(CL).filter(k => normalize(CL[k]).includes(normalize(search)));
   return (
     <Card className="p-3">
-      <SecTitle icon={BarChart3} title="Commodities · Evolução 2020–2026" color="#1a5276" />
+      <SecTitle icon={BarChart3} title="Commodities · Evolução 2020–2026" color="#111111" />
       <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Digite a commodity (ex.: soja, boi, café)"
         className="block w-full border rounded-lg p-2 mb-3 text-sm" />
-      <div className="flex flex-wrap gap-1 mb-3">{opts.map(k => <button key={k} onClick={() => setSel(p => p.includes(k) ? p.filter(x => x !== k) : [...p, k])} className="px-2 py-1 rounded-full text-xs font-semibold" style={{ background: sel.includes(k) ? CC[k] : "#f1f5f9", color: sel.includes(k) ? "#fff" : "#64748b" }}>{CL[k]}</button>)}
+      <div className="flex flex-wrap gap-1 mb-3">{opts.map(k => <button key={k} onClick={() => setSel(p => p.includes(k) ? p.filter(x => x !== k) : [...p, k])} className="px-2 py-1 rounded-full text-xs font-semibold" style={{ background: sel.includes(k) ? CC[k] : "#efefef", color: sel.includes(k) ? "#fff" : "#666666" }}>{CL[k]}</button>)}
         {!opts.length && <span className="text-xs opacity-40">Nenhuma commodity encontrada com esse nome.</span>}</div>
       {sel.length > 0 ? (
-        <div style={{ height: 300 }}><ResponsiveContainer><LineChart data={HISTORICO} margin={{ top: 5, right: 10, bottom: 5, left: 0 }}><CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" /><XAxis dataKey="ano" tick={{ fontSize: 10 }} /><YAxis tick={{ fontSize: 9 }} /><Tooltip formatter={v => `R$ ${fmt(v)}`} contentStyle={{ borderRadius: 8, fontSize: 11 }} /><Legend wrapperStyle={{ fontSize: 10 }} />{sel.map(k => <Line key={k} type="monotone" dataKey={k} name={CL[k]} stroke={CC[k]} strokeWidth={2.5} dot={{ r: 3 }} />)}</LineChart></ResponsiveContainer></div>
+        <div style={{ height: 300 }}><ResponsiveContainer><LineChart data={HISTORICO} margin={{ top: 5, right: 10, bottom: 5, left: 0 }}><CartesianGrid strokeDasharray="3 3" stroke="#e5e5e5" /><XAxis dataKey="ano" tick={{ fontSize: 10 }} /><YAxis tick={{ fontSize: 9 }} /><Tooltip formatter={v => `R$ ${fmt(v)}`} contentStyle={{ borderRadius: 8, fontSize: 11 }} /><Legend wrapperStyle={{ fontSize: 10 }} />{sel.map(k => <Line key={k} type="monotone" dataKey={k} name={CL[k]} stroke={CC[k]} strokeWidth={2.5} dot={{ r: 3 }} />)}</LineChart></ResponsiveContainer></div>
       ) : <p className="text-sm opacity-50 py-8 text-center">Selecione ao menos uma commodity para ver o gráfico.</p>}
       <p className="text-xs opacity-25 mt-2 text-right">Fonte: CEPEA/ESALQ-USP, Farmnews · série anual</p>
       <p className="text-xs opacity-40 mt-1">Os contratos de Chicago e de Nova Iorque e as ações têm histórico no comparador acima. Para algodão, suíno e laranja do Brasil ainda não há série histórica: veja o valor atual na aba Cotações Cooperativas.</p>
@@ -360,18 +361,18 @@ function StockHistoryChart({ symbol }) {
   }, [symbol]);
 
   if (state.loading) return <p className="text-sm opacity-50 py-8 text-center">Carregando histórico de {symbol}…</p>;
-  if (state.error) return <p role="alert" className="text-amber-800 text-sm py-8 text-center">{state.error}</p>;
+  if (state.error) return <p role="alert" className="text-neutral-800 text-sm py-8 text-center">{state.error}</p>;
   if (!state.points.length) return <p className="text-sm opacity-50 py-8 text-center">Sem dados históricos disponíveis para {symbol} desde 2020.</p>;
   return (
     <>
       <div style={{ height: 300 }}>
         <ResponsiveContainer>
           <LineChart data={state.points} margin={{ top: 5, right: 10, bottom: 5, left: 0 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+            <CartesianGrid strokeDasharray="3 3" stroke="#e5e5e5" />
             <XAxis dataKey="date" tick={{ fontSize: 9 }} minTickGap={40} />
             <YAxis tick={{ fontSize: 9 }} domain={["auto", "auto"]} />
             <Tooltip formatter={v => new Intl.NumberFormat("pt-BR", { style: "currency", currency: state.currency }).format(v)} labelFormatter={d => new Date(d).toLocaleDateString("pt-BR")} contentStyle={{ borderRadius: 8, fontSize: 11 }} />
-            <Line type="monotone" dataKey="close" name={state.name} stroke="#1a5276" strokeWidth={2} dot={false} />
+            <Line type="monotone" dataKey="close" name={state.name} stroke="#111111" strokeWidth={2} dot={false} />
           </LineChart>
         </ResponsiveContainer>
       </div>
@@ -407,7 +408,7 @@ function GraficosAcoesPanel({ target }) {
 
   return (
     <Card className="p-3">
-      <SecTitle icon={BarChart3} title="Ações / ETFs · Histórico desde 2020" color="#1a5276" />
+      <SecTitle icon={BarChart3} title="Ações / ETFs · Histórico desde 2020" color="#111111" />
       <form onSubmit={e => {
         e.preventDefault();
         const upper = term.toUpperCase();
@@ -420,16 +421,16 @@ function GraficosAcoesPanel({ target }) {
             onChange={e => { setInput(e.target.value); setValidation(""); }} placeholder="Ex.: Petrobras ou PETR4" autoComplete="off" />
           {showDropdown && (searching || suggestions.length > 0) && (
             <div className="absolute left-0 right-0 mt-1 bg-white border rounded-lg shadow-md z-10 max-h-56 overflow-auto">
-              {searching && <div className="p-2 text-xs text-slate-500">Buscando…</div>}
+              {searching && <div className="p-2 text-xs text-neutral-500">Buscando…</div>}
               {!searching && suggestions.map(s => (
-                <button key={s.symbol} type="button" onClick={() => pick(s.symbol, s.name)} className="block w-full text-left px-2 py-1.5 text-xs hover:bg-blue-50 border-b last:border-b-0">
+                <button key={s.symbol} type="button" onClick={() => pick(s.symbol, s.name)} className="block w-full text-left px-2 py-1.5 text-xs hover:bg-neutral-100 border-b last:border-b-0">
                   <span className="font-bold">{s.symbol}</span> · {s.name}
                 </button>
               ))}
             </div>
           )}
         </label>
-        <button className="self-end rounded-lg bg-blue-900 text-white p-2 text-sm" type="submit">Ver gráfico</button>
+        <button className="self-end rounded-lg bg-neutral-900 text-white p-2 text-sm" type="submit">Ver gráfico</button>
       </form>
       {validation && <p role="alert" className="text-red-700 text-sm mb-2">{validation}</p>}
       <StockHistoryChart key={symbol} symbol={symbol} />
@@ -449,12 +450,12 @@ const COMO_LER = [
 function ComoLerGraficoCard() {
   return (
     <Card className="p-3">
-      <SecTitle icon={BookOpen} title="Como interpretar o gráfico" color="#b45309" />
+      <SecTitle icon={BookOpen} title="Como interpretar o gráfico" color="#111111" />
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
         {COMO_LER.map((item, i) => (
-          <div key={i} className="rounded-lg p-2" style={{ background: i % 2 === 0 ? "#fffbeb" : "#fefce8", border: "1px solid #fde68a" }}>
-            <div className="text-sm font-semibold" style={{ color: "#78350f" }}>{item.icon} {item.titulo}</div>
-            <div className="text-xs mt-0.5" style={{ color: "#92400e" }}>{item.texto}</div>
+          <div key={i} className="rounded-lg p-2" style={{ background: i % 2 === 0 ? "#f6f6f6" : "#f2f2f2", border: "1px solid #bdbdbd" }}>
+            <div className="text-sm font-semibold" style={{ color: "#111111" }}>{item.icon} {item.titulo}</div>
+            <div className="text-xs mt-0.5" style={{ color: "#444444" }}>{item.texto}</div>
           </div>
         ))}
       </div>
@@ -478,8 +479,8 @@ function EvolucaoTab({ target }) {
 function GlossarioTab({ inicial }) {
   const [open, setOpen] = useState(inicial ?? null);
   return (
-    <Card className="p-3"><SecTitle icon={BookOpen} title="Glossário" color="#b45309" /><div className="space-y-1">{GLOSSARIO.map((g, i) => (
-      <div key={i} id={`glossario-${i}`} style={{ scrollMarginTop: 100 }}><button onClick={() => setOpen(open === i ? null : i)} className="w-full flex items-center justify-between py-2 px-3 rounded-lg text-sm text-left" style={{ background: open === i ? "#fef3c7" : i % 2 === 0 ? "#fffbeb" : "#fff", border: "1px solid #fde68a" }}><span className="font-semibold">{g.icon} {g.termo}</span>{open === i ? <ChevronUp size={13} /> : <ChevronDown size={13} />}</button>{open === i && <div className="px-4 py-2 text-sm rounded-b-lg" style={{ background: "#fefce8", borderLeft: "3px solid #f59e0b", color: "#78350f" }}>{g.def}</div>}</div>
+    <Card className="p-3"><SecTitle icon={BookOpen} title="Glossário" color="#111111" /><div className="space-y-1">{GLOSSARIO.map((g, i) => (
+      <div key={i} id={`glossario-${i}`} style={{ scrollMarginTop: 100 }}><button onClick={() => setOpen(open === i ? null : i)} className="w-full flex items-center justify-between py-2 px-3 rounded-lg text-sm text-left" style={{ background: open === i ? "#e8e8e8" : i % 2 === 0 ? "#f6f6f6" : "#fff", border: "1px solid #bdbdbd" }}><span className="font-semibold">{g.icon} {g.termo}</span>{open === i ? <ChevronUp size={13} /> : <ChevronDown size={13} />}</button>{open === i && <div className="px-4 py-2 text-sm rounded-b-lg" style={{ background: "#f2f2f2", borderLeft: "3px solid #111111", color: "#111111" }}>{g.def}</div>}</div>
     ))}</div></Card>
   );
 }
@@ -674,35 +675,37 @@ export default function App() {
     return () => clearInterval(t);
   }, []);
 
+  // data do cabeçalho, como na primeira página de um jornal: "Quarta-feira, 14 de outubro de 2026"
+  const dataPorExtenso = clock.toLocaleDateString("pt-BR", { weekday: "long", day: "numeric", month: "long", year: "numeric" }).replace(/^./, letra => letra.toUpperCase());
+
   return (
-    <div className="min-h-screen print:min-h-0 print:!bg-none print:!bg-white" style={{ background: "linear-gradient(180deg,#f8fafc 0%,#ecfdf5 50%,#f0f9ff 100%)", fontFamily: "system-ui, sans-serif" }}>
-      {/* na impressão (aba Jornal do dia) sai só o conteúdo: cabeçalho, menu, rodapé, mascote e contador ficam de fora */}
-      <div className="max-w-4xl mx-auto px-3 pt-3 pb-2 print:hidden">
-        <div className="rounded-xl overflow-hidden" style={{ background: "linear-gradient(135deg,#0c2340 0%,#1a5276 40%,#1e8449 100%)" }}>
-          <div className="px-4 py-2.5 flex flex-col items-center text-center">
-            <div className="flex items-center justify-center gap-2">
-              <div className="rounded-full border border-white flex items-center justify-center shrink-0" style={{ width: 30, height: 30, background: "radial-gradient(circle, #2E7D32 60%, #1B5E20 100%)" }} aria-hidden="true"><Wheat size={15} color="#fbbf24" /></div>
-              <h1 className="text-sm sm:text-base font-bold text-white">C.E.E.P.A. Fernando Costa</h1>
-            </div>
-            <div className="text-xs mt-1" style={{ color: "rgba(255,255,255,0.7)" }}><span style={{ color: "#fbbf24", fontWeight: 700 }}>Informativo Agrícola</span> • {new Date().toLocaleDateString("pt-BR")}</div>
-            <div className="text-xs" style={{ color: "rgba(255,255,255,0.55)" }}>Docente: <strong style={{ color: "rgba(255,255,255,0.8)" }}>{DOCENTE}</strong><span className="hidden sm:inline"> • </span><span className="block sm:inline">{ALUNOS_PARTICIPANTES.length > 1 ? "Estudantes participantes" : "Estudante participante"}: <strong style={{ color: "rgba(255,255,255,0.8)" }}>{ALUNOS_PARTICIPANTES.map((nome, i) => <span key={nome} className="inline-block">{nome}{i < ALUNOS_PARTICIPANTES.length - 1 && ",\u00a0"}</span>)}</strong></span></div>
-          </div>
+    <div className="min-h-screen bg-white print:min-h-0" style={{ color: "#111111" }}>
+      {/* Visual de jornal clássico (classe "jornal", regras em src/index.css): cabeçalho como o título de um
+          jornal, com o enfeite, o nome em letras grandes e a linha da escola e da data entre dois fios.
+          Na impressão (aba Jornal do dia) sai só o conteúdo: cabeçalho, menu, rodapé, mascote e contador ficam de fora. */}
+      <header className="jornal max-w-4xl mx-auto px-3 pt-4 print:hidden">
+        <Enfeite />
+        <h1 className="text-center font-bold uppercase" style={{ fontSize: "min(64px, 6.9vw)", lineHeight: 1.2, padding: "2px 0 4px" }}>Informativo Agrícola</h1>
+        <div className="flex flex-wrap items-baseline justify-between gap-x-3 py-1.5 text-xs sm:text-sm" style={{ borderTop: "1px solid #111111", borderBottom: "4px solid #111111" }}>
+          <span>C.E.E.P.A. Fernando Costa</span>
+          <span>{dataPorExtenso}</span>
         </div>
-      </div>
-      <div className="sticky top-0 z-50 border-b print:hidden" style={{ background: "rgba(255,255,255,0.92)", backdropFilter: "blur(12px)", borderColor: "rgba(0,0,0,0.06)" }}>
+        <p className="text-center italic pt-1.5 pb-1" style={{ fontSize: 12, color: "#444444" }}>Docente: <strong>{DOCENTE}</strong> · {ALUNOS_PARTICIPANTES.length > 1 ? "Estudantes participantes" : "Estudante participante"}: <strong>{ALUNOS_PARTICIPANTES.map((nome, i) => <span key={nome} className="inline-block">{nome}{i < ALUNOS_PARTICIPANTES.length - 1 && ",\u00a0"}</span>)}</strong></p>
+      </header>
+      <nav className="jornal sticky top-0 z-50 bg-white print:hidden" style={{ borderBottom: "1px solid #111111" }}>
         <div className="relative max-w-4xl mx-auto px-3">
           <div className="flex items-center gap-2 sm:gap-3 py-2">
-            <div className="flex items-center gap-2 shrink-0"><div className="rounded-full flex items-center justify-center" style={{ width: 26, height: 26, background: "#2E7D32" }}><span style={{ fontSize: 7, color: "#fff", fontWeight: 900 }}>CEEP</span></div><span className="text-sm font-bold" style={{ color: "#166534" }}>AgroInfo</span></div>
+            <span className="shrink-0 font-bold" style={{ fontFamily: '"Times New Roman", Times, Georgia, serif', fontSize: 18, letterSpacing: "-0.01em" }}>AgroInfo</span>
             <BuscaAgro itens={INDICE_BUSCA} onEscolher={irPara} comCastor={!!ASSISTENTE_URL} />
             <div className="flex items-center gap-2 shrink-0">
-              <div className="flex items-center gap-2 text-xs opacity-40">{count > 0 && <span className="hidden sm:flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: "#22c55e" }} />Ao vivo</span>}<span>{clock.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}</span></div>
+              <div className="flex items-center gap-2 text-xs" style={{ color: "#666666" }}>{count > 0 && <span className="hidden sm:flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: "#b91c1c" }} />Ao vivo</span>}<span>{clock.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}</span></div>
               <BotaoMascote visivel={mascote} onClick={() => mostrarMascote(!mascote)} />
             </div>
           </div>
-          <div className="-mb-px overflow-x-auto"><div className="flex gap-0.5 w-max sm:w-auto sm:flex-wrap sm:justify-center">{TABS.map(t => { const I = TAB_ICONS[t]; return (<button key={t} onClick={() => trocarAba(t)} className="flex items-center gap-1 px-2.5 py-2 text-xs font-semibold rounded-t-lg whitespace-nowrap" style={{ background: tab === t ? "#fff" : "transparent", color: tab === t ? "#166534" : "#94a3b8", borderBottom: tab === t ? "2px solid #166534" : "2px solid transparent" }}><I size={12} />{TAB_LABELS[t]}</button>); })}</div></div>
+          <div className="-mb-px overflow-x-auto"><div className="flex gap-0.5 w-max sm:w-auto sm:flex-wrap sm:justify-center">{TABS.map(t => { const I = TAB_ICONS[t]; return (<button key={t} onClick={() => trocarAba(t)} className="flex items-center gap-1 px-2.5 py-2 text-xs whitespace-nowrap" style={{ color: tab === t ? "#111111" : "#666666", fontWeight: tab === t ? 700 : 400, borderBottom: tab === t ? "3px solid #111111" : "3px solid transparent" }}><I size={12} />{TAB_LABELS[t]}</button>); })}</div></div>
         </div>
-      </div>
-      <div id="conteudo" className="max-w-4xl mx-auto px-3 py-4 print:max-w-none print:p-0" style={{ scrollMarginTop: 100 }}>
+      </nav>
+      <div id="conteudo" className="jornal max-w-4xl mx-auto px-3 py-4 print:max-w-none print:p-0" style={{ scrollMarginTop: 100 }}>
         {tab === "inicio" && <Inicio onIr={irPara} onCastor={ASSISTENTE_URL ? () => mostrarMascote(true) : null}
           dolar={dolar ?? (dataSource === "indisponivel" ? null : undefined)} variacaoDoDolar={dataSource === "real" ? moedas.find(m => m.id === "usd")?.var : null}>
           <MoedasCard moedas={moedas} pm={pm} flash={flash} situacao={dataSource} atualizadoEm={moedasEm} />
@@ -727,8 +730,11 @@ export default function App() {
         {tab === "evolucao" && <EvolucaoTab target={chartTarget} />}
         {tab === "glossario" && <GlossarioTab key={alvo?.termo != null ? alvo.n : "glossario"} inicial={alvo?.termo} />}
       </div>
-      <div className="text-center py-3 text-xs opacity-20 print:hidden">🎓 C.E.E.P.A. Fernando Costa • Docente: {DOCENTE} • {ALUNOS_PARTICIPANTES.length > 1 ? "Estudantes participantes" : "Estudante participante"}: {ALUNOS_PARTICIPANTES.join(", ")}</div>
-      <div className="print:hidden">
+      <footer className="jornal max-w-4xl mx-auto px-3 print:hidden">
+        <p className="text-center py-3 text-xs" style={{ borderTop: "1px solid #111111", color: "#666666" }}>Informativo Agrícola · C.E.E.P.A. Fernando Costa · Docente: {DOCENTE} · {ALUNOS_PARTICIPANTES.length > 1 ? "Estudantes participantes" : "Estudante participante"}: {ALUNOS_PARTICIPANTES.join(", ")} · agronahora.com.br</p>
+      </footer>
+      {/* o mascote e o contador continuam com a letra e o visual de antes */}
+      <div className="print:hidden" style={{ fontFamily: "system-ui, sans-serif" }}>
         {mascote && <Mascote onFechar={() => mostrarMascote(false)} assistenteUrl={ASSISTENTE_URL} pergunta={perguntaCastor} dadosPainel={{
           moedas: dataSource === "real"
             ? moedas.map(m => ({ nome: m.nome, valorReais: m.valor, variacaoPct: m.var, fonte: "AwesomeAPI" }))

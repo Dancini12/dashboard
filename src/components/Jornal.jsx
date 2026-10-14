@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Download, Image, MapPin, Printer, Search, Share2, X } from "lucide-react";
 import { getWmo, WEEK } from "../clima";
 import { textosDoJornal } from "../inicio";
+import Enfeite from "./Enfeite";
 import useResumoDoDia, { REGIAO } from "./useResumoDoDia";
 
 // Aba "Jornal do dia": o Resumo do dia diagramado como a primeira página de um jornal clássico, em
@@ -29,9 +30,6 @@ function haQuanto(data) {
 }
 // Variação em preto, como o resto da folha: a seta diz se subiu ou caiu.
 const variacao = valor => (valor == null || !Number.isFinite(valor) ? "" : Math.abs(valor) < 0.005 ? "estável" : `${valor > 0 ? "▲" : "▼"} ${decimal(Math.abs(valor), 2)}%`);
-// Losango do enfeite do alto da folha: desenhado, porque símbolo de fonte falta em alguns aparelhos, e
-// feito só de borda, porque a impressão costuma sair sem as cores de fundo.
-const Losango = ({ lado }) => <span className="block shrink-0" style={{ width: 0, height: 0, border: `${lado / 2}px solid ${PRETO}`, transform: "rotate(45deg)" }} />;
 // Manchete de notícia comprida demais é cortada em palavra inteira, para a folha caber em uma página.
 const encurtar = (texto, limite = 110) => (texto.length <= limite ? texto : `${texto.slice(0, limite).replace(/\s+\S*$/, "")}…`);
 // Trecho do texto corrido, com o assunto em destaque no começo, como nos jornais.
@@ -79,49 +77,47 @@ export default function Jornal({ dolar, variacaoDoDolar, moedas, indicadores, do
   return (
     <div className="space-y-4">
       <section className="rounded-xl border bg-white p-3 shadow-sm print:hidden">
-        <h2 className="text-sm font-bold text-green-800">Jornal do dia</h2>
-        <p className="text-xs text-slate-600 mt-1">O resumo do dia em uma folha só, em formato de jornal. Imprima, salve em PDF ou guarde como imagem para mandar à turma.</p>
+        <h2 className="text-sm font-bold text-neutral-900">Jornal do dia</h2>
+        <p className="text-xs text-neutral-600 mt-1">O resumo do dia em uma folha só, em formato de jornal. Imprima, salve em PDF ou guarde como imagem para mandar à turma.</p>
         <form onSubmit={procurar} className="flex gap-1.5 mt-3">
           <label className="relative flex-1 min-w-0">
             <span className="sr-only">Cidade da previsão do tempo</span>
-            <MapPin size={13} className="absolute" style={{ left: 9, top: "50%", transform: "translateY(-50%)", color: "#64748b" }} aria-hidden="true" />
+            <MapPin size={13} className="absolute" style={{ left: 9, top: "50%", transform: "translateY(-50%)", color: "#666666" }} aria-hidden="true" />
             <input value={busca} onChange={e => setBusca(e.target.value)} onFocus={e => e.target.select()} placeholder="Cidade da previsão do tempo (ex.: Londrina)" className="block w-full rounded-lg border bg-white text-base sm:text-sm" style={{ padding: "6px 10px 6px 28px" }} />
           </label>
-          <button type="submit" className="flex items-center gap-1 rounded-lg px-3 text-xs font-bold" style={{ border: "1px solid #bbf7d0", color: "#166534", background: "#fff" }}><Search size={12} aria-hidden="true" />Buscar</button>
+          <button type="submit" className="flex items-center gap-1 rounded-lg px-3 text-xs font-bold" style={{ border: "1px solid #bdbdbd", color: "#111111", background: "#fff" }}><Search size={12} aria-hidden="true" />Buscar</button>
         </form>
-        {erroDaBusca && <p role="alert" className="text-xs text-amber-800 mt-1.5">{erroDaBusca}</p>}
-        {!cidade && <p className="text-xs text-amber-800 mt-1.5">Digite a cidade acima para o jornal trazer a previsão do tempo de 7 dias.</p>}
-        {cidade && doTempo.erro && <p role="alert" className="text-xs text-amber-800 mt-1.5">{doTempo.desistiu ? "O serviço de clima não respondeu. Toque em “Buscar” para tentar de novo." : "O serviço de clima está demorando a responder. O jornal continua tentando sozinho: a previsão entra na folha assim que chegar."}</p>}
+        {erroDaBusca && <p role="alert" className="text-xs text-neutral-800 mt-1.5">{erroDaBusca}</p>}
+        {!cidade && <p className="text-xs text-neutral-800 mt-1.5">Digite a cidade acima para o jornal trazer a previsão do tempo de 7 dias.</p>}
+        {cidade && doTempo.erro && <p role="alert" className="text-xs text-neutral-800 mt-1.5">{doTempo.desistiu ? "O serviço de clima não respondeu. Toque em “Buscar” para tentar de novo." : "O serviço de clima está demorando a responder. O jornal continua tentando sozinho: a previsão entra na folha assim que chegar."}</p>}
         <div className="flex flex-wrap gap-2 mt-3">
-          <button type="button" onClick={() => window.print()} disabled={carregando} className={BOTAO} style={{ background: "#166534", color: "#fff" }}><Printer size={14} aria-hidden="true" />Imprimir ou salvar em PDF</button>
-          <button type="button" onClick={gerarImagem} disabled={carregando || gerando} className={BOTAO} style={{ border: "1px solid #bbf7d0", color: "#166534", background: "#fff" }}><Image size={14} aria-hidden="true" />{gerando ? "Gerando a imagem…" : "Salvar como imagem"}</button>
+          <button type="button" onClick={() => window.print()} disabled={carregando} className={BOTAO} style={{ background: "#111111", color: "#fff" }}><Printer size={14} aria-hidden="true" />Imprimir ou salvar em PDF</button>
+          <button type="button" onClick={gerarImagem} disabled={carregando || gerando} className={BOTAO} style={{ border: "1px solid #bdbdbd", color: "#111111", background: "#fff" }}><Image size={14} aria-hidden="true" />{gerando ? "Gerando a imagem…" : "Salvar como imagem"}</button>
         </div>
-        <p className="text-xs text-slate-500 mt-2">{carregando ? "Aguarde: os dados do dia ainda estão chegando." : "Para o PDF, escolha “Salvar como PDF” na janela de impressão."}</p>
+        <p className="text-xs text-neutral-500 mt-2">{carregando ? "Aguarde: os dados do dia ainda estão chegando." : "Para o PDF, escolha “Salvar como PDF” na janela de impressão."}</p>
 
-        {imagem?.erro && <p role="alert" className="rounded-lg p-2.5 mt-3 text-xs sm:text-sm" style={{ background: "#fffbeb", border: "1px solid #fde68a", color: "#78350f" }}>Não foi possível gerar a imagem neste aparelho. Use a captura de tela do aparelho ou a opção de imprimir.</p>}
+        {imagem?.erro && <p role="alert" className="rounded-lg p-2.5 mt-3 text-xs sm:text-sm" style={{ background: "#f6f6f6", border: "1px solid #bdbdbd", color: "#111111" }}>Não foi possível gerar a imagem neste aparelho. Use a captura de tela do aparelho ou a opção de imprimir.</p>}
         {imagem?.url && (
-          <div className="rounded-xl p-3 mt-3" style={{ background: "#f0fdf4", border: "1px solid #bbf7d0" }}>
+          <div className="rounded-xl p-3 mt-3" style={{ background: "#f2f2f2", border: "1px solid #bdbdbd" }}>
             <div className="flex items-start justify-between gap-2">
-              <p className="text-sm font-bold" style={{ color: "#14532d" }}>A imagem está pronta</p>
-              <button type="button" onClick={() => setImagem(null)} aria-label="Fechar a imagem" className="rounded-full p-1" style={{ color: "#166534" }}><X size={16} aria-hidden="true" /></button>
+              <p className="text-sm font-bold" style={{ color: "#111111" }}>A imagem está pronta</p>
+              <button type="button" onClick={() => setImagem(null)} aria-label="Fechar a imagem" className="rounded-full p-1" style={{ color: "#111111" }}><X size={16} aria-hidden="true" /></button>
             </div>
             <div className="flex flex-wrap gap-2 mt-2">
-              <a href={imagem.url} download={nomeDoArquivo} className={BOTAO} style={{ background: "#166534", color: "#fff" }}><Download size={14} aria-hidden="true" />Baixar a imagem</a>
-              {podeCompartilhar && <button type="button" onClick={compartilhar} className={BOTAO} style={{ border: "1px solid #bbf7d0", color: "#166534", background: "#fff" }}><Share2 size={14} aria-hidden="true" />Compartilhar</button>}
+              <a href={imagem.url} download={nomeDoArquivo} className={BOTAO} style={{ background: "#111111", color: "#fff" }}><Download size={14} aria-hidden="true" />Baixar a imagem</a>
+              {podeCompartilhar && <button type="button" onClick={compartilhar} className={BOTAO} style={{ border: "1px solid #bdbdbd", color: "#111111", background: "#fff" }}><Share2 size={14} aria-hidden="true" />Compartilhar</button>}
             </div>
-            <p className="text-xs text-slate-600 mt-2">No celular, também dá para segurar o dedo na imagem abaixo e escolher salvar nas fotos.</p>
-            <img src={imagem.url} alt="Jornal do dia em imagem" className="mt-2 w-full rounded-lg border" style={{ maxWidth: 420, borderColor: "#bbf7d0" }} />
+            <p className="text-xs text-neutral-600 mt-2">No celular, também dá para segurar o dedo na imagem abaixo e escolher salvar nas fotos.</p>
+            <img src={imagem.url} alt="Jornal do dia em imagem" className="mt-2 w-full rounded-lg border" style={{ maxWidth: 420, borderColor: "#bdbdbd" }} />
           </div>
         )}
       </section>
 
-      <article ref={folha} className="mx-auto rounded-lg bg-white p-4 shadow-md [container-type:inline-size] sm:p-8 print:!mt-0 print:max-w-none print:rounded-none print:!p-0 print:shadow-none" style={{ maxWidth: 794, fontFamily: TEXTO, color: PRETO }}>
+      {/* na tela, a folha fica sobre um fundo cinza, como papel sobre a mesa; na impressão e na imagem sai só a folha */}
+      <div className="bg-neutral-200 p-2 sm:p-6 print:bg-white print:p-0">
+      <article ref={folha} className="mx-auto bg-white p-4 [container-type:inline-size] sm:p-8 print:!mt-0 print:max-w-none print:!p-0" style={{ maxWidth: 794, fontFamily: TEXTO, color: PRETO }}>
         <header>
-          <div className="flex items-center gap-2" style={{ height: 14 }} aria-hidden="true">
-            <span className="flex-1" style={{ borderTop: FIO }} />
-            <Losango lado={5} /><Losango lado={9} /><Losango lado={5} />
-            <span className="flex-1" style={{ borderTop: FIO }} />
-          </div>
+          <Enfeite cor={PRETO} />
           {/* tamanho pela largura da folha (cqw), para caber em uma linha também no celular; vw é a reserva dos navegadores antigos */}
           <h2 className="text-center font-bold uppercase text-[length:min(54px,6.4vw)] supports-[width:1cqw]:text-[length:min(54px,7.4cqw)]" style={{ fontFamily: TITULO, lineHeight: 1.2, paddingBottom: 4 }}>Informativo Agrícola</h2>
           <div className="flex flex-wrap justify-between gap-x-3 py-1.5" style={{ fontSize: 13, borderTop: FIO, borderBottom: `4px solid ${PRETO}` }}>
@@ -209,6 +205,7 @@ export default function Jornal({ dolar, variacaoDoDolar, moedas, indicadores, do
           <p>Docente: {docente} · {alunos.length > 1 ? "Estudantes participantes" : "Estudante participante"}: {alunos.join(", ")} · agronahora.com.br</p>
         </footer>
       </article>
+      </div>
     </div>
   );
 }

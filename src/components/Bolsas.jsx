@@ -34,7 +34,7 @@ async function consultar(symbol) {
 }
 
 function Variacao({ valor }) {
-  const cor = valor > 0 ? "#15803d" : valor < 0 ? "#b91c1c" : "#64748b";
+  const cor = valor > 0 ? "#15803d" : valor < 0 ? "#b91c1c" : "#666666";
   return <span className="font-bold whitespace-nowrap" style={{ color: cor }}>{valor > 0 ? "▲ +" : valor < 0 ? "▼ " : ""}{numero(valor, 2)}%</span>;
 }
 
@@ -91,20 +91,20 @@ export default function Bolsas({ dolar, inicial, children }) {
   return (
     <div className="space-y-4">
       <section className="rounded-xl border bg-white p-3 shadow-sm">
-        <h2 className="text-sm font-bold text-green-800">Bolsas internacionais · Chicago e Nova Iorque</h2>
-        <p className="text-xs text-slate-600 mt-1">
+        <h2 className="text-sm font-bold text-neutral-900">Bolsas internacionais · Chicago e Nova Iorque</h2>
+        <p className="text-xs text-neutral-600 mt-1">
           Chicago é a referência mundial para soja, milho, trigo e carnes; Nova Iorque, para café, açúcar, algodão, cacau e suco de laranja.
           Esses preços influenciam o que o produtor recebe aqui. A tabela mostra o contrato mais próximo de cada produto, na unidade da
           bolsa e convertido para a unidade usada no Brasil. Clique em um produto para ver os próximos vencimentos. As ações da bolsa
           brasileira (B3) estão no fim da página.
         </p>
-        <label className="block text-xs text-slate-600 mt-3">Procurar pelo nome
+        <label className="block text-xs text-neutral-600 mt-3">Procurar pelo nome
           <input value={busca} onChange={e => setBusca(e.target.value)} placeholder="Ex.: soja, porco, laranja, gado…"
             onKeyDown={e => { if (e.key === "Enter" && visiveis.length) { e.preventDefault(); escolher(visiveis[0].key); } }}
-            className="block w-full rounded-lg border bg-white p-2 mt-1 text-sm text-slate-900" />
+            className="block w-full rounded-lg border bg-white p-2 mt-1 text-sm text-neutral-900" />
         </label>
         {quadro && (
-          <div className="mt-3 flex gap-2 rounded-lg p-2.5 text-xs" style={{ background: "#eff6ff", border: "1px solid #bfdbfe", color: "#1e3a8a" }}>
+          <div className="mt-3 flex gap-2 rounded-lg p-2.5 text-xs" style={{ background: "#f2f2f2", border: "1px solid #bdbdbd", color: "#111111" }}>
             <Clock size={15} className="shrink-0 mt-0.5" aria-hidden="true" />
             <div>
               <div>
@@ -118,8 +118,8 @@ export default function Bolsas({ dolar, inicial, children }) {
             </div>
           </div>
         )}
-        <details className="mt-2 text-xs text-slate-600">
-          <summary className="cursor-pointer font-semibold text-green-800">Como ler estas cotações</summary>
+        <details className="mt-2 text-xs text-neutral-600">
+          <summary className="cursor-pointer font-semibold text-neutral-900">Como ler estas cotações</summary>
           <ul className="mt-2 space-y-1 pl-5" style={{ listStyle: "disc" }}>
             <li><strong>As bolsas:</strong> em Chicago, a CBOT (Chicago Board of Trade) negocia grãos e derivados e a CME (Chicago Mercantile Exchange), boi, suíno e leite. Em Nova Iorque, a ICE negocia café, açúcar, algodão, cacau e suco de laranja.</li>
             <li><strong>Vencimento:</strong> o mês em que o contrato termina. Cada mês tem o seu preço; "soja nov/26" é a soja para entrega em novembro de 2026.</li>
@@ -130,21 +130,21 @@ export default function Bolsas({ dolar, inicial, children }) {
         </details>
       </section>
 
-      {!quadro && !erro && <p className="text-sm text-slate-500">Carregando as cotações das bolsas…</p>}
+      {!quadro && !erro && <p className="text-sm text-neutral-500">Carregando as cotações das bolsas…</p>}
       {erro && (
-        <p role="alert" className="rounded-xl border p-3 text-sm text-amber-800 bg-amber-50">
+        <p role="alert" className="rounded-xl border p-3 text-sm text-neutral-800 bg-neutral-100">
           {quadro ? "Não foi possível atualizar agora; a tabela mostra a última cotação recebida." : "As cotações das bolsas não estão disponíveis agora. Tente novamente em alguns minutos."}
         </p>
       )}
 
-      {quadro && !visiveis.length && <p className="text-sm text-slate-600">Nenhum produto com esse nome. <button type="button" onClick={() => setBusca("")} className="font-bold text-green-800 underline">Ver a lista completa</button></p>}
+      {quadro && !visiveis.length && <p className="text-sm text-neutral-600">Nenhum produto com esse nome. <button type="button" onClick={() => setBusca("")} className="font-bold text-neutral-900 underline">Ver a lista completa</button></p>}
       {quadro && GRUPOS.filter(grupo => visiveis.some(item => item.group === grupo)).map(grupo => (
         <section key={grupo} className="rounded-xl border bg-white p-3 shadow-sm">
-          <h3 className="text-sm font-bold" style={{ color: "#14532d" }}>{grupo} <span className="text-xs font-normal text-slate-500">· {BOLSA_DO_GRUPO[grupo]}</span></h3>
+          <h3 className="text-sm font-bold" style={{ color: "#111111" }}>{grupo} <span className="text-xs font-normal text-neutral-500">· {BOLSA_DO_GRUPO[grupo]}</span></h3>
           <div className="mt-2 overflow-x-auto">
             <table className="w-full text-xs">
               <thead>
-                <tr style={{ background: "#166534", color: "#fff" }}>
+                <tr style={{ background: "#111111", color: "#fff" }}>
                   <th className="py-1.5 px-2 text-left">Produto</th>
                   <th className="py-1.5 px-2 text-right">Último</th>
                   <th className="py-1.5 px-2 text-right hidden sm:table-cell">Variação</th>
@@ -159,10 +159,10 @@ export default function Bolsas({ dolar, inicial, children }) {
                   const u = UNIDADE_BRASIL[item.key];
                   const emDolar = c && naUnidadeBrasil(item, c.value);
                   return (
-                    <tr key={item.key} onClick={() => escolher(item.key)} className="cursor-pointer" style={{ background: ativo ? "#dcfce7" : i % 2 ? "#fff" : "#f8fafc" }}>
+                    <tr key={item.key} onClick={() => escolher(item.key)} className="cursor-pointer" style={{ background: ativo ? "#e3e3e3" : i % 2 ? "#fff" : "#f6f6f6" }}>
                       <td className="py-1.5 px-2">
-                        <button type="button" aria-pressed={ativo} className="text-left font-semibold" style={{ color: "#14532d" }}>{item.emoji} {item.name}</button>
-                        <span className="block text-slate-500" style={{ fontSize: 10.5 }}>{c?.vencimento && `${vencimentoCurto(c.vencimento)} · `}{item.unit}</span>
+                        <button type="button" aria-pressed={ativo} className="text-left font-semibold" style={{ color: "#111111" }}>{item.emoji} {item.name}</button>
+                        <span className="block text-neutral-500" style={{ fontSize: 10.5 }}>{c?.vencimento && `${vencimentoCurto(c.vencimento)} · `}{item.unit}</span>
                       </td>
                       {c ? <>
                         <td className="py-1.5 px-2 text-right font-mono font-bold">
@@ -170,9 +170,9 @@ export default function Bolsas({ dolar, inicial, children }) {
                           <span className="block sm:hidden font-sans" style={{ fontSize: 10.5 }}><Variacao valor={c.change} /></span>
                         </td>
                         <td className="py-1.5 px-2 text-right hidden sm:table-cell"><Variacao valor={c.change} /></td>
-                        <td className="py-1.5 px-2 text-right font-mono hidden sm:table-cell">{dolares(emDolar)}<span className="font-sans text-slate-500">/{u.curto}</span></td>
-                        <td className="py-1.5 px-2 text-right font-mono font-bold whitespace-nowrap">{dolar ? reais(emDolar * dolar) : dolares(emDolar)}<span className="font-sans font-normal text-slate-500">/{u.curto}</span></td>
-                      </> : <td colSpan={4} className="py-1.5 px-2 text-right text-slate-500">sem cotação agora</td>}
+                        <td className="py-1.5 px-2 text-right font-mono hidden sm:table-cell">{dolares(emDolar)}<span className="font-sans text-neutral-500">/{u.curto}</span></td>
+                        <td className="py-1.5 px-2 text-right font-mono font-bold whitespace-nowrap">{dolar ? reais(emDolar * dolar) : dolares(emDolar)}<span className="font-sans font-normal text-neutral-500">/{u.curto}</span></td>
+                      </> : <td colSpan={4} className="py-1.5 px-2 text-right text-neutral-500">sem cotação agora</td>}
                     </tr>
                   );
                 })}
@@ -183,46 +183,46 @@ export default function Bolsas({ dolar, inicial, children }) {
       ))}
 
       <div id="bolsa-detalhe" style={{ scrollMarginTop: 100 }}>
-        {quadro && !produto && <p className="rounded-xl border border-dashed p-4 text-sm text-slate-600 text-center">Clique em um produto da tabela para ver os próximos vencimentos.</p>}
+        {quadro && !produto && <p className="rounded-xl border border-dashed p-4 text-sm text-neutral-600 text-center">Clique em um produto da tabela para ver os próximos vencimentos.</p>}
         {produto && (
           <section className="rounded-xl border bg-white p-3 shadow-sm">
-            <h3 className="text-sm font-bold" style={{ color: "#14532d" }}>
-              {produto.emoji} {produto.name} <span className="text-xs font-normal text-slate-500">· {NOME_DA_BOLSA[produto.exchange]} · cotado em {produto.cotacao}</span>
+            <h3 className="text-sm font-bold" style={{ color: "#111111" }}>
+              {produto.emoji} {produto.name} <span className="text-xs font-normal text-neutral-500">· {NOME_DA_BOLSA[produto.exchange]} · cotado em {produto.cotacao}</span>
             </h3>
-            {cotacao && <p className="text-xs text-slate-600 mt-1">Equivale a {produto.kg !== 1000 && <><strong>{dolares(porKg(produto, cotacao.value) * 1000)}</strong> por tonelada e </>}<strong>{dolares(porKg(produto, cotacao.value))}</strong> por kg.</p>}
+            {cotacao && <p className="text-xs text-neutral-600 mt-1">Equivale a {produto.kg !== 1000 && <><strong>{dolares(porKg(produto, cotacao.value) * 1000)}</strong> por tonelada e </>}<strong>{dolares(porKg(produto, cotacao.value))}</strong> por kg.</p>}
             {cotacao && (
               <div className="mt-2 grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
-                <div className="rounded-lg p-2" style={{ background: "#f0fdf4" }}>
-                  <div className="text-slate-500">Último{cotacao.vencimento && ` · ${vencimentoCurto(cotacao.vencimento)}`}</div>
-                  <div className="text-base font-bold" style={{ color: "#166534" }}>{numero(cotacao.value)}</div>
-                  <div className="text-slate-500">{produto.unit}</div>
+                <div className="rounded-lg p-2" style={{ background: "#f2f2f2" }}>
+                  <div className="text-neutral-500">Último{cotacao.vencimento && ` · ${vencimentoCurto(cotacao.vencimento)}`}</div>
+                  <div className="text-base font-bold" style={{ color: "#111111" }}>{numero(cotacao.value)}</div>
+                  <div className="text-neutral-500">{produto.unit}</div>
                 </div>
-                <div className="rounded-lg p-2" style={{ background: "#f8fafc" }}>
-                  <div className="text-slate-500">Variação no dia</div>
+                <div className="rounded-lg p-2" style={{ background: "#f6f6f6" }}>
+                  <div className="text-neutral-500">Variação no dia</div>
                   <div className="text-base"><Variacao valor={cotacao.change} /></div>
-                  <div className="text-slate-500">sobre o pregão anterior</div>
+                  <div className="text-neutral-500">sobre o pregão anterior</div>
                 </div>
-                <div className="rounded-lg p-2" style={{ background: "#f8fafc" }}>
-                  <div className="text-slate-500">Mínima e máxima do dia</div>
+                <div className="rounded-lg p-2" style={{ background: "#f6f6f6" }}>
+                  <div className="text-neutral-500">Mínima e máxima do dia</div>
                   <div className="font-bold mt-0.5">{cotacao.low != null && cotacao.high != null ? `${numero(cotacao.low)} a ${numero(cotacao.high)}` : "—"}</div>
-                  <div className="text-slate-500">{produto.unit}</div>
+                  <div className="text-neutral-500">{produto.unit}</div>
                 </div>
-                <div className="rounded-lg p-2" style={{ background: "#f8fafc" }}>
-                  <div className="text-slate-500">Por {unidade.nome}</div>
+                <div className="rounded-lg p-2" style={{ background: "#f6f6f6" }}>
+                  <div className="text-neutral-500">Por {unidade.nome}</div>
                   <div className="font-bold mt-0.5">{dolar ? reais(naUnidadeBrasil(produto, cotacao.value) * dolar) : dolares(naUnidadeBrasil(produto, cotacao.value))}</div>
-                  {dolar && <div className="text-slate-500">{dolares(naUnidadeBrasil(produto, cotacao.value))}</div>}
+                  {dolar && <div className="text-neutral-500">{dolares(naUnidadeBrasil(produto, cotacao.value))}</div>}
                 </div>
               </div>
             )}
 
-            <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500 mt-4">Próximos vencimentos</h4>
-            {!vencimentos && !semVencimentos && <p className="text-sm text-slate-500 mt-1">Buscando os vencimentos de {produto.name.toLowerCase()}…</p>}
-            {semVencimentos && <p role="alert" className="text-sm text-amber-800 mt-1">Os vencimentos deste produto não estão disponíveis agora.</p>}
+            <h4 className="text-xs font-bold uppercase tracking-wider text-neutral-500 mt-4">Próximos vencimentos</h4>
+            {!vencimentos && !semVencimentos && <p className="text-sm text-neutral-500 mt-1">Buscando os vencimentos de {produto.name.toLowerCase()}…</p>}
+            {semVencimentos && <p role="alert" className="text-sm text-neutral-800 mt-1">Os vencimentos deste produto não estão disponíveis agora.</p>}
             {vencimentos && (
               <div className="mt-1.5 overflow-x-auto">
                 <table className="w-full text-xs">
                   <thead>
-                    <tr style={{ background: "#166534", color: "#fff" }}>
+                    <tr style={{ background: "#111111", color: "#fff" }}>
                       <th className="py-1.5 px-2 text-left">Vencimento</th>
                       <th className="py-1.5 px-2 text-right">Preço <span className="font-normal">({produto.unit})</span></th>
                       <th className="py-1.5 px-2 text-right">Variação</th>
@@ -234,12 +234,12 @@ export default function Bolsas({ dolar, inicial, children }) {
                     {vencimentos.map((v, i) => {
                       const emDolar = naUnidadeBrasil(produto, v.value);
                       return (
-                        <tr key={v.contrato} style={{ background: i % 2 ? "#fff" : "#f8fafc" }}>
-                          <td className="py-1 px-2 font-semibold">{MESES[v.mes - 1]}/{v.ano} <span className="font-normal text-slate-500" style={{ fontSize: 10.5 }}>{v.contrato}</span></td>
+                        <tr key={v.contrato} style={{ background: i % 2 ? "#fff" : "#f6f6f6" }}>
+                          <td className="py-1 px-2 font-semibold">{MESES[v.mes - 1]}/{v.ano} <span className="font-normal text-neutral-500" style={{ fontSize: 10.5 }}>{v.contrato}</span></td>
                           <td className="py-1 px-2 text-right font-mono font-bold">{numero(v.value)}</td>
                           <td className="py-1 px-2 text-right"><Variacao valor={v.change} /></td>
-                          <td className={`py-1 px-2 text-right font-mono ${dolar ? "hidden sm:table-cell" : ""}`}>{dolares(emDolar)}<span className="font-sans text-slate-500">/{unidade.curto}</span></td>
-                          {dolar && <td className="py-1 px-2 text-right font-mono font-bold whitespace-nowrap">{reais(emDolar * dolar)}<span className="font-sans font-normal text-slate-500">/{unidade.curto}</span></td>}
+                          <td className={`py-1 px-2 text-right font-mono ${dolar ? "hidden sm:table-cell" : ""}`}>{dolares(emDolar)}<span className="font-sans text-neutral-500">/{unidade.curto}</span></td>
+                          {dolar && <td className="py-1 px-2 text-right font-mono font-bold whitespace-nowrap">{reais(emDolar * dolar)}<span className="font-sans font-normal text-neutral-500">/{unidade.curto}</span></td>}
                         </tr>
                       );
                     })}
@@ -247,17 +247,17 @@ export default function Bolsas({ dolar, inicial, children }) {
                 </table>
               </div>
             )}
-            <p className="text-xs text-slate-600 mt-3 leading-relaxed"><strong>Referência no Brasil:</strong> {produto.b3}. {produto.explanation}</p>
+            <p className="text-xs text-neutral-600 mt-3 leading-relaxed"><strong>Referência no Brasil:</strong> {produto.b3}. {produto.explanation}</p>
           </section>
         )}
       </div>
 
-      <div className="rounded-xl border bg-amber-50 border-amber-200 p-3">
-        <h3 className="font-bold text-amber-900 text-sm">Do preço da bolsa ao preço do produtor</h3>
-        <p className="text-xs text-amber-800 mt-1"><strong>Bolsa ± base da região − frete − armazenagem e descontos.</strong> A bolsa não diz quanto a cooperativa vai pagar: compare com a aba Cotações Cooperativas e faça a conta na aba Calculadoras.</p>
+      <div className="rounded-xl border bg-neutral-100 border-neutral-300 p-3">
+        <h3 className="font-bold text-neutral-900 text-sm">Do preço da bolsa ao preço do produtor</h3>
+        <p className="text-xs text-neutral-800 mt-1"><strong>Bolsa ± base da região − frete − armazenagem e descontos.</strong> A bolsa não diz quanto a cooperativa vai pagar: compare com a aba Cotações Cooperativas e faça a conta na aba Calculadoras.</p>
       </div>
 
-      <p className="text-xs text-slate-500">
+      <p className="text-xs text-neutral-500">
         Fonte das cotações acima: {quadro?.source ?? "Yahoo Finance · cotação indicativa"}, contratos da CBOT e da CME (Chicago) e da ICE (Nova Iorque); dólar comercial da AwesomeAPI.
         Valores de referência para estudo, com atraso; não servem para fechar negócio.
       </p>

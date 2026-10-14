@@ -78,12 +78,12 @@ export default function VisitorCounter({ presencaUrl }) {
   if (count === null && online === null) return null;
 
   return (
-    <div style={{ position: "fixed", bottom: 12, right: 12, zIndex: 40, background: "rgba(12,35,64,0.95)", border: "1px solid rgba(251,191,36,0.3)", borderRadius: 12, padding: "8px 12px", boxShadow: "0 4px 20px rgba(0,0,0,0.3)", fontSize: 12, color: "rgba(255,255,255,0.85)" }}>
-      {count !== null && <div>👥 Visitantes: <strong style={{ color: "#fbbf24" }}>{count.toLocaleString("pt-BR")}</strong></div>}
+    <div style={{ position: "fixed", bottom: 12, right: 12, zIndex: 40, background: "rgba(17,17,17,0.94)", border: "1px solid rgba(255,255,255,0.25)", borderRadius: 2, padding: "8px 12px", boxShadow: "0 4px 20px rgba(0,0,0,0.3)", fontSize: 12, color: "rgba(255,255,255,0.85)" }}>
+      {count !== null && <div>👥 Visitantes: <strong style={{ color: "#ffffff" }}>{count.toLocaleString("pt-BR")}</strong></div>}
       {online !== null && (
         <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: count !== null ? 2 : 0 }}>
           <span className="animate-pulse" style={{ width: 8, height: 8, borderRadius: "50%", background: "#22c55e", boxShadow: "0 0 0 3px rgba(34,197,94,0.25)", margin: "0 3px" }} />
-          Online agora: <strong style={{ color: "#4ade80" }}>{online.toLocaleString("pt-BR")}</strong>
+          Online agora: <strong style={{ color: "#ffffff" }}>{online.toLocaleString("pt-BR")}</strong>
         </div>
       )}
     </div>

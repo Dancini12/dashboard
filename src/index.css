@@ -26,3 +26,28 @@ body {
 img[src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"] {
   display: inline;
 }
+
+/* Visual de jornal clássico, em preto e branco. Vale para o cabeçalho, o menu, as abas e o rodapé, que
+   levam a classe "jornal" no App; o mascote e o contador de visitantes ficam de fora. Texto com serifa
+   (Georgia), títulos em Times, campos e tabelas de números sem serifa, cantos retos e sem sombra. */
+.jornal {
+  font-family: Georgia, "Times New Roman", Times, serif;
+}
+.jornal h1, .jornal h2, .jornal h3, .jornal h4, .jornal .font-black {
+  font-family: "Times New Roman", Times, Georgia, serif;
+}
+.jornal input, .jornal select, .jornal textarea, .jornal table {
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+.jornal .rounded, .jornal .rounded-sm, .jornal .rounded-md, .jornal .rounded-lg, .jornal .rounded-xl,
+.jornal .rounded-t, .jornal .rounded-b, .jornal .rounded-t-lg, .jornal .rounded-b-lg {
+  border-radius: 0;
+}
+.jornal .shadow, .jornal .shadow-sm, .jornal .shadow-md, .jornal .shadow-lg {
+  box-shadow: none;
+}
+/* cada quadro abre com um fio preto, como as seções de um jornal */
+.jornal .rounded-xl.border {
+  border-color: #d4d4d4 !important;
+  border-top: 2px solid #111111 !important;
+}

@@ -74,7 +74,7 @@ export function StockQuotes({ refresh, onViewChart, buscaInicial, onCommodity })
   const quote = state.quote?.symbol === symbol ? state.quote : null;
 
   return <section id="consultar-acao" className="rounded-xl border bg-white p-3 shadow-sm" style={{ scrollMarginTop: 100 }}>
-    <h2 className="text-sm font-bold text-blue-900 mb-3">Consultar ação ou ETF da B3</h2>
+    <h2 className="text-sm font-bold text-neutral-900 mb-3">Consultar ação ou ETF da B3</h2>
     <form onSubmit={event => {
       event.preventDefault();
       const raw = input.trim();
@@ -95,42 +95,42 @@ export function StockQuotes({ refresh, onViewChart, buscaInicial, onCommodity })
         {showDropdown && (searching || suggestions.length > 0 || commodityDigitada) && (
           <div className="absolute left-0 right-0 mt-1 bg-white border rounded-lg shadow-md z-10 max-h-72 overflow-auto">
             {commodityDigitada && (
-              <div className="p-2 text-xs border-b" style={{ background: '#fffbeb', color: '#78350f' }}>
+              <div className="p-2 text-xs border-b" style={{ background: '#f6f6f6', color: '#111111' }}>
                 Procurando o preço de <strong>{term}</strong>? Este campo é para ações e fundos da Bolsa; a busca mostra
                 empresas com esse nome, não o preço da commodity. O preço está na aba "Cotações Cooperativas".
-                <button type="button" onClick={irParaCommodity} className="mt-1.5 block rounded-lg bg-green-800 px-2 py-1 font-bold text-white">
+                <button type="button" onClick={irParaCommodity} className="mt-1.5 block rounded-lg bg-neutral-900 px-2 py-1 font-bold text-white">
                   Ver o preço de {term}
                 </button>
               </div>
             )}
-            {searching && <div className="p-2 text-xs text-slate-500">Buscando…</div>}
+            {searching && <div className="p-2 text-xs text-neutral-500">Buscando…</div>}
             {!searching && suggestions.map(s => (
               <button key={s.symbol} type="button" onClick={() => pick(s.symbol, s.name)}
-                className="block w-full text-left px-2 py-1.5 text-xs hover:bg-blue-50 border-b last:border-b-0">
+                className="block w-full text-left px-2 py-1.5 text-xs hover:bg-neutral-100 border-b last:border-b-0">
                 <span className="font-bold">{s.symbol}</span> · {s.name}
-                {s.restrito && <span className="ml-1 rounded bg-slate-100 px-1 text-slate-500">precisa de chave</span>}
+                {s.restrito && <span className="ml-1 rounded bg-neutral-100 px-1 text-neutral-500">precisa de chave</span>}
               </button>
             ))}
           </div>
         )}
       </label>
-      <button className="self-end rounded-lg bg-blue-900 text-white p-2 text-sm" type="submit">Consultar</button>
+      <button className="self-end rounded-lg bg-neutral-900 text-white p-2 text-sm" type="submit">Consultar</button>
     </form>
 
     <div aria-live="polite" className="mt-3 text-sm">
       {validation && <p role="alert" className="text-red-700">{validation}</p>}
       {state.symbol !== symbol && <p>Buscando {symbol}…</p>}
-      {state.symbol === symbol && state.error && <p role="alert" className="text-amber-800">{state.error}{quote ? ' Última cotação recebida mantida abaixo; atualização pendente.' : ''}</p>}
-      {quote && <div className="mt-2 rounded-lg bg-blue-50 p-3">
+      {state.symbol === symbol && state.error && <p role="alert" className="text-neutral-800">{state.error}{quote ? ' Última cotação recebida mantida abaixo; atualização pendente.' : ''}</p>}
+      {quote && <div className="mt-2 rounded-lg bg-neutral-100 p-3">
         <p className="font-semibold">{quote.symbol} · {quote.name}</p>
         <p className="text-xl font-bold">{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: quote.currency }).format(quote.value)}</p>
         {Number.isFinite(quote.change) && <p>Variação: {quote.change.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}%</p>}
-        <p className="text-xs text-slate-600">{quote.source} · Cotação de {new Date(quote.date).toLocaleString('pt-BR')}</p>
+        <p className="text-xs text-neutral-600">{quote.source} · Cotação de {new Date(quote.date).toLocaleString('pt-BR')}</p>
         {onViewChart && <button type="button" onClick={() => onViewChart({ type: 'stock', symbol: quote.symbol, name: quote.name })}
-          className="mt-2 text-xs font-bold text-blue-900 underline">Ver gráfico desde 2020</button>}
+          className="mt-2 text-xs font-bold text-neutral-900 underline">Ver gráfico desde 2020</button>}
       </div>}
     </div>
-    <p className="mt-2 text-xs text-slate-500">Digite o nome da empresa e escolha uma sugestão da lista, ou informe o código diretamente.</p>
+    <p className="mt-2 text-xs text-neutral-500">Digite o nome da empresa e escolha uma sugestão da lista, ou informe o código diretamente.</p>
   </section>;
 }
 
@@ -164,8 +164,8 @@ export function CommodityQuotes({ refresh, onViewChart, adicionar, buscaInicial 
   };
 
   return <section id="consultar-commodity" className="rounded-xl border bg-white p-3 shadow-sm" style={{ scrollMarginTop: 90 }}>
-    <h2 className="text-sm font-bold text-green-800">Indicadores de preço do Brasil</h2>
-    <p className="text-xs text-slate-600 mt-1">Digite o nome (ex.: soja, café, boi) e aperte Enter ou clique em Adicionar para ver o valor. Também dá pra escolher direto na lista abaixo. São indicadores nacionais, como os do CEPEA: servem de comparação para os preços por região do Paraná, acima. Chicago e Nova Iorque estão na aba Bolsas.</p>
+    <h2 className="text-sm font-bold text-neutral-900">Indicadores de preço do Brasil</h2>
+    <p className="text-xs text-neutral-600 mt-1">Digite o nome (ex.: soja, café, boi) e aperte Enter ou clique em Adicionar para ver o valor. Também dá pra escolher direto na lista abaixo. São indicadores nacionais, como os do CEPEA: servem de comparação para os preços por região do Paraná, acima. Chicago e Nova Iorque estão na aba Bolsas.</p>
     <div className="flex gap-2 mt-3">
       <label className="flex-1 min-w-0 text-xs">Nome da commodity
         <input
@@ -176,13 +176,13 @@ export function CommodityQuotes({ refresh, onViewChart, adicionar, buscaInicial 
           onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addFirstMatch(); } }}
         />
       </label>
-      <button type="button" onClick={addFirstMatch} className="self-end rounded-lg bg-green-800 text-white p-2 text-xs font-bold">Adicionar</button>
+      <button type="button" onClick={addFirstMatch} className="self-end rounded-lg bg-neutral-900 text-white p-2 text-xs font-bold">Adicionar</button>
     </div>
     {notFound && <p role="alert" className="text-red-700 text-xs mt-1">Nenhuma commodity encontrada com esse nome. Veja as opções abaixo.</p>}
     {['Brasil', 'Internacional'].map(market => <fieldset key={market} className="mt-3">
       <legend className="font-semibold text-sm">{market}</legend>
       <div className="flex flex-wrap gap-2 mt-1">{COMMODITIES.filter(row => row[2] === market && normalize(row[1]).includes(normalize(search))).map(([id, name]) =>
-        <label key={id} className="text-xs rounded-lg border p-2 cursor-pointer bg-green-50 flex gap-2 items-center">
+        <label key={id} className="text-xs rounded-lg border p-2 cursor-pointer bg-neutral-100 flex gap-2 items-center">
           <input type="checkbox" checked={selected.includes(id)} onChange={() => {
             const next = selected.includes(id) ? selected.filter(value => value !== id) : [...selected, id];
             setSelected(next); savePreference('agroinfo.commodities.v1', next);
@@ -195,19 +195,19 @@ export function CommodityQuotes({ refresh, onViewChart, adicionar, buscaInicial 
       const url = `https://www.noticiasagricolas.com.br/widgets/cotacoes?id=${id}&fonte=${encodeURIComponent(siteFont)}&largura=420`;
       const historyKey = COMMODITY_HISTORY_KEY[id];
       return <article key={id} id={`commodity-${id}`} className="rounded-xl border shadow-sm bg-white p-3 min-w-0" style={{ borderColor: 'rgba(0,0,0,0.1)', scrollMarginTop: 100 }}>
-        <div className="flex items-center justify-between gap-2 mb-2 pb-2" style={{ borderBottom: '1px solid #e5e7eb' }}>
-          <h3 className="font-semibold text-sm">{name} <span className="text-xs text-slate-500">· {market}</span></h3>
+        <div className="flex items-center justify-between gap-2 mb-2 pb-2" style={{ borderBottom: '1px solid #e5e5e5' }}>
+          <h3 className="font-semibold text-sm">{name} <span className="text-xs text-neutral-500">· {market}</span></h3>
           {onViewChart && historyKey && (
             <button type="button" onClick={() => onViewChart({ type: 'commodity', id, key: historyKey, name })}
-              className="text-xs font-bold text-green-800 underline shrink-0">Ver gráfico</button>
+              className="text-xs font-bold text-neutral-900 underline shrink-0">Ver gráfico</button>
           )}
         </div>
-        <div className="w-full overflow-x-auto overflow-y-auto rounded-lg border" style={{ maxHeight: 260, borderColor: '#e5e7eb' }}>
+        <div className="w-full overflow-x-auto overflow-y-auto rounded-lg border" style={{ maxHeight: 260, borderColor: '#e5e5e5' }}>
           <iframe key={`${id}-${refresh}`} src={url} title={`Cotação de ${name}`} className="border-0 bg-white block" style={{ width: 440, height: 320 }} loading="lazy" />
         </div>
-        <a className="text-xs text-blue-800 underline mt-2 inline-block" href={url} target="_blank" rel="noopener noreferrer">Ver cotação na fonte / abrir se a tabela não carregar</a>
+        <a className="text-xs text-neutral-800 underline mt-2 inline-block" href={url} target="_blank" rel="noopener noreferrer">Ver cotação na fonte / abrir se a tabela não carregar</a>
       </article>;
     })}</div>
-    <p className="text-xs text-slate-500 mt-2">Fonte: Notícias Agrícolas e provedores indicados nas tabelas. Publicação conforme cada mercado; a consulta periódica não implica preço em tempo real.</p>
+    <p className="text-xs text-neutral-500 mt-2">Fonte: Notícias Agrícolas e provedores indicados nas tabelas. Publicação conforme cada mercado; a consulta periódica não implica preço em tempo real.</p>
   </section>;
 }

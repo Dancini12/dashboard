@@ -35,7 +35,7 @@ const encurtar = (texto, limite = 110) => (texto.length <= limite ? texto : `${t
 // Trecho do texto corrido, com o assunto em destaque no começo, como nos jornais.
 const Trecho = ({ assunto, children }) => <p style={{ marginBottom: 8 }}><strong className="uppercase" style={{ fontSize: "0.86em", letterSpacing: "0.06em" }}>{assunto} — </strong>{children}</p>;
 
-export default function Jornal({ dolar, variacaoDoDolar, moedas, indicadores, docente, alunos }) {
+export default function Jornal({ dolar, variacaoDoDolar, moedas, indicadores, docente }) {
   const { chicago, parana, combustiveis, safra, noticias, mercado, cidade, busca, setBusca, procurar, erroDaBusca,
     sojaNaBolsa, sojaEmReais, daRegiao, diesel, doTempo, hoje, semana, chuva, avisos, noCampo, frases } = useResumoDoDia({ dolar, variacaoDoDolar });
   const [fechamento] = useState(() => new Date()); // a edição leva a data e a hora em que a aba foi aberta
@@ -202,7 +202,7 @@ export default function Jornal({ dolar, variacaoDoDolar, moedas, indicadores, do
 
         <footer style={{ marginTop: 8, fontSize: 9.5, lineHeight: 1.4, color: "#555", fontFamily: SEM_SERIFA, breakInside: "avoid" }}>
           <p>Fontes: AwesomeAPI (dólar), Yahoo Finance (Chicago, com atraso), DERAL/SEAB-PR (preços e safra), ANP (diesel), Open-Meteo (tempo), Google Notícias e Banco Central. Edição fechada às {fechamento.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}.</p>
-          <p>Docente: {docente} · {alunos.length > 1 ? "Estudantes participantes" : "Estudante participante"}: {alunos.join(", ")} · agronahora.com.br</p>
+          <p>Docente: {docente} · agronahora.com.br</p>
         </footer>
       </article>
       </div>

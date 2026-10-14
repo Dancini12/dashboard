@@ -23,7 +23,7 @@ Painel educacional gratuito do **C.E.E.P.A. Fernando Costa** (Santa Mariana, PR)
 - **Glossário** com os termos do mercado.
 - **Castor:** assistente que responde dúvidas dos alunos sobre o mercado.
 
-Docente: Marcel Dancini Rodrigues.
+Docente: Marcel Dancini.
 
 ---
 

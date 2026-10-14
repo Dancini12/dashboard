@@ -15,7 +15,7 @@ const LOCAL = { CBOT: "Chicago", CME: "Chicago", "ICE US": "Nova Iorque" };
 const ERRO_GENERICO = "Não foi possível buscar o histórico agora.";
 
 const pct = v => `${v > 0 ? "+" : v < 0 ? "−" : ""}${Math.abs(v).toLocaleString("pt-BR", { minimumFractionDigits: 1, maximumFractionDigits: 1 })}%`;
-// "2020" → 2020; "Mar/26" → 2026
+// "2020" → 2020; também aceita rótulo de mês, como "Mar/26" → 2026
 const anoDe = texto => Number(texto) || 2000 + Number(texto.slice(-2));
 const futuro = f => ({
   chave: `f:${f.symbol}`, simbolo: f.symbol,
@@ -244,7 +244,7 @@ export default function CompararHistorico({ historico, nomes }) {
         Como a conta é feita: a média dos preços de cada ano é comparada com a média do ano inicial. Chicago e Nova Iorque
         estão em dólar; commodities do Brasil e ações, em reais. Por isso a comparação é da variação em %, não do preço.
         O ponto de {ultimoAno} é a média do ano até agora (nas commodities do Brasil, o último valor da tabela abaixo).
-        Fontes: Yahoo Finance (contratos), BRAPI (ações), CEPEA/ESALQ e Farmnews (commodities do Brasil).
+        Fontes: Yahoo Finance (contratos), BRAPI (ações), CEPEA/ESALQ (commodities do Brasil).
       </p>
     </section>
   );

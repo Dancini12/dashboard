@@ -16,6 +16,7 @@ import TvAgro from "./components/TvAgro";
 import { StockQuotes, CommodityQuotes, TICKER_RE } from "./components/MarketQuotes";
 import { COMMODITIES, FUTURES, CALCULADORAS, APELIDOS_FUTUROS, PRODUTOS_PARANA } from "./catalogo";
 import { CANAIS_AGRO } from "./canaisAgro";
+import historicoCepea from "./historicoCepea.json";
 import BuscaAgro from "./components/BuscaAgro";
 import Enfeite from "./components/Enfeite";
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
@@ -68,15 +69,14 @@ function indicadoresAtuais(bcb, selic) {
     return { ...ind, periodo: periodoDe(dado.data, ind.sinal), valor: `${ind.sinal && dado.valor > 0 ? "+" : ""}${fmt(dado.valor)}${ind.sufixo}`, desc: `${ind.desc}${em12Meses}` };
   });
 }
-const HISTORICO = [
-  { ano: "2020", boi: 220, soja: 105, milho: 52, cafe: 530, trigo: 1050, feijao: 180, cana: 78, leite: 1.50 },
-  { ano: "2021", boi: 297, soja: 165, milho: 85, cafe: 950, trigo: 1500, feijao: 200, cana: 100, leite: 2.05 },
-  { ano: "2022", boi: 310, soja: 190, milho: 87, cafe: 1310, trigo: 2100, feijao: 280, cana: 130, leite: 2.60 },
-  { ano: "2023", boi: 240, soja: 149, milho: 66, cafe: 900, trigo: 1550, feijao: 260, cana: 140, leite: 2.20 },
-  { ano: "2024", boi: 260, soja: 132, milho: 64, cafe: 1100, trigo: 1350, feijao: 230, cana: 145, leite: 2.10 },
-  { ano: "2025", boi: 320, soja: 118, milho: 68, cafe: 2100, trigo: 1300, feijao: 300, cana: 150, leite: 2.15 },
-  { ano: "Mar/26", boi: 343.69, soja: 115.49, milho: 55.26, cafe: 1750, trigo: 1263.33, feijao: 350, cana: 157.14, leite: 2.17 },
-];
+// Médias anuais dos indicadores do CEPEA/ESALQ desde 2020, calculadas das planilhas do próprio CEPEA por
+// scripts/historico-cepea.py (uma rotina do GitHub roda o script todo mês). O ano corrente é a média até o
+// último dia publicado (historicoCepea.ultimoDia).
+const HISTORICO = historicoCepea.anos;
+const SERIES_DO_HISTORICO = historicoCepea.series;
+const ANO_CORRENTE_DO_HISTORICO = historicoCepea.ultimoDia.slice(0, 4);
+const ATE_DO_HISTORICO = `${historicoCepea.ultimoDia.slice(8, 10)}/${historicoCepea.ultimoDia.slice(5, 7)}`;
+const rotuloDoAno = ano => (ano === ANO_CORRENTE_DO_HISTORICO ? `${ano}*` : ano);
 const GLOSSARIO = [
   { termo: "Commodity", def: "Produto primário padronizado negociado em bolsa (soja, milho, café, boi gordo).", icon: "🌾" },
   { termo: "CEPEA", def: "Centro de Estudos Avançados em Economia Aplicada (ESALQ/USP). Referência de preços agro.", icon: "📊" },
@@ -306,26 +306,26 @@ function NoticiasTab({ busca }) {
   );
 }
 
-const NOMES_DO_HISTORICO = { boi: "🐂 Boi", soja: "🌱 Soja", milho: "🌽 Milho", cafe: "☕ Café", trigo: "🌾 Trigo", feijao: "🥔 Feijão", cana: "🎋 Cana", leite: "🥛 Leite" };
+const NOMES_DO_HISTORICO = { boi: "🐂 Boi", soja: "🌱 Soja", milho: "🌽 Milho", cafe: "☕ Café", trigo: "🌾 Trigo" };
 
 function TabelaDoHistorico() {
   const cols = Object.keys(NOMES_DO_HISTORICO);
   const lb = NOMES_DO_HISTORICO;
   return (
     <Card className="p-3 overflow-x-auto">
-      <SecTitle icon={Clock} title="Os números, ano a ano · 2020–2026" color="#111111" />
-      <p className="text-xs opacity-40 mb-2">Fonte: CEPEA/ESALQ, Farmnews • R$ nominais</p>
+      <SecTitle icon={Clock} title={`Os números, ano a ano · ${HISTORICO[0].ano}–${HISTORICO.at(-1).ano}`} color="#111111" />
+      <p className="text-xs text-neutral-500 mb-2">Média de cada ano, em R$ da época. * {ANO_CORRENTE_DO_HISTORICO}: média de 1º de janeiro até {ATE_DO_HISTORICO}. Fonte: CEPEA/ESALQ.</p>
       <table className="w-full text-xs" style={{ minWidth: 550 }}>
-        <thead><tr style={{ background: "#111111", color: "#fff" }}><th className="py-1.5 px-1 text-left">Commodity</th>{HISTORICO.map(h => <th key={h.ano} className="py-1.5 px-1 text-center">{h.ano}</th>)}<th className="py-1.5 px-1 text-center">Var%</th></tr></thead>
-        <tbody>{cols.map((c, i) => { const pct = ((HISTORICO[6][c] - HISTORICO[0][c]) / HISTORICO[0][c] * 100); return (
-          <tr key={c} style={{ background: i % 2 === 0 ? "#f2f2f2" : "#fff" }}><td className="py-1 px-1 font-semibold whitespace-nowrap">{lb[c]}</td>{HISTORICO.map(h => <td key={h.ano} className="py-1 px-1 text-center font-mono" style={{ color: h.ano === "Mar/26" ? "#111111" : "#333", fontWeight: h.ano === "Mar/26" ? 700 : 400 }}>{fmt(h[c])}</td>)}<td className="py-1 px-1 text-center"><VarBadge val={parseFloat(pct.toFixed(1))} /></td></tr>); })}</tbody>
+        <thead><tr style={{ background: "#111111", color: "#fff" }}><th className="py-1.5 px-1 text-left">Commodity</th>{HISTORICO.map(h => <th key={h.ano} className="py-1.5 px-1 text-center">{rotuloDoAno(h.ano)}</th>)}<th className="py-1.5 px-1 text-center">Var%</th></tr></thead>
+        <tbody>{cols.map((c, i) => { const pct = ((HISTORICO.at(-1)[c] - HISTORICO[0][c]) / HISTORICO[0][c] * 100); return (
+          <tr key={c} style={{ background: i % 2 === 0 ? "#f2f2f2" : "#fff" }}><td className="py-1 px-1 font-semibold whitespace-nowrap">{lb[c]}<span className="block font-normal text-neutral-500" style={{ fontSize: 10 }}>{SERIES_DO_HISTORICO[c].unidade} · em {ATE_DO_HISTORICO}: R$ {fmt(SERIES_DO_HISTORICO[c].ultimo.valor)}</span></td>{HISTORICO.map(h => <td key={h.ano} className="py-1 px-1 text-center font-mono" style={{ color: h === HISTORICO.at(-1) ? "#111111" : "#333", fontWeight: h === HISTORICO.at(-1) ? 700 : 400 }}>{fmt(h[c])}</td>)}<td className="py-1 px-1 text-center"><VarBadge val={parseFloat(pct.toFixed(1))} /></td></tr>); })}</tbody>
       </table>
     </Card>
   );
 }
 
-const CC = { boi: "#1a5276", soja: "#27ae60", milho: "#f39c12", cafe: "#6f4e37", trigo: "#c0392b", feijao: "#8e44ad", cana: "#16a085", leite: "#2980b9" };
-const CL = { boi: "Boi", soja: "Soja", milho: "Milho", cafe: "Café", trigo: "Trigo", feijao: "Feijão", cana: "Cana", leite: "Leite" };
+const CC = { boi: "#1a5276", soja: "#27ae60", milho: "#f39c12", cafe: "#6f4e37", trigo: "#c0392b" };
+const CL = { boi: "Boi", soja: "Soja", milho: "Milho", cafe: "Café", trigo: "Trigo" };
 const normalize = (v) => v.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
 
 function GraficosCommoditiesPanel({ target }) {
@@ -334,16 +334,16 @@ function GraficosCommoditiesPanel({ target }) {
   const opts = Object.keys(CL).filter(k => normalize(CL[k]).includes(normalize(search)));
   return (
     <Card className="p-3">
-      <SecTitle icon={BarChart3} title="Commodities · Evolução 2020–2026" color="#111111" />
+      <SecTitle icon={BarChart3} title={`Commodities · Evolução ${HISTORICO[0].ano}–${HISTORICO.at(-1).ano}`} color="#111111" />
       <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Digite a commodity (ex.: soja, boi, café)"
         className="block w-full border rounded-lg p-2 mb-3 text-sm" />
       <div className="flex flex-wrap gap-1 mb-3">{opts.map(k => <button key={k} onClick={() => setSel(p => p.includes(k) ? p.filter(x => x !== k) : [...p, k])} className="px-2 py-1 rounded-full text-xs font-semibold" style={{ background: sel.includes(k) ? CC[k] : "#efefef", color: sel.includes(k) ? "#fff" : "#666666" }}>{CL[k]}</button>)}
         {!opts.length && <span className="text-xs opacity-40">Nenhuma commodity encontrada com esse nome.</span>}</div>
       {sel.length > 0 ? (
-        <div style={{ height: 300 }}><ResponsiveContainer><LineChart data={HISTORICO} margin={{ top: 5, right: 10, bottom: 5, left: 0 }}><CartesianGrid strokeDasharray="3 3" stroke="#e5e5e5" /><XAxis dataKey="ano" tick={{ fontSize: 10 }} /><YAxis tick={{ fontSize: 9 }} /><Tooltip formatter={v => `R$ ${fmt(v)}`} contentStyle={{ borderRadius: 8, fontSize: 11 }} /><Legend wrapperStyle={{ fontSize: 10 }} />{sel.map(k => <Line key={k} type="monotone" dataKey={k} name={CL[k]} stroke={CC[k]} strokeWidth={2.5} dot={{ r: 3 }} />)}</LineChart></ResponsiveContainer></div>
+        <div style={{ height: 300 }}><ResponsiveContainer><LineChart data={HISTORICO} margin={{ top: 5, right: 10, bottom: 5, left: 0 }}><CartesianGrid strokeDasharray="3 3" stroke="#e5e5e5" /><XAxis dataKey="ano" tickFormatter={rotuloDoAno} tick={{ fontSize: 10 }} /><YAxis tick={{ fontSize: 9 }} /><Tooltip formatter={v => `R$ ${fmt(v)}`} contentStyle={{ borderRadius: 8, fontSize: 11 }} /><Legend wrapperStyle={{ fontSize: 10 }} />{sel.map(k => <Line key={k} type="monotone" dataKey={k} name={CL[k]} stroke={CC[k]} strokeWidth={2.5} dot={{ r: 3 }} />)}</LineChart></ResponsiveContainer></div>
       ) : <p className="text-sm opacity-50 py-8 text-center">Selecione ao menos uma commodity para ver o gráfico.</p>}
-      <p className="text-xs opacity-25 mt-2 text-right">Fonte: CEPEA/ESALQ-USP, Farmnews · série anual</p>
-      <p className="text-xs opacity-40 mt-1">Os contratos de Chicago e de Nova Iorque e as ações têm histórico no comparador acima. Para algodão, suíno e laranja do Brasil ainda não há série histórica: veja o valor atual na aba Cotações Cooperativas.</p>
+      <p className="text-xs text-neutral-500 mt-2">Média de cada ano, em R$ da época; * {ANO_CORRENTE_DO_HISTORICO} até {ATE_DO_HISTORICO}. Fonte: CEPEA/ESALQ (boi gordo em São Paulo, soja no Paraná, milho em Campinas, café arábica e trigo no Paraná).</p>
+      <p className="text-xs text-neutral-500 mt-1">Os contratos de Chicago e de Nova Iorque e as ações têm histórico no comparador acima. Feijão, cana, leite, algodão, suíno e laranja não têm série anual do CEPEA desde 2020 que o site consiga atualizar sozinho: veja o valor atual na aba Cotações Cooperativas.</p>
     </Card>
   );
 }
@@ -741,7 +741,12 @@ export default function App() {
             : "indisponíveis no momento",
           selic: selic.value != null ? { metaPctAoAno: selic.value, data: selic.date, fonte: selic.source } : "indisponível",
           indicadores: indicadores.filter(i => i.nome !== "Selic").map(i => ({ nome: i.nome, valor: i.valor, periodo: i.periodo, descricao: i.desc, fonte: "Banco Central" })),
-          historicoAnual: { descricao: "Tabela Histórico 2020–2026 do painel (CEPEA/ESALQ, Farmnews; R$ nominais)", linhas: HISTORICO },
+          historicoAnual: {
+            descricao: `Médias anuais dos indicadores do CEPEA/ESALQ em R$ nominais; ${ANO_CORRENTE_DO_HISTORICO} é a média de 1º de janeiro até ${historicoCepea.ultimoDia}`,
+            unidades: Object.fromEntries(Object.entries(SERIES_DO_HISTORICO).map(([chave, serie]) => [chave, `${serie.nome}, ${serie.unidade}`])),
+            ultimoPreco: Object.fromEntries(Object.entries(SERIES_DO_HISTORICO).map(([chave, serie]) => [chave, serie.ultimo])),
+            linhas: HISTORICO,
+          },
         }} />}
         <VisitorCounter presencaUrl={ASSISTENTE_URL} />
       </div>

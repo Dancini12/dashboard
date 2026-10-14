@@ -1,0 +1,104 @@
+{
+  "fonte": "CEPEA/ESALQ",
+  "ultimoDia": "2026-10-13",
+  "series": {
+    "boi": {
+      "nome": "Indicador do Boi Gordo CEPEA/ESALQ (São Paulo)",
+      "unidade": "R$/@",
+      "ultimo": {
+        "data": "2026-10-13",
+        "valor": 378.0
+      }
+    },
+    "soja": {
+      "nome": "Indicador da Soja CEPEA/ESALQ, Paraná",
+      "unidade": "R$/saca de 60 kg",
+      "ultimo": {
+        "data": "2026-10-13",
+        "valor": 147.98
+      }
+    },
+    "milho": {
+      "nome": "Indicador do Milho ESALQ/B3 (Campinas)",
+      "unidade": "R$/saca de 60 kg",
+      "ultimo": {
+        "data": "2026-10-13",
+        "valor": 65.59
+      }
+    },
+    "cafe": {
+      "nome": "Indicador do Café Arábica CEPEA/ESALQ",
+      "unidade": "R$/saca de 60 kg",
+      "ultimo": {
+        "data": "2026-10-13",
+        "valor": 1547.28
+      }
+    },
+    "trigo": {
+      "nome": "Preço médio do trigo CEPEA/ESALQ, Paraná",
+      "unidade": "R$/tonelada",
+      "ultimo": {
+        "data": "2026-10-13",
+        "valor": 1561.58
+      }
+    }
+  },
+  "anos": [
+    {
+      "ano": "2020",
+      "boi": 226.18,
+      "soja": 115.86,
+      "milho": 58.69,
+      "cafe": 542.96,
+      "trigo": 1183.62
+    },
+    {
+      "ano": "2021",
+      "boi": 305.97,
+      "soja": 165.6,
+      "milho": 91.83,
+      "cafe": 962.17,
+      "trigo": 1573.25
+    },
+    {
+      "ano": "2022",
+      "boi": 317.74,
+      "soja": 184.4,
+      "milho": 88.16,
+      "cafe": 1260.96,
+      "trigo": 1890.79
+    },
+    {
+      "ano": "2023",
+      "boi": 254.69,
+      "soja": 143.39,
+      "milho": 66.01,
+      "cafe": 953.16,
+      "trigo": 1388.24
+    },
+    {
+      "ano": "2024",
+      "boi": 255.68,
+      "soja": 129.73,
+      "milho": 63.37,
+      "cafe": 1369.19,
+      "trigo": 1396.63
+    },
+    {
+      "ano": "2025",
+      "boi": 313.93,
+      "soja": 130.95,
+      "milho": 71.7,
+      "cafe": 2271.22,
+      "trigo": 1404.01
+    },
+    {
+      "ano": "2026",
+      "boi": 346.2,
+      "soja": 130.85,
+      "milho": 67.27,
+      "cafe": 1766.76,
+      "trigo": 1338.72
+    }
+  ]
+}

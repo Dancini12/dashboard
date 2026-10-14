@@ -1,0 +1,40 @@
+# Atualiza a tabela "Os números, ano a ano" da aba Evolução: toda segunda-feira recalcula, das
+# planilhas do CEPEA/ESALQ, a média de cada ano desde 2020 (scripts/historico-cepea.py) e, se mudou,
+# envia src/historicoCepea.json para o repositório, o que publica o site sozinho.
+name: Histórico CEPEA
+
+on:
+  schedule:
+    - cron: '0 9 * * 1' # segunda-feira, 6h no horário de Brasília
+  workflow_dispatch: # permite rodar na hora, pelo botão "Run workflow" do GitHub
+
+permissions:
+  contents: write
+
+concurrency: historico-cepea
+
+jobs:
+  atualizar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Buscar as planilhas do CEPEA
+        run: |
+          pip install xlrd==2.0.1
+          python scripts/historico-cepea.py
+      - name: Enviar para o repositório, se mudou
+        run: |
+          if [ -z "$(git status --porcelain src/historicoCepea.json)" ]; then
+            echo "Nada mudou."
+            exit 0
+          fi
+          git config user.name "AgroInfo (dados automáticos)"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/historicoCepea.json
+          git commit -m "Histórico do CEPEA atualizado pela fonte oficial"
+          git pull --rebase origin main
+          git push origin HEAD:main

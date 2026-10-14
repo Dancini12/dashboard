@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Download, Image, MapPin, Printer, Search, Share2, X } from "lucide-react";
+import { Download, Image, MapPin, Printer, RefreshCw, Search, Share2, X } from "lucide-react";
 import { getWmo, WEEK } from "../clima";
 import { textosDoJornal } from "../inicio";
 import Enfeite from "./Enfeite";
@@ -36,9 +36,18 @@ const encurtar = (texto, limite = 110) => (texto.length <= limite ? texto : `${t
 const Trecho = ({ assunto, children }) => <p style={{ marginBottom: 8 }}><strong className="uppercase" style={{ fontSize: "0.86em", letterSpacing: "0.06em" }}>{assunto} — </strong>{children}</p>;
 
 export default function Jornal({ dolar, variacaoDoDolar, moedas, indicadores }) {
-  const { chicago, parana, combustiveis, safra, noticias, mercado, cidade, busca, setBusca, procurar, erroDaBusca,
+  const { chicago, parana, combustiveis, safra, noticias, mercado, cidade, busca, setBusca, procurar, erroDaBusca, atualizadoEm, atualizar,
     sojaNaBolsa, sojaEmReais, daRegiao, diesel, doTempo, hoje, semana, chuva, avisos, noCampo, frases } = useResumoDoDia({ dolar, variacaoDoDolar });
-  const [fechamento] = useState(() => new Date()); // a edição leva a data e a hora em que a aba foi aberta
+  // a edição leva a data e a hora da atualização mais recente dos dados (o resumo se atualiza sozinho)
+  const [aberturaDaAba] = useState(() => Date.now());
+  const fechamento = new Date(atualizadoEm ?? aberturaDaAba);
+  const [pediuEm, setPediuEm] = useState(null); // hora do toque em "Atualizar agora", até os dados novos chegarem
+  const atualizando = pediuEm != null && (atualizadoEm ?? 0) < pediuEm;
+  const atualizarAgora = () => {
+    setPediuEm(Date.now());
+    atualizar();
+    setTimeout(() => setPediuEm(null), 45000); // se as fontes não responderem, o botão volta ao normal
+  };
   const [imagem, setImagem] = useState(null); // { url, arquivo } da imagem gerada; { erro } se não deu
   const [gerando, setGerando] = useState(false);
   const folha = useRef(null);
@@ -93,8 +102,9 @@ export default function Jornal({ dolar, variacaoDoDolar, moedas, indicadores }) 
         <div className="flex flex-wrap gap-2 mt-3">
           <button type="button" onClick={() => window.print()} disabled={carregando} className={BOTAO} style={{ background: "#111111", color: "#fff" }}><Printer size={14} aria-hidden="true" />Imprimir ou salvar em PDF</button>
           <button type="button" onClick={gerarImagem} disabled={carregando || gerando} className={BOTAO} style={{ border: "1px solid #bdbdbd", color: "#111111", background: "#fff" }}><Image size={14} aria-hidden="true" />{gerando ? "Gerando a imagem…" : "Salvar como imagem"}</button>
+          <button type="button" onClick={atualizarAgora} disabled={carregando || atualizando} className={BOTAO} style={{ border: "1px solid #bdbdbd", color: "#111111", background: "#fff" }}><RefreshCw size={14} className={atualizando ? "animate-spin" : undefined} aria-hidden="true" />{atualizando ? "Atualizando…" : "Atualizar agora"}</button>
         </div>
-        <p className="text-xs text-neutral-500 mt-2">{carregando ? "Aguarde: os dados do dia ainda estão chegando." : "Para o PDF, escolha “Salvar como PDF” na janela de impressão."}</p>
+        <p className="text-xs text-neutral-500 mt-2">{carregando ? "Aguarde: os dados do dia ainda estão chegando." : <>Dados atualizados às {fechamento.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}. O jornal se atualiza sozinho a cada 10 minutos. Para o PDF, escolha “Salvar como PDF” na janela de impressão.</>}</p>
 
         {imagem?.erro && <p role="alert" className="rounded-lg p-2.5 mt-3 text-xs sm:text-sm" style={{ background: "#f6f6f6", border: "1px solid #bdbdbd", color: "#111111" }}>Não foi possível gerar a imagem neste aparelho. Use a captura de tela do aparelho ou a opção de imprimir.</p>}
         {imagem?.url && (

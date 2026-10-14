@@ -51,7 +51,7 @@ Fontes: https://dadosabertos.bcb.gov.br/dataset/432-taxa-de-juros---meta-selic-d
 
 ## Jornal do dia
 
-- Usa os mesmos dados do Resumo do dia (`src/components/useResumoDoDia.js`). O PDF sai pela impressão do navegador: na impressão, o cabeçalho, o menu, o mascote e o contador somem (classes `print:` do Tailwind) e a folha é A4 (`@page` em `src/index.css`).
+- Usa os mesmos dados do Resumo do dia (`src/components/useResumoDoDia.js`). Esses dados se atualizam sozinhos a cada 10 minutos, quando a página volta à tela depois de mais de 5 minutos escondida e pelo botão "Atualizar agora"; a previsão do tempo, a cada hora. A folha leva a data e a hora da atualização mais recente. O PDF sai pela impressão do navegador: na impressão, o cabeçalho, o menu, o mascote e o contador somem (classes `print:` do Tailwind) e a folha é A4 (`@page` em `src/index.css`).
 - A imagem é gerada no próprio navegador pela biblioteca `html2canvas`, baixada só quando alguém pede, e sai em formato de página inteira também no celular (a folha é desenhada como em tela larga). Em `src/index.css` há uma regra para a imagem de teste que ela usa: sem essa regra, o estilo base do Tailwind faz o texto sair deslocado para baixo na imagem.
 - A cidade da previsão é a última escolhida no Resumo do dia, no Jornal ou na aba Clima (fica lembrada no navegador). O Open-Meteo passa por momentos em que responde "sobrecarregado": cada pedido é repetido 4 vezes (`src/clima.js`), o Resumo e o Jornal pedem de novo sozinhos por mais 2 minutos e, enquanto isso, usam a previsão do dia que o navegador já tinha recebido.
 

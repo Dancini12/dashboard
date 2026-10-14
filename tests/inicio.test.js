@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { precoNaRegiao, operacoesEmAndamento, frasesDoDia, textosDoJornal, horaDaCotacao, diaDoBoletim } from '../src/inicio.js';
+import { precoNaRegiao, operacoesEmAndamento, frasesDoDia, textosDoJornal, horaDaCotacao, diaDoBoletim, organizarNoticias, rubricaDe } from '../src/inicio.js';
 
 const cotacao = {
   regioes: ['Apucarana', 'Cornélio Procópio'],
@@ -71,4 +71,24 @@ test('jornal do dia: de quando são a cotação de Chicago e o boletim do DERAL'
   assert.equal(horaDaCotacao(undefined, referencia), null);
   assert.equal(diaDoBoletim('14/10/2026'), '14/10');
   assert.equal(diaDoBoletim(undefined), null);
+});
+
+test('jornal do dia: notícias por assunto, sem repetir tema e, na economia, só o que mexe com o agro', () => {
+  const n = (title, link = title) => ({ title, link, author: 'Fonte', pubDate: 'Wed, 14 Oct 2026 12:00:00 GMT' });
+  const agro = [
+    n('Preço do boi gordo no físico e futuro na máxima'),
+    n('Boi gordo, frango e suíno: confira cotações para esta quarta-feira'),
+    n('Exportações de carne bovina recuam na parcial de outubro'),
+    n('Boi gordo: arroba segue em alta com escalas de abate apertadas'),
+    n('Mercado de feijão no Brasil apresenta cotações divergentes'),
+  ];
+  assert.deepEqual(organizarNoticias(agro, 'agro').map(i => i.rubrica), ['Pecuária', 'Exportação', 'Grãos'], 'uma notícia por assunto');
+  assert.equal(organizarNoticias(agro.slice(0, 2), 'agro').length, 2, 'com poucos assuntos, completa com o que tiver');
+  assert.equal(organizarNoticias([n('Preço do boi gordo no físico e futuro na máxima', 'a'), n('Preço do boi gordo no físico e futuro na máxima hoje', 'b')], 'agro').length, 1, 'notícia parecida não se repete');
+  const economia = [n('Anvisa proíbe canetas emagrecedoras sem registro'), n('Dólar sobe a R$ 5,05 e Bolsa cai'), n('Copom mantém a Selic em 13,75%'), n('Prazo pra bancos devolverem dinheiro de bets acaba hoje')];
+  assert.deepEqual(organizarNoticias(economia, 'economia').map(i => i.rubrica), ['Câmbio', 'Juros'], 'assunto sem ligação com o agro fica de fora');
+  assert.equal(organizarNoticias([n('Dólar sobe a R$ 5,05')], 'economia', 3, [n('Dólar sobe a R$ 5,05')]).length, 0, 'não repete o que já saiu na outra coluna');
+  assert.equal(rubricaDe('Geada atinge lavouras de trigo no Paraná', 'agro'), 'Clima');
+  assert.equal(rubricaDe('Cooperativa inaugura nova unidade', 'agro'), 'Geral');
+  assert.equal(rubricaDe('Custo do confinamento amplia diferença de lucro', 'agro'), 'Pecuária');
 });

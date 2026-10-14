@@ -58,6 +58,53 @@ const POR_UNIDADE = { 'sc 60 kg': 'a saca', arroba: 'a arroba', kg: 'o quilo', t
 
 // Textos corridos do Jornal do dia, montados com os mesmos números do Resumo do dia. Devolve
 // { mercado: [frases], campo: frase ou null, economia: [frases] }; o que ainda não chegou fica de fora.
+// Notícias do Jornal do dia organizadas por assunto. Cada notícia ganha uma rubrica pelo título (a
+// primeira regra que casar, na ordem da lista); a seleção vai da mais recente para a mais antiga e
+// evita repetir rubrica e notícia parecida, para a folha não trazer três vezes o mesmo assunto. Na
+// economia entram só os assuntos que mexem com o agro: notícia sem rubrica fica de fora.
+const RUBRICAS = {
+  agro: [
+    ['Clima', /\b(chuva|seca|geada|estiagem|enchente|el nino|la nina|clima)/],
+    ['Exportação', /\b(export|import|embarque|china|tarifa|cota\b|portos?\b)/],
+    ['Café', /\bcafe\b/],
+    ['Grãos', /\b(soja|milho|trigo|feijao|arroz|sorgo|graos?|cevada|aveia)/],
+    ['Pecuária', /\b(boi|arroba|bovin|gado|carnes?\b|frango|suin|porco|leite|ovos?\b|pecuar|abate|bezerro|confinamento)/],
+    ['Safra', /\b(safra|plantio|colheita|conab|lavoura|produtividade)/],
+    ['Insumos', /\b(fertiliz|adubo|defensiv|sementes?\b|insumo)/],
+    ['Política agrícola', /\b(plano safra|credito rural|pronaf|seguro rural|ministerio da agricultura)/],
+  ],
+  economia: [
+    ['Câmbio', /\b(dolar|cambio)/],
+    ['Juros', /\b(selic|juros|copom)/],
+    ['Inflação', /\b(inflacao|ipca|inpc|igp)/],
+    ['Comércio exterior', /\b(export|import|balanca comercial|tarifa|novos mercados|china)/],
+    ['Combustíveis', /\b(diesel|gasolina|combustive|petroleo|petrobras)/],
+    ['Crédito', /\b(credito|financiamento|plano safra)/],
+    ['Atividade econômica', /\b(pib|servicos|industria|varejo|desemprego|emprego)/],
+  ],
+};
+const semAcento = texto => texto.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+const palavrasDe = titulo => new Set(semAcento(titulo).split(/[^a-z0-9]+/).filter(p => p.length > 3));
+// duas notícias são parecidas quando metade ou mais das palavras de uma está na outra
+function parecidas(a, b) {
+  const pa = palavrasDe(a), pb = palavrasDe(b);
+  const comuns = [...pa].filter(p => pb.has(p)).length;
+  return comuns >= Math.max(2, Math.ceil(Math.min(pa.size, pb.size) / 2));
+}
+export function rubricaDe(titulo, tipo) {
+  const texto = semAcento(titulo);
+  return RUBRICAS[tipo].find(([, regra]) => regra.test(texto))?.[0] ?? (tipo === 'agro' ? 'Geral' : null);
+}
+export function organizarNoticias(itens = [], tipo = 'agro', quantas = 3, evitar = []) {
+  const candidatas = itens.map(item => ({ ...item, rubrica: rubricaDe(item.title ?? '', tipo) }))
+    .filter(item => item.title && item.rubrica && !evitar.some(e => e.link === item.link || parecidas(e.title, item.title)));
+  const escolhidas = [];
+  const cabe = item => escolhidas.length < quantas && !escolhidas.some(e => e.link === item.link || parecidas(e.title, item.title));
+  for (const item of candidatas) if (cabe(item) && !escolhidas.some(e => e.rubrica === item.rubrica)) escolhidas.push(item); // uma por rubrica
+  for (const item of candidatas) if (cabe(item)) escolhidas.push(item); // se faltar, completa com rubrica repetida
+  return escolhidas;
+}
+
 // Quando foi a cotação de Chicago (segundos desde 1970), dito em relação à hora de referência (ms):
 // "às 14:09" se foi no mesmo dia, "em 13/10, às 15:20" se foi antes (bolsa fechada, fim de semana).
 export function horaDaCotacao(segundos, referencia) {

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Download, Image, MapPin, Printer, RefreshCw, Search, Share2, X } from "lucide-react";
 import { getWmo, WEEK } from "../clima";
-import { diaDoBoletim, horaDaCotacao, textosDoJornal } from "../inicio";
+import { diaDoBoletim, horaDaCotacao, organizarNoticias, textosDoJornal } from "../inicio";
 import Enfeite from "./Enfeite";
 import useResumoDoDia, { REGIAO } from "./useResumoDoDia";
 
@@ -76,6 +76,12 @@ export default function Jornal({ dolar, variacaoDoDolar, moedas, indicadores }) 
   const compartilhar = () => navigator.share({ files: [imagem.arquivo], title: "Informativo Agrícola · Jornal do dia" }).catch(() => { /* a pessoa desistiu de compartilhar */ });
 
   const [manchete, ...complemento] = frases.length ? frases : ["O dia no campo e no mercado."];
+  // notícias por assunto: três do agro, sem repetir tema, e três de economia que mexem com o agro
+  const doAgro = organizarNoticias(noticias.dados?.items, "agro");
+  const colunasDeNoticias = [
+    { assunto: "Agronegócio", consulta: noticias, itens: doAgro },
+    { assunto: "Economia", consulta: mercado, itens: organizarNoticias(mercado.dados?.items, "economia", 3, doAgro) },
+  ];
   const textos = textosDoJornal({ dolar, variacaoDoDolar, sojaEmReais, variacaoDaSoja: sojaNaBolsa?.change, daRegiao, regiao: REGIAO, diesel, noCampo, moedas, indicadores });
   const cotacoes = [
     ["Dólar comercial", dolar ? reais(dolar) : null, "", variacao(variacaoDoDolar)],
@@ -164,20 +170,22 @@ export default function Jornal({ dolar, variacaoDoDolar, moedas, indicadores }) 
             <p className="italic" style={{ fontSize: 11, color: "#555", marginTop: 4 }}>Cotações do dia. Chicago {horaDaCotacao(sojaNaBolsa?.date, fechamento) ?? "com atraso"}; região de {REGIAO} (DERAL{diaDoBoletim(parana.dados?.data) ? `, boletim de ${diaDoBoletim(parana.dados.data)}` : ""}); diesel: variação da semana.</p>
 
             <div className="grid grid-cols-1 gap-x-5 gap-y-3 sm:grid-cols-2 print:grid-cols-2" style={{ marginTop: 12 }}>
-              {[["Agronegócio", noticias], ["Mercado", mercado]].map(([assunto, consulta]) => {
-                const manchetes = consulta.dados?.items?.slice(0, 3) ?? [];
-                return (
-                  <section key={assunto}>
-                    <h4 className="font-bold uppercase" style={{ fontSize: 11, letterSpacing: "0.1em", borderBottom: FIO, paddingBottom: 2, fontFamily: SEM_SERIFA }}>{assunto}</h4>
-                    {manchetes.length ? manchetes.map(item => (
-                      <p key={item.link} style={{ fontSize: 12.5, lineHeight: 1.3, marginTop: 6 }}>
-                        <a href={item.link} target="_blank" rel="noopener noreferrer" className="font-bold">{encurtar(item.title)}</a>
-                        <span className="block italic" style={{ fontSize: 10.5, color: "#555" }}>{item.author}{item.pubDate && ` · ${haQuanto(item.pubDate)}`}</span>
-                      </p>
-                    )) : <p style={{ fontSize: 12.5, color: "#555", marginTop: 6 }}>{consulta.erro || consulta.dados ? "Notícias indisponíveis agora." : "Buscando as notícias…"}</p>}
-                  </section>
-                );
-              })}
+              {colunasDeNoticias.map(({ assunto, consulta, itens }) => (
+                <section key={assunto}>
+                  <h4 className="font-bold uppercase" style={{ fontSize: 11, letterSpacing: "0.1em", borderBottom: FIO, paddingBottom: 2, fontFamily: SEM_SERIFA }}>{assunto}</h4>
+                  {itens.length ? (
+                    <ol>
+                      {itens.map((item, i) => (
+                        <li key={item.link} style={{ padding: "5px 0", borderTop: i ? "1px solid #d4d4d4" : "none" }}>
+                          <span className="block uppercase" style={{ fontSize: 9, letterSpacing: "0.1em", color: "#555", fontFamily: SEM_SERIFA }}>{item.rubrica}</span>
+                          <a href={item.link} target="_blank" rel="noopener noreferrer" className="block font-bold" style={{ fontSize: 12.5, lineHeight: 1.25 }}>{encurtar(item.title, 95)}</a>
+                          <span className="block italic" style={{ fontSize: 10.5, color: "#555" }}>{item.author}{item.pubDate && ` · ${haQuanto(item.pubDate)}`}</span>
+                        </li>
+                      ))}
+                    </ol>
+                  ) : <p style={{ fontSize: 12.5, color: "#555", marginTop: 6 }}>{consulta.erro || consulta.dados ? "Notícias indisponíveis agora." : "Buscando as notícias…"}</p>}
+                </section>
+              ))}
             </div>
           </div>
         </div>

@@ -702,7 +702,7 @@ export default function App() {
               <BotaoMascote visivel={mascote} onClick={() => mostrarMascote(!mascote)} />
             </div>
           </div>
-          <div className="-mb-px overflow-x-auto"><div className="flex gap-0.5 w-max sm:w-auto sm:flex-wrap sm:justify-center">{TABS.map(t => { const I = TAB_ICONS[t]; return (<button key={t} onClick={() => trocarAba(t)} className="flex items-center gap-1 px-2.5 py-2 text-xs whitespace-nowrap" style={{ color: tab === t ? "#111111" : "#666666", fontWeight: tab === t ? 700 : 400, borderBottom: tab === t ? "3px solid #111111" : "3px solid transparent" }}><I size={12} />{TAB_LABELS[t]}</button>); })}</div></div>
+          <div className="-mb-px overflow-x-auto"><div className="flex gap-0.5 w-max sm:w-auto sm:flex-wrap sm:justify-center">{TABS.map(t => { const I = TAB_ICONS[t]; return (<button key={t} onClick={() => trocarAba(t)} className="flex items-center gap-1 px-2.5 py-2 text-xs whitespace-nowrap" style={{ color: tab === t ? "#111111" : "#444444", fontWeight: 700, borderBottom: tab === t ? "3px solid #111111" : "3px solid transparent" }}><I size={12} />{TAB_LABELS[t]}</button>); })}</div></div>
         </div>
       </nav>
       <div id="conteudo" className="jornal max-w-4xl mx-auto px-3 py-4 print:max-w-none print:p-0" style={{ scrollMarginTop: 100 }}>

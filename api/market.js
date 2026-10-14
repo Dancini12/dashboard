@@ -333,7 +333,7 @@ export default async function handler(req, res) {
 // ---------------------------------------------------------------- Paraná (DERAL/SEAB)
 
 const DERAL = 'https://www.agricultura.pr.gov.br';
-const UA_AGROINFO = 'Mozilla/5.0 (compatible; AgroInfo-CEEPA/1.0; +https://agroinfo-dashboard.vercel.app)';
+const UA_AGROINFO = 'Mozilla/5.0 (compatible; AgroInfo-CEEPA/1.0; +https://agronahora.com.br)';
 
 async function buscar(url, comoArquivo = false) {
   const response = await fetch(url, { signal: AbortSignal.timeout(15000), headers: { 'User-Agent': UA_AGROINFO } });

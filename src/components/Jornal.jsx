@@ -206,7 +206,7 @@ export default function Jornal({ dolar, variacaoDoDolar, moedas, indicadores, do
 
         <footer style={{ marginTop: 8, fontSize: 9.5, lineHeight: 1.4, color: "#555", fontFamily: SEM_SERIFA, breakInside: "avoid" }}>
           <p>Fontes: AwesomeAPI (dólar), Yahoo Finance (Chicago, com atraso), DERAL/SEAB-PR (preços e safra), ANP (diesel), Open-Meteo (tempo), Google Notícias e Banco Central. Edição fechada às {fechamento.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}.</p>
-          <p>Docente: {docente} · {alunos.length > 1 ? "Estudantes participantes" : "Estudante participante"}: {alunos.join(", ")} · agroinfo-dashboard.vercel.app</p>
+          <p>Docente: {docente} · {alunos.length > 1 ? "Estudantes participantes" : "Estudante participante"}: {alunos.join(", ")} · agronahora.com.br</p>
         </footer>
       </article>
     </div>

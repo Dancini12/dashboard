@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://agroinfo-dashboard.vercel.app/sitemap.xml
+Sitemap: https://agronahora.com.br/sitemap.xml

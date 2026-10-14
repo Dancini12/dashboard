@@ -4,7 +4,7 @@
 import lerPlanilha from 'read-excel-file/node';
 
 const PLANILHA_DERAL = 'https://www.agricultura.pr.gov.br/system/files/publico/Safras/pss.xlsx';
-const UA_AGROINFO = 'Mozilla/5.0 (compatible; AgroInfo-CEEPA/1.0; +https://agroinfo-dashboard.vercel.app)';
+const UA_AGROINFO = 'Mozilla/5.0 (compatible; AgroInfo-CEEPA/1.0; +https://agronahora.com.br)';
 const REGIAO_DA_ESCOLA = 'CORNÉLIO PROCÓPIO';
 const CULTURAS = ['SOJA (1ª SAFRA)', 'MILHO (1ª SAFRA)', 'MILHO (2ª SAFRA)', 'TRIGO', 'FEIJÃO (1ª SAFRA)', 'FEIJÃO (2ª SAFRA)', 'CAFÉ', 'CANA-DE-AÇÚCAR', 'MANDIOCA', 'CEVADA'];
 const SAFRAS_NA_TABELA = 10;

@@ -1,6 +1,8 @@
 # AgroInfo — Painel de cotações agrícolas
 
-**Acesse: https://agroinfo-dashboard.vercel.app**
+**Acesse: https://agronahora.com.br**
+
+O endereço antigo, `agroinfo-dashboard.vercel.app`, e o `www.agronahora.com.br` redirecionam para `agronahora.com.br` (regras em `vercel.json`). As chamadas `/api` no endereço antigo continuam respondendo sem redirecionar. A chave do contador de visitantes (`src/components/VisitorCounter.jsx`) mantém o nome antigo de propósito, para a contagem não zerar.
 
 Painel educacional gratuito do **C.E.E.P.A. Fernando Costa** (Santa Mariana, PR) para alunos e produtores acompanharem o mercado agrícola:
 

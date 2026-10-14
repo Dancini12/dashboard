@@ -6,7 +6,7 @@
 import { PAISES } from '../src/paises.js';
 
 const COMEX = 'https://api-comexstat.mdic.gov.br/general?language=pt';
-const UA_AGROINFO = 'Mozilla/5.0 (compatible; AgroInfo-CEEPA/1.0; +https://agroinfo-dashboard.vercel.app)';
+const UA_AGROINFO = 'Mozilla/5.0 (compatible; AgroInfo-CEEPA/1.0; +https://agronahora.com.br)';
 
 // Posições do Sistema Harmonizado (4 dígitos) de cada produto, na ordem em que aparecem na aba.
 export const PRODUTOS_EXPORTADOS = [

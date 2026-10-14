@@ -28,7 +28,6 @@ const TvAgro = lazy(() => import("./components/TvAgro"));
 const EvolucaoTab = lazy(() => import("./components/Evolucao"));
 
 const UPDATE_SEC = 60;
-const DOCENTE = "Marcel Dancini";
 // URL do App da Web do assistente (Apps Script, termina em /exec). Passo a passo em apps-script/LEIA-ME.md.
 const ASSISTENTE_URL = import.meta.env.VITE_ASSISTENTE_URL
   || "https://script.google.com/macros/s/AKfycbyDYcrR3XX5bqo0rKCp1c1ZgDHf4GCHsJv7jesNPo5PEtJT6qYMLCyUV6OGmB1ur-jrBA/exec";
@@ -494,16 +493,12 @@ export default function App() {
   return (
     <div className="min-h-screen bg-white print:min-h-0" style={{ color: "#111111" }}>
       {/* Visual de jornal clássico (classe "jornal", regras em src/index.css): cabeçalho como o título de um
-          jornal, com o enfeite, o nome em letras grandes e a linha da escola e da data entre dois fios.
+          jornal, com o enfeite, o nome em letras grandes e a data entre dois fios.
           Na impressão (aba Jornal do dia) sai só o conteúdo: cabeçalho, menu, rodapé, mascote e contador ficam de fora. */}
       <header className="jornal max-w-4xl mx-auto px-3 pt-4 print:hidden">
         <Enfeite />
         <h1 className="text-center font-bold uppercase" style={{ fontSize: "min(64px, 6.9vw)", lineHeight: 1.2, padding: "2px 0 4px" }}>Informativo Agrícola</h1>
-        <div className="flex flex-wrap items-baseline justify-between gap-x-3 py-1.5 text-xs sm:text-sm" style={{ borderTop: "1px solid #111111", borderBottom: "4px solid #111111" }}>
-          <span>C.E.E.P.A. Fernando Costa</span>
-          <span>{dataPorExtenso}</span>
-        </div>
-        <p className="text-center italic pt-1.5 pb-1" style={{ fontSize: 12, color: "#444444" }}>Docente: <strong>{DOCENTE}</strong></p>
+        <div className="py-1.5 text-center text-xs sm:text-sm" style={{ borderTop: "1px solid #111111", borderBottom: "4px solid #111111" }}>{dataPorExtenso}</div>
       </header>
       <nav className="jornal sticky top-0 z-50 bg-white print:hidden" style={{ borderBottom: "1px solid #111111" }}>
         <div className="relative max-w-4xl mx-auto px-3">
@@ -526,7 +521,7 @@ export default function App() {
           <IndicadoresCard indicadores={indicadores} />
         </Inicio>}
         {tab === "jornal" && <Jornal dolar={dolar ?? (dataSource === "indisponivel" ? null : undefined)} variacaoDoDolar={dataSource === "real" ? moedas.find(m => m.id === "usd")?.var : null}
-          moedas={moedas} indicadores={indicadores} docente={DOCENTE} />}
+          moedas={moedas} indicadores={indicadores} />}
         {tab === "bolsas" && <Bolsas key={alvo?.contrato ? alvo.n : "bolsas"} inicial={alvo?.contrato} dolar={dolar}>
           <StockQuotes key={alvo?.acao ? alvo.n : "acoes"} buscaInicial={alvo?.acao} refresh={count} onViewChart={viewChart} onCommodity={termo => irPara({ aba: "cooperativas", buscaCommodity: termo, ancora: "consultar-commodity" })} />
         </Bolsas>}
@@ -546,7 +541,7 @@ export default function App() {
         </Suspense>
       </div>
       <footer className="jornal max-w-4xl mx-auto px-3 print:hidden">
-        <p className="text-center py-3 text-xs" style={{ borderTop: "1px solid #111111", color: "#666666" }}>Informativo Agrícola · C.E.E.P.A. Fernando Costa · Docente: {DOCENTE} · agronahora.com.br</p>
+        <p className="text-center py-3 text-xs" style={{ borderTop: "1px solid #111111", color: "#666666" }}>Informativo Agrícola · agronahora.com.br</p>
       </footer>
       {/* o mascote e o contador continuam com a letra e o visual de antes */}
       <div className="print:hidden" style={{ fontFamily: "system-ui, sans-serif" }}>

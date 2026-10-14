@@ -6,7 +6,7 @@
 // transmissão aberta, como o Canal Rural, e às vezes chega sem a transmissão pronta).
 import { CANAIS_AGRO } from '../src/canaisAgro.js';
 
-const UA_AGROINFO = 'Mozilla/5.0 (compatible; AgroInfo-CEEPA/1.0; +https://agronahora.com.br)';
+const UA_AGROINFO = 'Mozilla/5.0 (compatible; AgroInfo/1.0; +https://agronahora.com.br)';
 const DADOS_DO_PLAYER = 'ytInitialPlayerResponse = ';
 
 // O objeto JSON que começa em `inicio`, lido até a chave que o fecha (chaves dentro de texto não contam).

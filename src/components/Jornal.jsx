@@ -35,7 +35,7 @@ const encurtar = (texto, limite = 110) => (texto.length <= limite ? texto : `${t
 // Trecho do texto corrido, com o assunto em destaque no começo, como nos jornais.
 const Trecho = ({ assunto, children }) => <p style={{ marginBottom: 8 }}><strong className="uppercase" style={{ fontSize: "0.86em", letterSpacing: "0.06em" }}>{assunto} — </strong>{children}</p>;
 
-export default function Jornal({ dolar, variacaoDoDolar, moedas, indicadores, docente }) {
+export default function Jornal({ dolar, variacaoDoDolar, moedas, indicadores }) {
   const { chicago, parana, combustiveis, safra, noticias, mercado, cidade, busca, setBusca, procurar, erroDaBusca,
     sojaNaBolsa, sojaEmReais, daRegiao, diesel, doTempo, hoje, semana, chuva, avisos, noCampo, frases } = useResumoDoDia({ dolar, variacaoDoDolar });
   const [fechamento] = useState(() => new Date()); // a edição leva a data e a hora em que a aba foi aberta
@@ -120,9 +120,8 @@ export default function Jornal({ dolar, variacaoDoDolar, moedas, indicadores, do
           <Enfeite cor={PRETO} />
           {/* tamanho pela largura da folha (cqw), para caber em uma linha também no celular; vw é a reserva dos navegadores antigos */}
           <h2 className="text-center font-bold uppercase text-[length:min(54px,6.4vw)] supports-[width:1cqw]:text-[length:min(54px,7.4cqw)]" style={{ fontFamily: TITULO, lineHeight: 1.2, paddingBottom: 4 }}>Informativo Agrícola</h2>
-          <div className="flex flex-wrap justify-between gap-x-3 py-1.5" style={{ fontSize: 13, borderTop: FIO, borderBottom: `4px solid ${PRETO}` }}>
-            <span>C.E.E.P.A. Fernando Costa</span>
-            <span>{comMaiuscula(fechamento.toLocaleDateString("pt-BR", { weekday: "long", day: "numeric", month: "long", year: "numeric" }))}</span>
+          <div className="py-1.5 text-center" style={{ fontSize: 13, borderTop: FIO, borderBottom: `4px solid ${PRETO}` }}>
+            {comMaiuscula(fechamento.toLocaleDateString("pt-BR", { weekday: "long", day: "numeric", month: "long", year: "numeric" }))}
           </div>
         </header>
 
@@ -202,7 +201,7 @@ export default function Jornal({ dolar, variacaoDoDolar, moedas, indicadores, do
 
         <footer style={{ marginTop: 8, fontSize: 9.5, lineHeight: 1.4, color: "#555", fontFamily: SEM_SERIFA, breakInside: "avoid" }}>
           <p>Fontes: AwesomeAPI (dólar), Yahoo Finance (Chicago, com atraso), DERAL/SEAB-PR (preços e safra), ANP (diesel), Open-Meteo (tempo), Google Notícias e Banco Central. Edição fechada às {fechamento.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}.</p>
-          <p>Docente: {docente} · agronahora.com.br</p>
+          <p>agronahora.com.br</p>
         </footer>
       </article>
       </div>

@@ -4,7 +4,7 @@
 import lerPlanilha from 'read-excel-file/node';
 
 const PAGINA_ANP = 'https://www.gov.br/anp/pt-br/assuntos/precos-e-defesa-da-concorrencia/precos/levantamento-de-precos-de-combustiveis-ultimas-semanas-pesquisadas';
-const UA_AGROINFO = 'Mozilla/5.0 (compatible; AgroInfo-CEEPA/1.0; +https://agronahora.com.br)';
+const UA_AGROINFO = 'Mozilla/5.0 (compatible; AgroInfo/1.0; +https://agronahora.com.br)';
 // produto na planilha → nome mostrado, na ordem do card
 const PRODUTOS = [['OLEO DIESEL S10', 'Diesel S10'], ['OLEO DIESEL', 'Diesel comum (S500)'], ['GASOLINA COMUM', 'Gasolina comum'], ['ETANOL HIDRATADO', 'Etanol']];
 const ESTADO = 'PARANA';

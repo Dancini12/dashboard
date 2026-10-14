@@ -15,7 +15,7 @@ SERIES = {  # chave da tabela → (endereço da planilha no CEPEA, nome do indic
     "trigo": ("trigo.aspx?id=178", "Preço médio do trigo CEPEA/ESALQ, Paraná", "R$/tonelada"),
 }
 PRIMEIRO_ANO = 2020
-UA = "Mozilla/5.0 (compatible; AgroInfo-CEEPA/1.0; +https://agronahora.com.br)"
+UA = "Mozilla/5.0 (compatible; AgroInfo/1.0; +https://agronahora.com.br)"
 DESTINO = pathlib.Path(__file__).resolve().parent.parent / "src" / "historicoCepea.json"
 
 

@@ -4,7 +4,7 @@
 
 O endereço antigo, `agroinfo-dashboard.vercel.app`, e o `www.agronahora.com.br` redirecionam para `agronahora.com.br` (regras em `vercel.json`). As chamadas `/api` no endereço antigo continuam respondendo sem redirecionar. A chave do contador de visitantes (`src/components/VisitorCounter.jsx`) mantém o nome antigo de propósito, para a contagem não zerar.
 
-Painel educacional gratuito do **C.E.E.P.A. Fernando Costa** (Santa Mariana, PR) para alunos e produtores acompanharem o mercado agrícola:
+Painel gratuito para estudantes e produtores acompanharem o mercado agrícola:
 
 - **Link direto para cada aba:** o endereço muda com a aba (`…/#tv`, `…/#exportacoes`, `…/#clima`), então dá para mandar o link de uma aba e usar o botão "voltar" do navegador entre elas.
 - **Busca no topo:** digite um produto, moeda, termo ou dúvida (ex.: "soja", "porco", "dólar", "o que é hedge") e vá direto à cotação, ao gráfico, ao glossário, às notícias ou ao Castor.
@@ -23,7 +23,6 @@ Painel educacional gratuito do **C.E.E.P.A. Fernando Costa** (Santa Mariana, PR)
 - **Glossário** com os termos do mercado.
 - **Castor:** assistente que responde dúvidas dos alunos sobre o mercado.
 
-Docente: Marcel Dancini.
 
 ---
 
@@ -43,7 +42,7 @@ Fontes: https://dadosabertos.bcb.gov.br/dataset/432-taxa-de-juros---meta-selic-d
 
 ## Visual de jornal
 
-- O site inteiro segue o modelo de jornal clássico em preto e branco: cabeçalho com o enfeite (`src/components/Enfeite.jsx`), o nome em letras grandes e a linha da escola e da data entre dois fios; texto com serifa; cantos retos, sem sombra, e um fio preto no alto de cada quadro. As regras ficam em `src/index.css`, na classe `jornal`, que o `App.jsx` põe no cabeçalho, no menu, nas abas e no rodapé.
+- O site inteiro segue o modelo de jornal clássico em preto e branco: cabeçalho com o enfeite (`src/components/Enfeite.jsx`), o nome em letras grandes e a data entre dois fios; texto com serifa; cantos retos, sem sombra, e um fio preto no alto de cada quadro. As regras ficam em `src/index.css`, na classe `jornal`, que o `App.jsx` põe no cabeçalho, no menu, nas abas e no rodapé.
 - A cor ficou só onde tem significado: alta em verde e queda em vermelho, avisos de risco em vermelho, o selo "ao vivo" da TV e os gráficos com várias linhas, que precisam de cores para separar uma da outra. O mapa de preços das Cotações Cooperativas usa tons de cinza (preto paga mais, cinza-claro paga menos).
 - O mascote (Castor) e o contador de visitantes ficam fora da classe `jornal` e mantêm o visual próprio.
 - A prévia que aparece quando alguém manda o link (WhatsApp, redes sociais) é `public/compartilhar.png`, feita a partir de `scripts/compartilhar.html`.

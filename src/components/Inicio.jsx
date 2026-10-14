@@ -1,5 +1,6 @@
 import { Calculator, ChevronRight, GitCompareArrows, GraduationCap, MapPin, MessageCircleQuestion, Search } from "lucide-react";
 import { getWmo, WEEK } from "../clima";
+import { diaDoBoletim, horaDaCotacao } from "../inicio";
 import useResumoDoDia, { REGIAO } from "./useResumoDoDia";
 
 // "Resumo do dia", a página que abre o site, montada como a primeira página de um jornal: a manchete
@@ -67,7 +68,7 @@ function Notas({ consulta, de = 0, ate = 3 }) {
 
 export default function Inicio({ dolar, variacaoDoDolar, onIr, onCastor, children }) {
   const { chicago, parana, combustiveis, safra, noticias, mercado, cidade, busca, setBusca, procurar, erroDaBusca,
-    sojaNaBolsa, sojaEmReais, daRegiao, diesel, doTempo, hoje, semana, chuva, avisos, noCampo } = useResumoDoDia({ dolar, variacaoDoDolar });
+    sojaNaBolsa, sojaEmReais, daRegiao, diesel, doTempo, hoje, semana, chuva, avisos, noCampo, atualizadoEm } = useResumoDoDia({ dolar, variacaoDoDolar });
   const estadoDe = consulta => (consulta.erro ? "erro" : "carregando");
   const manchete = noticias.dados?.items?.[0];
   const aviso = !avisos ? null : avisos.geada.length ? ["❄️ Risco de geada", avisos.geada] : avisos.chuvaForte.length ? ["⛈️ Chuva forte prevista", avisos.chuvaForte] : avisos.calor.length ? ["🌡️ Calor forte previsto", avisos.calor] : null;
@@ -107,7 +108,7 @@ export default function Inicio({ dolar, variacaoDoDolar, onIr, onCastor, childre
                 {diesel?.semanaAnterior && <Variacao valor={(diesel.parana.medio - diesel.semanaAnterior) / diesel.semanaAnterior * 100} sufixo=" na semana" altaERuim />}
               </Quadro>
             </div>
-            <p className="mt-1 italic text-xs text-neutral-500">Cotações do dia: Bolsa de Chicago, preços da região de {REGIAO} (DERAL) e diesel nos postos do Paraná (ANP).</p>
+            <p className="mt-1 italic text-xs text-neutral-500">Cotações do dia: Bolsa de Chicago{atualizadoEm && horaDaCotacao(sojaNaBolsa?.date, atualizadoEm) ? ` (${horaDaCotacao(sojaNaBolsa.date, atualizadoEm)})` : ""}, preços da região de {REGIAO} (DERAL{diaDoBoletim(parana.dados?.data) ? `, boletim de ${diaDoBoletim(parana.dados.data)}` : ""}) e diesel nos postos do Paraná (ANP).</p>
           </section>
 
           <div className="grid grid-cols-1 gap-x-6 gap-y-6 mt-6 sm:grid-cols-2">

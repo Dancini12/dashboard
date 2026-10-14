@@ -22,15 +22,18 @@ const MINUTOS_ENTRE_PREVISOES = 60;
 const MINUTO = 60000;
 
 // Uma fonte do resumo, pedida de novo a cada rodada. Enquanto a resposta nova não chega (ou se ela
-// falhar), fica na tela o que já tinha chegado.
+// falhar), fica na tela o que já tinha chegado. Nas rodadas automáticas vale a cópia que o servidor
+// guarda por alguns minutos; na pedida pelo botão ("fresca"), o endereço leva a hora, o que faz o
+// servidor ir de novo às fontes. "fim" é a hora em que a última tentativa terminou, com ou sem sucesso.
 function useConsulta(url, rodada) {
   const [estado, setEstado] = useState({});
   useEffect(() => {
     let ativo = true;
-    fetch(url, { signal: AbortSignal.timeout(45000), cache: "no-store" })
+    const endereco = rodada.fresca ? `${url}&agora=${Date.now()}` : url;
+    fetch(endereco, { signal: AbortSignal.timeout(45000), cache: "no-store" })
       .then(r => (r.ok ? r.json() : Promise.reject(new Error("indisponível"))))
-      .then(dados => { if (ativo) setEstado({ dados, em: Date.now() }); })
-      .catch(() => { if (ativo) setEstado(anterior => (anterior.dados ? anterior : { erro: true })); });
+      .then(dados => { if (ativo) setEstado({ dados, em: Date.now(), fim: Date.now() }); })
+      .catch(() => { if (ativo) setEstado(anterior => (anterior.dados ? { ...anterior, fim: Date.now() } : { erro: true, fim: Date.now() })); });
     return () => { ativo = false; };
   }, [url, rodada]);
   return estado;
@@ -38,12 +41,12 @@ function useConsulta(url, rodada) {
 
 // dolar e variacaoDoDolar vêm do App, que já consulta as moedas a cada minuto.
 export default function useResumoDoDia({ dolar, variacaoDoDolar }) {
-  const [rodada, setRodada] = useState(0);
+  const [rodada, setRodada] = useState({ n: 0, fresca: false });
   const [rodadaDoClima, setRodadaDoClima] = useState(0);
   const ultimas = useRef({ dados: 0, clima: 0 }); // hora das últimas rodadas
   useEffect(() => {
     ultimas.current = { dados: Date.now(), clima: Date.now() };
-    const novaRodada = () => { ultimas.current.dados = Date.now(); setRodada(r => r + 1); };
+    const novaRodada = () => { ultimas.current.dados = Date.now(); setRodada(r => ({ n: r.n + 1, fresca: false })); };
     const novaPrevisao = () => { ultimas.current.clima = Date.now(); setRodadaDoClima(r => r + 1); };
     const relogio = setInterval(novaRodada, MINUTOS_ENTRE_RODADAS * MINUTO);
     const relogioDoClima = setInterval(novaPrevisao, MINUTOS_ENTRE_PREVISOES * MINUTO);
@@ -61,10 +64,10 @@ export default function useResumoDoDia({ dolar, variacaoDoDolar }) {
       window.removeEventListener("focus", aoVoltar);
     };
   }, []);
-  // botão "Atualizar agora": pede tudo na hora, a previsão também
+  // botão "Atualizar agora": pede tudo na hora, direto nas fontes, e a previsão também
   const atualizar = useCallback(() => {
     ultimas.current = { dados: Date.now(), clima: Date.now() };
-    setRodada(r => r + 1);
+    setRodada(r => ({ n: r.n + 1, fresca: true }));
     setRodadaDoClima(r => r + 1);
   }, []);
   const chicago = useConsulta("/api/market?type=bolsas", rodada);
@@ -124,13 +127,16 @@ export default function useResumoDoDia({ dolar, variacaoDoDolar }) {
   const chuva = doTempo.dados && resumoDaChuva(doTempo.dados.dias, doTempo.dados.hoje);
   const avisos = doTempo.dados && avisosDaPrevisao(doTempo.dados.dias, doTempo.dados.hoje);
   const noCampo = safra.dados?.parana ? operacoesEmAndamento(safra.dados.parana.culturas).slice(0, 4) : [];
-  // hora da resposta mais recente entre as fontes do resumo (null enquanto nenhuma chegou)
-  const atualizadoEm = Math.max(0, ...[chicago, parana, combustiveis, safra, noticias, mercado].map(c => c.em ?? 0)) || null;
+  // hora da resposta mais recente entre as fontes do resumo (null enquanto nenhuma chegou) e hora em
+  // que a última delas terminou a tentativa mais recente (para saber quando a atualização acabou)
+  const fontes = [chicago, parana, combustiveis, safra, noticias, mercado];
+  const atualizadoEm = Math.max(0, ...fontes.map(c => c.em ?? 0)) || null;
+  const respondidoEm = Math.min(...fontes.map(c => c.fim ?? 0)) || null;
   const frases = frasesDoDia({ dolar, variacaoDoDolar, variacaoDaSoja: sojaNaBolsa?.change, cidade: hoje ? cidade.nome : null, hoje, avisos });
 
   return {
     chicago, parana, combustiveis, safra, noticias, mercado,
-    cidade, busca, setBusca, procurar, erroDaBusca, atualizadoEm, atualizar,
+    cidade, busca, setBusca, procurar, erroDaBusca, atualizadoEm, respondidoEm, atualizar,
     sojaNaBolsa, sojaEmReais, daRegiao, diesel, doTempo, hoje, proximosDias, semana, chuva, avisos, noCampo, frases,
   };
 }

@@ -58,6 +58,17 @@ const POR_UNIDADE = { 'sc 60 kg': 'a saca', arroba: 'a arroba', kg: 'o quilo', t
 
 // Textos corridos do Jornal do dia, montados com os mesmos números do Resumo do dia. Devolve
 // { mercado: [frases], campo: frase ou null, economia: [frases] }; o que ainda não chegou fica de fora.
+// Quando foi a cotação de Chicago (segundos desde 1970), dito em relação à hora de referência (ms):
+// "às 14:09" se foi no mesmo dia, "em 13/10, às 15:20" se foi antes (bolsa fechada, fim de semana).
+export function horaDaCotacao(segundos, referencia) {
+  if (!Number.isFinite(segundos)) return null;
+  const quando = new Date(segundos * 1000), base = new Date(referencia);
+  const hora = quando.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+  return quando.toDateString() === base.toDateString() ? `às ${hora}` : `em ${quando.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })}, às ${hora}`;
+}
+// "14/10/2026" → "14/10": data do boletim do DERAL, para a folha dizer de quando são os preços da região.
+export const diaDoBoletim = data => (typeof data === 'string' && /^\d{2}\/\d{2}/.test(data) ? data.slice(0, 5) : null);
+
 export function textosDoJornal({ dolar, variacaoDoDolar, sojaEmReais, variacaoDaSoja, daRegiao = [], regiao, diesel, noCampo = [], moedas = [], indicadores = [] }) {
   const mercado = [];
   if (dolar != null) mercado.push(`O dólar comercial vale ${reais(dolar)}${variacaoDoDolar != null ? `, ${rumo(variacaoDoDolar)} no dia` : ''}.`);

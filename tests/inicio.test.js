@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { precoNaRegiao, operacoesEmAndamento, frasesDoDia, textosDoJornal } from '../src/inicio.js';
+import { precoNaRegiao, operacoesEmAndamento, frasesDoDia, textosDoJornal, horaDaCotacao, diaDoBoletim } from '../src/inicio.js';
 
 const cotacao = {
   regioes: ['Apucarana', 'Cornélio Procópio'],
@@ -62,4 +62,13 @@ test('jornal do dia: textos corridos do mercado, do campo e da economia', () => 
   assert.equal(r.campo, 'Nas lavouras do Paraná: plantio de soja (1ª safra) 26/27 em 15% até set/26; colheita de trigo 25/26 em 46,5% até set/26.');
   assert.deepEqual(r.economia, ['Outras moedas: euro a R$ 5,62; peso argentino a R$ 0,0033.', 'Indicadores: IPCA (set/26), +0,82%; Selic, 13,75% a.a.'], 'sem moeda nem indicador que ainda não chegou');
   assert.deepEqual(textosDoJornal({}), { mercado: [], campo: null, economia: [] }, 'sem dados, nada');
+});
+
+test('jornal do dia: de quando são a cotação de Chicago e o boletim do DERAL', () => {
+  const referencia = new Date(2026, 9, 14, 15, 0).getTime();
+  assert.equal(horaDaCotacao(new Date(2026, 9, 14, 14, 9).getTime() / 1000, referencia), 'às 14:09');
+  assert.equal(horaDaCotacao(new Date(2026, 9, 13, 15, 20).getTime() / 1000, referencia), 'em 13/10, às 15:20', 'de outro dia, leva a data');
+  assert.equal(horaDaCotacao(undefined, referencia), null);
+  assert.equal(diaDoBoletim('14/10/2026'), '14/10');
+  assert.equal(diaDoBoletim(undefined), null);
 });

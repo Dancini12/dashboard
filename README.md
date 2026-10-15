@@ -49,6 +49,12 @@ Fontes: https://dadosabertos.bcb.gov.br/dataset/432-taxa-de-juros---meta-selic-d
 - Cada aba, menos o Resumo do dia, é baixada só quando é aberta (`lazy` no `App.jsx`); a biblioteca de gráficos vem junto com as abas que a usam.
 - A tabela e o gráfico da aba Evolução vêm de `src/historicoCepea.json`: médias anuais dos indicadores do CEPEA/ESALQ desde 2020, geradas por `scripts/historico-cepea.py`. A rotina `.github/workflows/historico-cepea.yml` roda o script toda segunda-feira e publica se algo mudou.
 
+## Anúncios (preparação)
+
+- Páginas exigidas pelo Google AdSense: `public/sobre.html` (o que é o site, fontes, contato) e `public/privacidade.html` (LGPD, cookies e anúncios), servidas em `/sobre` e `/privacidade` (`cleanUrls` no `vercel.json`) e ligadas no rodapé.
+- `src/components/Anuncios.jsx`: aviso de cookies e espaços de anúncio. Ficam desligados enquanto não houver `VITE_ADSENSE_CLIENT` (código "ca-pub-…") na hospedagem; com ele, o aviso aparece uma vez e o script do AdSense só carrega depois da escolha ("Só os necessários" → anúncios não personalizados). Os espaços com a etiqueta "Publicidade" aparecem com `VITE_ADSENSE_SLOT`; sem ele, valem os anúncios automáticos. Não há anúncio na TV Agro nem na folha do Jornal.
+- Antes de ligar os anúncios: a hospedagem precisa permitir uso comercial (o plano gratuito da Vercel não permite), e as fontes de uso só não comercial (Open-Meteo, feeds do Google Notícias) precisam ser trocadas.
+
 ## Jornal do dia
 
 - Usa os mesmos dados do Resumo do dia (`src/components/useResumoDoDia.js`). Esses dados se atualizam sozinhos a cada 10 minutos, quando a página volta à tela depois de mais de 5 minutos escondida e pelo botão "Atualizar agora"; a previsão do tempo, a cada hora. As atualizações automáticas aceitam a cópia que o servidor guarda por alguns minutos; o botão pede com `agora=<hora>` no endereço, o que faz o servidor ir de novo às fontes. A legenda das cotações diz a hora da cotação de Chicago e a data do boletim do DERAL. As notícias da folha são organizadas por `organizarNoticias` (`src/inicio.js`): cada uma ganha uma rubrica pelo título (Pecuária, Grãos, Câmbio…), a folha não repete assunto nem notícia parecida, e a coluna Economia só traz assuntos que mexem com o agro. A folha leva a data e a hora da atualização mais recente. O PDF sai pela impressão do navegador: na impressão, o cabeçalho, o menu, o mascote e o contador somem (classes `print:` do Tailwind) e a folha é A4 (`@page` em `src/index.css`).

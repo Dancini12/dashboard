@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Sobre e contato · Informativo Agrícola</title>
+<meta name="description" content="O que é o Informativo Agrícola, de onde vêm os dados e como entrar em contato." />
+<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+<style>
+  :root { --tinta: #111111; --cinza: #555555; --fio: #d4d4d4; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #ffffff; color: var(--tinta); font-family: Georgia, "Times New Roman", Times, serif; line-height: 1.6; }
+  main { max-width: 760px; margin: 0 auto; padding: 24px 16px 48px; }
+  .enfeite { display: flex; align-items: center; gap: 8px; height: 14px; }
+  .enfeite .fio { flex: 1; border-top: 1px solid var(--tinta); }
+  .enfeite .losango { width: 0; height: 0; border: 2.5px solid var(--tinta); transform: rotate(45deg); }
+  .enfeite .losango.grande { border-width: 4.5px; }
+  .titulo { display: block; text-align: center; font-family: "Times New Roman", Times, Georgia, serif; font-weight: 700; text-transform: uppercase;
+    font-size: min(54px, 7.4vw); line-height: 1.2; color: var(--tinta); text-decoration: none; padding: 2px 0 4px; }
+  .linha { text-align: center; font-size: 14px; padding: 6px 0; border-top: 1px solid var(--tinta); border-bottom: 4px solid var(--tinta); }
+  .linha a { color: var(--tinta); }
+  h1 { font-family: "Times New Roman", Times, Georgia, serif; font-size: clamp(28px, 6vw, 40px); line-height: 1.15; margin: 28px 0 4px; }
+  .data { font-style: italic; color: var(--cinza); font-size: 14px; margin: 0 0 20px; }
+  h2 { font-family: "Times New Roman", Times, Georgia, serif; font-size: 22px; margin: 28px 0 6px; padding-top: 10px; border-top: 2px solid var(--tinta); }
+  p, li { font-size: 16px; }
+  ul { padding-left: 20px; }
+  a { color: var(--tinta); }
+  footer { margin-top: 40px; padding-top: 10px; border-top: 1px solid var(--tinta); font-size: 13px; color: var(--cinza); text-align: center; }
+</style>
+</head>
+<body>
+<main>
+  <div class="enfeite" aria-hidden="true"><span class="fio"></span><span class="losango"></span><span class="losango grande"></span><span class="losango"></span><span class="fio"></span></div>
+  <a class="titulo" href="/">Informativo Agrícola</a>
+  <div class="linha"><a href="/">← Voltar ao site</a></div>
+  <h1>Sobre o Informativo Agrícola</h1>
+  <p class="data">O dia no campo e no mercado, em uma página.</p>
+  <p>O Informativo Agrícola reúne, em um só lugar e de graça, o que quem trabalha ou estuda o agronegócio precisa acompanhar no dia: cotações das bolsas e da região, previsão do tempo da sua cidade, andamento da safra, exportações, notícias e uma TV com canais do agro. Tem também calculadoras, atividades de estudo e o Jornal do dia, uma folha para imprimir ou mandar como imagem.</p>
+
+  <h2>De onde vêm os dados</h2>
+  <ul>
+    <li><strong>Preços do Paraná e safra:</strong> DERAL, da Secretaria da Agricultura e do Abastecimento do Paraná (SEAB).</li>
+    <li><strong>Séries históricas de commodities:</strong> CEPEA/ESALQ-USP.</li>
+    <li><strong>Bolsas de Chicago e Nova Iorque:</strong> Yahoo Finance, com atraso; ações da B3: BRAPI.</li>
+    <li><strong>Moedas e indicadores:</strong> AwesomeAPI e Banco Central do Brasil.</li>
+    <li><strong>Combustíveis:</strong> Agência Nacional do Petróleo (ANP).</li>
+    <li><strong>Exportações:</strong> Comex Stat, do Ministério do Desenvolvimento, Indústria, Comércio e Serviços.</li>
+    <li><strong>Produção agrícola:</strong> IBGE.</li>
+    <li><strong>Previsão do tempo:</strong> Open-Meteo.</li>
+    <li><strong>Notícias:</strong> manchetes com link para quem publicou, via Google Notícias.</li>
+  </ul>
+  <p>Os números são de referência, para acompanhar o mercado e estudar. Não são recomendação de compra ou venda e não servem para fechar negócio: antes de negociar, confirme o preço com o seu comprador.</p>
+
+  <h2>Contato</h2>
+  <p>Sugestões, correções ou dúvidas: <a href="mailto:contato@agronahora.com.br">contato@agronahora.com.br</a>.</p>
+
+  <footer>Informativo Agrícola · agronahora.com.br · <a href="/sobre">Sobre e contato</a> · <a href="/privacidade">Política de privacidade</a></footer>
+</main>
+</body>
+</html>

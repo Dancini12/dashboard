@@ -11,6 +11,7 @@ import { Card, SecTitle, VarBadge } from "./components/Cartao";
 import { fmt, fmtInt } from "./formatos";
 import BuscaAgro from "./components/BuscaAgro";
 import Enfeite from "./components/Enfeite";
+import { Anuncio, AvisoDeCookies } from "./components/Anuncios";
 import { lazy, Suspense, useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { RefreshCw, BookOpen, BarChart3, DollarSign, ChevronDown, ChevronUp, ArrowRight, Newspaper, ExternalLink, Warehouse, Landmark, CloudRain, Calculator, GraduationCap, Sprout, Ship, House, Tv, Printer } from "lucide-react";
 
@@ -539,9 +540,11 @@ export default function App() {
         {tab === "evolucao" && <EvolucaoTab target={chartTarget} />}
         {tab === "glossario" && <GlossarioTab key={alvo?.termo != null ? alvo.n : "glossario"} inicial={alvo?.termo} />}
         </Suspense>
+        {/* espaço de anúncio no fim da aba (fora da TV, que é só vídeo, e da folha do Jornal, que é para imprimir) */}
+        {tab !== "tv" && tab !== "jornal" && <Anuncio key={tab} />}
       </div>
       <footer className="jornal max-w-4xl mx-auto px-3 print:hidden">
-        <p className="text-center py-3 text-xs" style={{ borderTop: "1px solid #111111", color: "#666666" }}>Informativo Agrícola · agronahora.com.br</p>
+        <p className="text-center py-3 text-xs" style={{ borderTop: "1px solid #111111", color: "#666666" }}>Informativo Agrícola · agronahora.com.br · <a href="/sobre" className="underline">Sobre e contato</a> · <a href="/privacidade" className="underline">Política de privacidade</a></p>
       </footer>
       {/* o mascote e o contador continuam com a letra e o visual de antes */}
       <div className="print:hidden" style={{ fontFamily: "system-ui, sans-serif" }}>
@@ -559,6 +562,7 @@ export default function App() {
           },
         }} />}
         <VisitorCounter presencaUrl={ASSISTENTE_URL} />
+        <AvisoDeCookies />
       </div>
     </div>
   );

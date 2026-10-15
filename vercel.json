@@ -1,14 +1,25 @@
 {
+  "cleanUrls": true,
   "redirects": [
     {
       "source": "/((?!api/).*)",
-      "has": [{ "type": "host", "value": "agroinfo-dashboard.vercel.app" }],
+      "has": [
+        {
+          "type": "host",
+          "value": "agroinfo-dashboard.vercel.app"
+        }
+      ],
       "destination": "https://agronahora.com.br/$1",
       "permanent": false
     },
     {
       "source": "/(.*)",
-      "has": [{ "type": "host", "value": "www.agronahora.com.br" }],
+      "has": [
+        {
+          "type": "host",
+          "value": "www.agronahora.com.br"
+        }
+      ],
       "destination": "https://agronahora.com.br/$1",
       "permanent": true
     }

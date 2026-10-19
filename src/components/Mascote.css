@@ -7,7 +7,7 @@
   right: 12px;
   z-index: 60; /* acima da barra fixa do topo (z-50) */
   /* ocupa a margem ao lado do conteúdo (896px), sem invadi-lo */
-  --mascote-w: clamp(84px, calc((100vw - 896px) / 2 - 40px), 128px);
+  --mascote-w: clamp(68px, calc((100vw - 896px) / 2 - 40px), 104px);
   width: var(--mascote-w);
   aspect-ratio: 360 / 625;
   pointer-events: none;

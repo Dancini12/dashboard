@@ -6,6 +6,10 @@ const SUGESTOES = ["Como o dólar influencia o preço da soja?", "O que é o ind
 const AVISO = "Não digite dados pessoais. As conversas podem ser usadas pelo Google para melhorar seus produtos. "
   + "As perguntas ficam guardadas para o Castor aprender.";
 const MAX_PERGUNTA = 500;
+// Enquanto o Castor está em construção, toda pergunta recebe só este aviso: nada vai para o Apps
+// Script nem para o Gemini (e nada fica guardado). Para religar, trocar para false.
+const EM_CONSTRUCAO = true;
+const MSG_EM_CONSTRUCAO = "Ainda estou em construção! Logo vou conseguir responder às suas dúvidas. Enquanto isso, explore as abas do site: as cotações, o clima, a safra e as notícias estão lá.";
 const MAX_HISTORICO = 6;
 // Mesma mensagem do Assistente.gs para Gemini sobrecarregado (500/503): vale tentar de novo.
 const MSG_INDISPONIVEL = "O assistente está indisponível agora. Tente de novo em instantes.";
@@ -176,6 +180,10 @@ export default function AssistenteAgro({ url, dadosDashboard, aberto, pergunta, 
     setSaudou(true);
     setTexto("");
     setErro("");
+    if (EM_CONSTRUCAO) {
+      setMensagens(m => [...m, { id: ++ultimoId.current, autor: "assistente", texto: MSG_EM_CONSTRUCAO, digitar: !reduzMovimento }]);
+      return;
+    }
     setPensando(true);
     onPensando?.(true);
     try {
@@ -256,7 +264,7 @@ export default function AssistenteAgro({ url, dadosDashboard, aberto, pergunta, 
           onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); enviar(texto); } }} />
         <button type="submit" disabled={!texto.trim() || pensando || !url} aria-label="Enviar" title="Enviar"><Send size={16} /></button>
       </form>
-      <p className="assistente-aviso">{AVISO}</p>
+      {!EM_CONSTRUCAO && <p className="assistente-aviso">{AVISO}</p>}
     </section>
   );
 }

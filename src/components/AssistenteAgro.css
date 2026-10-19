@@ -8,7 +8,7 @@
   position: absolute;
   top: 0;
   z-index: 2;
-  width: min(340px, calc(100vw - var(--mascote-w, 128px) - 64px));
+  width: min(340px, calc(100vw - var(--mascote-w, 104px) - 64px));
   max-height: min(480px, calc(100vh - 24px));
   display: flex;
   flex-direction: column;
@@ -50,7 +50,7 @@
 
 .assistente.embaixo .assistente-rabicho {
   top: auto;
-  bottom: calc(var(--mascote-w, 128px) * 625 / 360 * 0.76 - 40px);
+  bottom: calc(var(--mascote-w, 104px) * 625 / 360 * 0.76 - 40px);
 }
 
 .rabicho-sombra {

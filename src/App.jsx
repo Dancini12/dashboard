@@ -6,6 +6,7 @@ import Combustiveis from "./components/Combustiveis";
 import Inicio from "./components/Inicio";
 import { StockQuotes, CommodityQuotes } from "./components/MarketQuotes";
 import { COMMODITIES, FUTURES, CALCULADORAS, APELIDOS_FUTUROS, PRODUTOS_PARANA } from "./catalogo";
+import { itensDeBuscaDosEstados } from "./estados";
 import { CANAIS_AGRO } from "./canaisAgro";
 import { ANO_CORRENTE_DO_HISTORICO, HISTORICO, NOMES_CURTOS_DO_HISTORICO as CL, SERIES_DO_HISTORICO, historicoCepea } from "./historico";
 import { Card, SecTitle, VarBadge } from "./components/Cartao";
@@ -324,6 +325,7 @@ function GlossarioTab({ inicial }) {
 
 // Tudo o que a busca do topo encontra: título, onde fica (grupo e detalhe), palavras extras e o destino.
 const SINONIMOS_PARANA = { "Suíno": "porco", Boi: "gado arroba", Vaca: "gado arroba", "Erva-mate": "chimarrão", Mandioca: "aipim macaxeira", "Café em coco": "café", "Café beneficiado": "café" };
+const SINONIMOS_DOS_ESTADOS = { ...SINONIMOS_PARANA, "Boi gordo": "gado arroba", "Vaca gorda": "gado arroba", Laranja: "citros suco", Cordeiro: "ovino carneiro", "Búfalo": "bufalino" };
 const DESCRICAO_ABA = {
   inicio: "O dia em uma página: cotações, tempo da sua cidade, lavouras, notícias, moedas, indicadores da economia e atalhos para a aula",
   jornal: "O resumo do dia em formato de jornal, em uma folha só, para imprimir, salvar em PDF ou guardar como imagem",
@@ -332,14 +334,15 @@ const DESCRICAO_ABA = {
   exportacoes: "Quanto o Brasil e o Paraná exportam de soja, milho, carnes e outros, para quais países, e o que o Brasil vende e compra de cada país",
   clima: "Previsão do tempo de agora e dos próximos dias, chuva que caiu e que vai cair, água no solo e risco de geada", calculadoras: "Preço da saca, conversor de unidades, relação de troca, ponto de equilíbrio e financiamento",
   aprender: "Simulação de uma safra com decisões do produtor e simulador de hedge",
-  cooperativas: "Preço pago ao produtor nas regiões do Paraná, indicadores de preço do Brasil e combustíveis", noticias: "Agronegócio, mercado e mercado internacional",
+  cooperativas: "Preço pago ao produtor no Paraná, em São Paulo, Mato Grosso do Sul, Mato Grosso e Rio Grande do Sul, indicadores de preço do Brasil e combustíveis", noticias: "Agronegócio, mercado e mercado internacional",
   tv: "Canais de TV do agro ao vivo e os vídeos recentes de cada um, pelo YouTube",
   evolucao: "Comparação de qual item subiu mais, gráficos e tabela de preços de 2020 a 2026", glossario: "Significado dos termos do mercado",
 };
 const INDICE_BUSCA = [
   { titulo: "Chicago e Nova Iorque · cotações das bolsas", detalhe: DESCRICAO_ABA.bolsas, grupo: "Bolsas", termos: "indices internacional vencimento cbot cme ice mercado futuro futuros contratos", acao: { aba: "bolsas" } },
   ...PRODUTOS_PARANA.map(nome => ({ titulo: `${nome} · preço por região do PR`, detalhe: "Quanto cooperativas e cerealistas pagam ao produtor (DERAL)", grupo: "Cooperativas",
-    termos: `cooperativa produtor parana regiao deral ${SINONIMOS_PARANA[nome] ?? ""}`, acao: { aba: "cooperativas", produto: nome } })),
+    termos: `cooperativa produtor parana paranaense regiao deral ${SINONIMOS_PARANA[nome] ?? ""}`, acao: { aba: "cooperativas", produto: nome } })),
+  ...itensDeBuscaDosEstados(SINONIMOS_DOS_ESTADOS),
   ...COMMODITIES.map(([id, nome, mercado]) => ({ titulo: nome, detalhe: mercado === "Brasil" ? "Indicador de preço no Brasil · Cotações Cooperativas" : "Cotação internacional · Cotações Cooperativas", grupo: "Cooperativas",
     termos: mercado === "Brasil" ? "brasil indicador cepea" : "internacional exterior bolsa", acao: { aba: "cooperativas", commodity: id, ancora: `commodity-${id}` } })),
   ...FUTURES.map(f => ({ titulo: `${f.name} · ${f.exchange === "ICE US" ? "Bolsa de Nova Iorque" : "Bolsa de Chicago"}`, detalhe: `Cotado em ${f.unit} · preço, vencimentos e valor em reais`, grupo: "Bolsas",

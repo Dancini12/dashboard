@@ -2,6 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { buscar } from '../src/busca.js';
 import { COMMODITIES, FUTURES, APELIDOS_FUTUROS, PRODUTOS_PARANA } from '../src/catalogo.js';
+import { itensDeBuscaDosEstados } from '../src/estados.js';
 import handler from '../api/news.js';
 
 // Mesmo formato do índice montado no App.jsx.
@@ -62,4 +63,17 @@ test('notícias: busca exige termo de 2 a 60 letras e consulta o Google News com
   const res = await chamar({ feed: 'busca', q: ' soja chicago ' });
   assert.equal(res.code, 200);
   assert.equal(res.data.items[0].title, 'Soja sobe em Chicago');
+});
+
+test('busca: preço de outro estado só aparece quando a pessoa digita o estado', () => {
+  const comEstados = [...itens, ...itensDeBuscaDosEstados({ 'Boi gordo': 'gado arroba' })];
+  const achados = consulta => buscar(comEstados, consulta);
+  assert.ok(!achados('soja').some(i => i.acao?.estado), 'só "soja": os resultados de antes, sem os estados');
+  assert.deepEqual(achados('soja mato grosso')[0].acao, { aba: 'cooperativas', estado: 'MT', produto: 'Soja' }, 'Mato Grosso antes de Mato Grosso do Sul');
+  assert.ok(achados('soja mato grosso').some(i => i.acao?.estado === 'MS'));
+  assert.deepEqual(achados('soja mato grosso do sul').map(i => i.acao?.estado), ['MS']);
+  assert.deepEqual(achados('milho gaúcho')[0].acao, { aba: 'cooperativas', estado: 'RS', produto: 'Milho' });
+  assert.deepEqual(achados('gado sp')[0].acao, { aba: 'cooperativas', estado: 'SP', produto: 'Boi gordo' }, 'sigla e sinônimo');
+  assert.deepEqual(achados('cotações são paulo')[0].acao, { aba: 'cooperativas', estado: 'SP' });
+  assert.ok(achados('laranja paulista').some(i => i.acao?.produto === 'Laranja'));
 });

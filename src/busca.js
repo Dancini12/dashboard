@@ -17,7 +17,10 @@ const SINONIMOS = {
 const alternativas = palavra => [palavra, SINONIMOS[palavra], palavra.length > 3 && palavra.endsWith('s') ? palavra.slice(0, -1) : null].filter(Boolean);
 
 // Cada palavra digitada precisa ser o começo de alguma palavra do título ou dos termos do item.
-// Título que começa com a busca vem primeiro; empate fica na ordem do índice.
+// Título que começa com a busca vem primeiro; empate fica na ordem do índice. Item com "exige" só aparece
+// se alguma palavra digitada for o começo de uma das palavras dele: os preços de cada estado aparecem
+// quando a pessoa digita o estado ("soja mato grosso", "milho gaúcho") e não empurram os outros
+// resultados de quem digitou só "soja".
 export function buscar(itens, consulta, limite = 8) {
   const digitadas = palavrasDe(consulta).filter(p => !IGNORAR.has(p));
   if (!digitadas.length) return [];
@@ -27,6 +30,10 @@ export function buscar(itens, consulta, limite = 8) {
       const texto = [...titulo, ...palavrasDe(item.termos ?? '')];
       const combina = p => alternativas(p).some(a => texto.some(w => w.startsWith(a)));
       if (!digitadas.every(combina)) return null;
+      if (item.exige) {
+        const exigidas = palavrasDe(item.exige);
+        if (!digitadas.some(p => alternativas(p).some(a => exigidas.some(w => w.startsWith(a))))) return null;
+      }
       const comeca = alternativas(digitadas[0]).some(a => titulo[0]?.startsWith(a));
       const noTitulo = digitadas.some(p => alternativas(p).some(a => titulo.some(w => w.startsWith(a))));
       return { item, pontos: comeca ? 3 : noTitulo ? 2 : 1, ordem };

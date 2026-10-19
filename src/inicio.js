@@ -1,6 +1,7 @@
 // Contas do Resumo do dia, a página que abre o site.
 import { APELIDOS_PARANA } from './catalogo.js';
 import { getWmo } from './clima.js';
+import { ESTADOS } from './estados.js';
 
 const MESES = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
 const MESES_DE_VALIDADE = 3; // andamento mais antigo que isso não é notícia
@@ -15,6 +16,56 @@ export function precoNaRegiao(cotacao, apelido, regiao) {
   const base = { unidade: produto.unidade, mediaEstado: produto.mediaEstado, variacaoPct: produto.variacaoPct };
   if (typeof daRegiao === 'number') return { ...base, valor: daRegiao, daRegiao: true };
   return produto.mediaEstado != null ? { ...base, valor: produto.mediaEstado, daRegiao: false } : null;
+}
+
+// Soja, milho e boi do estado escolhido no Resumo do dia e no Jornal do dia, a partir dos dados da fonte
+// de cada estado. No Paraná, o preço da região (precoNaRegiao); nos outros, a média do estado; em São
+// Paulo, a média simples das regionais que informaram, porque o IEA não publica a do estado.
+const PRODUTOS_DO_RESUMO = ['Soja', 'Milho', 'Boi'];
+const NA_FONTE = { Soja: ['Soja'], Milho: ['Milho'], Boi: ['Boi', 'Boi gordo'] };
+const UNIDADE_CURTA = { 'saca de 60 kg': 'saca', '60 kg': 'saca', arroba: 'arroba', 'kg vivo': 'kg vivo' };
+const duasCasas = v => Math.round(v * 100) / 100;
+export function precosDoEstado(sigla, dados, regiao) {
+  if (sigla === 'PR') return PRODUTOS_DO_RESUMO.map(produto => ({ produto, nomeNaFonte: produto, preco: precoNaRegiao(dados, produto, regiao) }));
+  return PRODUTOS_DO_RESUMO.map(produto => {
+    const p = dados?.produtos?.find(x => NA_FONTE[produto].includes(x.nome));
+    const base = { produto, nomeNaFonte: p?.nome ?? produto };
+    if (!p) return { ...base, preco: null };
+    const unidade = UNIDADE_CURTA[String(p.unidade).toLowerCase()] ?? p.unidade;
+    if (sigla === 'RS') {
+      if (p.medio == null) return { ...base, preco: null };
+      return { ...base, preco: { valor: p.medio, unidade, daRegiao: false, variacaoPct: p.semanaAnterior ? duasCasas((p.medio - p.semanaAnterior) / p.semanaAnterior * 100) : null } };
+    }
+    if (p.mediaEstado != null) return { ...base, preco: { valor: p.mediaEstado, unidade, daRegiao: false, variacaoPct: p.variacaoEstado ?? null } };
+    const valores = (p.locais ?? []).map(l => l.valor).filter(Number.isFinite);
+    if (!valores.length) return { ...base, preco: null };
+    return { ...base, preco: { valor: duasCasas(valores.reduce((a, b) => a + b, 0) / valores.length), unidade, daRegiao: false, variacaoPct: null,
+      regionais: valores.length, minimo: Math.min(...valores), maximo: Math.max(...valores) } };
+  });
+}
+
+// Nome do preço no quadro: longo no Resumo ("Soja em Mato Grosso (média)"), curto na folha do Jornal
+// ("Soja em MT"). No Paraná continua o da região, ou a média do estado quando a região não tem preço.
+export function rotuloDoPreco(produto, preco, estado = ESTADOS[0], regiao = '', curto = false) {
+  if (estado.sigla === 'PR') {
+    if (curto) return `${produto} ${preco && !preco.daRegiao ? 'no Paraná' : 'na região'}`;
+    return `${produto} ${preco && !preco.daRegiao ? 'no Paraná (média)' : `em ${regiao}`}`;
+  }
+  if (curto) return `${produto} ${estado.no} ${estado.sigla}`;
+  return `${produto} ${estado.no} ${estado.nome} (${preco?.regionais ? 'média das regionais' : 'média'})`;
+}
+
+// De quando são os preços do estado, para a nota embaixo do quadro: "boletim de 16/10", "16/10",
+// "de 14/10 a 16/10", "semana de 12/10 a 16/10".
+export function referenciaDoEstado(sigla, dados) {
+  if (!dados) return null;
+  if (sigla === 'PR') return diaDoBoletim(dados.data) ? `boletim de ${diaDoBoletim(dados.data)}` : null;
+  if (sigla === 'RS') return dados.semana ? `semana de ${dados.semana.de.slice(0, 5)} a ${dados.semana.ate.slice(0, 5)}` : null;
+  const produtos = dados.produtos ?? [];
+  const ate = produtos.reduce((a, p) => (p.data > a ? p.data : a), '');
+  const desde = produtos.reduce((a, p) => (p.desde && p.desde < a ? p.desde : a), ate);
+  if (!ate) return null;
+  return desde && desde !== ate ? `de ${diaMes(desde)} a ${diaMes(ate)}` : diaMes(ate);
 }
 
 // Plantios e colheitas em andamento no Paraná: a safra mais recente de cada cultura em que a
@@ -54,7 +105,7 @@ export function frasesDoDia({ dolar, variacaoDoDolar, variacaoDaSoja, cidade, ho
 
 const reais = v => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 const minuscula = texto => texto.charAt(0).toLowerCase() + texto.slice(1);
-const POR_UNIDADE = { 'sc 60 kg': 'a saca', arroba: 'a arroba', kg: 'o quilo', tonelada: 'a tonelada' };
+const POR_UNIDADE = { 'sc 60 kg': 'a saca', saca: 'a saca', arroba: 'a arroba', kg: 'o quilo', 'kg vivo': 'o quilo vivo', tonelada: 'a tonelada' };
 
 // Textos corridos do Jornal do dia, montados com os mesmos números do Resumo do dia. Devolve
 // { mercado: [frases], campo: frase ou null, economia: [frases] }; o que ainda não chegou fica de fora.
@@ -116,13 +167,18 @@ export function horaDaCotacao(segundos, referencia) {
 // "14/10/2026" → "14/10": data do boletim do DERAL, para a folha dizer de quando são os preços da região.
 export const diaDoBoletim = data => (typeof data === 'string' && /^\d{2}\/\d{2}/.test(data) ? data.slice(0, 5) : null);
 
-export function textosDoJornal({ dolar, variacaoDoDolar, sojaEmReais, variacaoDaSoja, daRegiao = [], regiao, diesel, noCampo = [], moedas = [], indicadores = [] }) {
+export function textosDoJornal({ dolar, variacaoDoDolar, sojaEmReais, variacaoDaSoja, daRegiao = [], regiao, estado = ESTADOS[0], diesel, noCampo = [], moedas = [], indicadores = [] }) {
   const mercado = [];
   if (dolar != null) mercado.push(`O dólar comercial vale ${reais(dolar)}${variacaoDoDolar != null ? `, ${rumo(variacaoDoDolar)} no dia` : ''}.`);
   if (sojaEmReais != null) mercado.push(`Na Bolsa de Chicago, a soja equivale a ${reais(sojaEmReais)} por saca no porto${variacaoDaSoja != null ? `, ${rumo(variacaoDaSoja)}` : ''}.`);
-  const precos = daRegiao.filter(item => item.preco).map(({ produto, preco }) => `${produto.toLowerCase()}, ${reais(preco.valor)} ${POR_UNIDADE[preco.unidade.toLowerCase()] ?? `por ${preco.unidade}`}${preco.daRegiao ? '' : ' (média do Paraná)'}`);
-  if (precos.length) mercado.push(`Na região de ${regiao}, os preços do dia são: ${precos.join('; ')}.`);
-  if (diesel) mercado.push(`O diesel S10 custa em média ${reais(diesel.parana.medio)} o litro nos postos do Paraná.`);
+  const doParana = estado.sigla === 'PR';
+  const precos = daRegiao.filter(item => item.preco).map(({ produto, preco }) => `${produto.toLowerCase()}, ${reais(preco.valor)} ${POR_UNIDADE[preco.unidade.toLowerCase()] ?? `por ${preco.unidade}`}${preco.daRegiao || !doParana ? '' : ' (média do Paraná)'}`);
+  if (precos.length) {
+    const de = doParana ? `Na região de ${regiao}, os preços do dia são`
+      : `${estado.no === 'no' ? 'No' : 'Em'} ${estado.nome}, ${daRegiao.some(i => i.preco?.regionais) ? 'as médias das regionais são' : estado.sigla === 'RS' ? 'as médias da semana são' : 'as médias do dia são'}`;
+    mercado.push(`${de}: ${precos.join('; ')}.`);
+  }
+  if (diesel?.medio != null) mercado.push(`O diesel S10 custa em média ${reais(diesel.medio)} o litro nos postos ${estado.de} ${estado.nome}.`);
   const campo = noCampo.length
     ? `Nas lavouras do Paraná: ${noCampo.map(o => `${o.operacao.toLowerCase()} de ${minuscula(o.cultura)} ${o.safra} em ${o.pct.toLocaleString('pt-BR', { maximumFractionDigits: 1 })}% até ${o.mes}`).join('; ')}.` : null;
   const outras = moedas.filter(m => m.id !== 'usd' && m.valor != null).map(m => `${m.nome.toLowerCase()} a R$ ${m.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: m.valor < 1 ? 4 : 2 })}`);

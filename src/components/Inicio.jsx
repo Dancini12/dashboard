@@ -1,6 +1,7 @@
 import { Calculator, ChevronRight, GitCompareArrows, GraduationCap, MapPin, MessageCircleQuestion, Search } from "lucide-react";
 import { getWmo, WEEK } from "../clima";
-import { diaDoBoletim, horaDaCotacao, organizarNoticias } from "../inicio";
+import { ESTADOS } from "../estados";
+import { horaDaCotacao, organizarNoticias, rotuloDoPreco } from "../inicio";
 import { Anuncio } from "./Anuncios";
 import useResumoDoDia, { REGIAO } from "./useResumoDoDia";
 
@@ -51,7 +52,7 @@ function Quadro({ rotulo, valor, unidade, estado, onClick, cor = VERDE, children
   );
 }
 // Título de seção: letras pequenas e espaçadas sobre um fio, como nas páginas de jornal.
-const Titulo = ({ children }) => <h2 className="font-bold uppercase" style={{ fontSize: 11, letterSpacing: "0.12em", fontFamily: SEM_SERIFA, color: VERDE, borderBottom: `1px solid ${VERDE}`, paddingBottom: 3 }}>{children}</h2>;
+const Titulo = ({ children, semFio }) => <h2 className="font-bold uppercase" style={{ fontSize: 11, letterSpacing: "0.12em", fontFamily: SEM_SERIFA, color: VERDE, ...(semFio ? {} : { borderBottom: `1px solid ${VERDE}` }), paddingBottom: 3 }}>{children}</h2>;
 const VerMais = ({ onClick, children }) => (
   <button type="button" onClick={onClick} className="mt-2 inline-flex items-center gap-0.5 text-xs font-bold text-green-800 hover:underline">{children}<ChevronRight size={13} aria-hidden="true" /></button>
 );
@@ -72,7 +73,7 @@ function Notas({ consulta, itens }) {
 }
 
 export default function Inicio({ dolar, variacaoDoDolar, onIr, onCastor, children }) {
-  const { chicago, parana, combustiveis, safra, noticias, mercado, cidade, busca, setBusca, procurar, erroDaBusca,
+  const { chicago, doEstado, estado, escolherEstado, referencia, combustiveis, safra, noticias, mercado, cidade, busca, setBusca, procurar, erroDaBusca,
     sojaNaBolsa, sojaEmReais, daRegiao, diesel, doTempo, hoje, semana, chuva, avisos, noCampo, atualizadoEm } = useResumoDoDia({ dolar, variacaoDoDolar });
   const estadoDe = consulta => (consulta.erro ? "erro" : "carregando");
   // notícias por assunto, como no Jornal do dia: seis do agro sem repetir tema (se faltar assunto,
@@ -99,7 +100,16 @@ export default function Inicio({ dolar, variacaoDoDolar, onIr, onCastor, childre
         {/* colunas 2 e 3 (no celular, logo depois da manchete): o quadro das cotações no lugar da foto do modelo */}
         <div className="sm:col-span-2 sm:order-2">
           <section>
-            <Titulo>Hoje no mercado</Titulo>
+            {/* o estado dos preços e do diesel: o mesmo da aba Cotações Cooperativas, lembrado neste navegador */}
+            <div className="flex items-end justify-between gap-2" style={{ borderBottom: `1px solid ${VERDE}` }}>
+              <Titulo semFio>Hoje no mercado</Titulo>
+              <label className="flex items-center gap-1.5 pb-1 text-xs text-slate-600" style={{ fontFamily: SEM_SERIFA }}>
+                Estado
+                <select value={estado.sigla} onChange={e => escolherEstado(e.target.value)} className="rounded border bg-white px-1.5 py-0.5 text-xs font-bold text-green-800" style={{ borderColor: "#bbf7d0" }}>
+                  {ESTADOS.map(e => <option key={e.sigla} value={e.sigla}>{e.nome}</option>)}
+                </select>
+              </label>
+            </div>
             <div className="grid grid-cols-2 gap-px mt-2 sm:grid-cols-3" style={{ background: "#d6e9dc", border: "1px solid #b7d8c0" }}>
               <Quadro cor={COR_DO_QUADRO.dolar} rotulo="Dólar comercial" valor={dolar ? reais(dolar) : null} estado={dolar === null ? "erro" : "carregando"} onClick={() => onIr({ aba: "inicio", ancora: "card-moedas" })}>
                 <Variacao valor={variacaoDoDolar} sufixo=" hoje" />
@@ -108,17 +118,23 @@ export default function Inicio({ dolar, variacaoDoDolar, onIr, onCastor, childre
                 estado={estadoDe(chicago)} onClick={() => onIr({ aba: "bolsas", contrato: "soja", ancora: "bolsa-detalhe" })}>
                 {sojaNaBolsa && <>{sojaEmReais != null && <>{decimal(sojaNaBolsa.value, 2)} US¢/bushel · </>}<Variacao valor={sojaNaBolsa.change} sufixo=" hoje" /></>}
               </Quadro>
-              {daRegiao.map(({ produto, preco }) => (
-                <Quadro key={produto} cor={COR_DO_QUADRO.regiao} rotulo={`${produto} ${preco && !preco.daRegiao ? "no Paraná (média)" : `em ${REGIAO}`}`} valor={preco ? reais(preco.valor) : null} unidade={preco ? UNIDADES[preco.unidade.toLowerCase()] ?? preco.unidade : null}
-                  estado={parana.dados ? "erro" : estadoDe(parana)} onClick={() => onIr({ aba: "cooperativas", produto })}>
-                  {preco && <>{preco.daRegiao && preco.mediaEstado != null && <>Paraná: {reais(preco.mediaEstado)} · </>}<Variacao valor={preco.variacaoPct} sufixo={preco.daRegiao ? " no estado" : " sobre ontem"} /></>}
+              {daRegiao.map(({ produto, nomeNaFonte, preco }) => (
+                <Quadro key={produto} cor={COR_DO_QUADRO.regiao} rotulo={rotuloDoPreco(produto, preco, estado, REGIAO)} valor={preco ? reais(preco.valor) : null} unidade={preco ? UNIDADES[preco.unidade.toLowerCase()] ?? preco.unidade : null}
+                  estado={doEstado.dados ? "erro" : estadoDe(doEstado)} onClick={() => onIr({ aba: "cooperativas", estado: estado.sigla, produto: nomeNaFonte })}>
+                  {preco && (estado.sigla === "PR"
+                    ? <>{preco.daRegiao && preco.mediaEstado != null && <>Paraná: {reais(preco.mediaEstado)} · </>}<Variacao valor={preco.variacaoPct} sufixo={preco.daRegiao ? " no estado" : " sobre ontem"} /></>
+                    : preco.regionais ? <>{preco.regionais} {preco.regionais === 1 ? "regional" : "regionais"}: {reais(preco.minimo)} a {reais(preco.maximo)}</>
+                      : <Variacao valor={preco.variacaoPct} sufixo={estado.sigla === "RS" ? " na semana" : " sobre a anterior"} />)}
                 </Quadro>
               ))}
-              <Quadro cor={COR_DO_QUADRO.diesel} rotulo="Diesel S10 no Paraná" valor={diesel ? reais(diesel.parana.medio) : null} unidade={diesel ? "litro" : null} estado={combustiveis.dados ? "erro" : estadoDe(combustiveis)} onClick={() => onIr({ aba: "cooperativas", ancora: "card-combustiveis" })}>
-                {diesel?.semanaAnterior && <Variacao valor={(diesel.parana.medio - diesel.semanaAnterior) / diesel.semanaAnterior * 100} sufixo=" na semana" altaERuim />}
+              <Quadro cor={COR_DO_QUADRO.diesel} rotulo={`Diesel S10 ${estado.no} ${estado.nome}`} valor={diesel ? reais(diesel.medio) : null} unidade={diesel ? "litro" : null} estado={combustiveis.dados ? "erro" : estadoDe(combustiveis)} onClick={() => onIr({ aba: "cooperativas", ancora: "card-combustiveis" })}>
+                {diesel?.semanaAnterior && <Variacao valor={(diesel.medio - diesel.semanaAnterior) / diesel.semanaAnterior * 100} sufixo=" na semana" altaERuim />}
               </Quadro>
             </div>
-            <p className="mt-1 italic text-xs text-slate-500">Cotações do dia: Bolsa de Chicago{atualizadoEm && horaDaCotacao(sojaNaBolsa?.date, atualizadoEm) ? ` (${horaDaCotacao(sojaNaBolsa.date, atualizadoEm)})` : ""}, preços da região de {REGIAO} (DERAL{diaDoBoletim(parana.dados?.data) ? `, boletim de ${diaDoBoletim(parana.dados.data)}` : ""}) e diesel nos postos do Paraná (ANP).</p>
+            <p className="mt-1 italic text-xs text-slate-500">
+              Cotações do dia: Bolsa de Chicago{atualizadoEm && horaDaCotacao(sojaNaBolsa?.date, atualizadoEm) ? ` (${horaDaCotacao(sojaNaBolsa.date, atualizadoEm)})` : ""},
+              {estado.sigla === "PR" ? ` preços da região de ${REGIAO}` : ` preços ${estado.no === "no" ? "do" : "de"} ${estado.nome}`} ({estado.fonte}{referencia ? `, ${referencia}` : ""}) e diesel nos postos {estado.de} {estado.nome} (ANP).
+            </p>
           </section>
 
           <div className="grid grid-cols-1 gap-x-6 gap-y-6 mt-6 sm:grid-cols-2">
@@ -218,7 +234,7 @@ export default function Inicio({ dolar, variacaoDoDolar, onIr, onCastor, childre
       </section>
 
       <p className="text-xs text-slate-500" style={{ borderTop: "1px solid #dcebdf", paddingTop: 8 }}>
-        Fontes: AwesomeAPI (dólar), Yahoo Finance (Chicago, com atraso), DERAL/SEAB-PR (preços e safra), ANP (diesel), Open-Meteo (tempo), Google Notícias e Banco Central.
+        Fontes: AwesomeAPI (dólar), Yahoo Finance (Chicago, com atraso), DERAL/SEAB-PR (preços do Paraná e safra), IEA, Famasul, IMEA e Emater/RS (preços dos outros estados), ANP (diesel), Open-Meteo (tempo), Google Notícias, IBGE e Banco Central.
         As ações da B3 estão na aba Bolsas; os combustíveis e os indicadores de preço do Brasil, em Cotações Cooperativas.
       </p>
     </div>

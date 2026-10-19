@@ -2,25 +2,18 @@ import { useEffect, useState } from "react";
 import { Clock, ExternalLink } from "lucide-react";
 import { APELIDOS_PARANA as APELIDOS } from "../catalogo";
 import { FAIXAS_DE_PRECO as FAIXAS, faixaDePreco } from "../calculos";
+import { ESTADOS, estadoLembrado, lembrarEstado } from "../estados";
 import { CotacaoDoEstado } from "./CotacoesEstados";
 
 // Aba "Cotações Cooperativas": o preço pago ao produtor em cada estado, pela fonte oficial dele.
 // Paraná (aqui): cotação diária do SIMA (DERAL/SEAB-PR), o preço de compra pago pelos atacadistas
 // (cooperativas, cerealistas e indústrias) em cada região do estado. São Paulo, Mato Grosso do Sul, Mato
-// Grosso e Rio Grande do Sul ficam em CotacoesEstados.jsx. O estado escolhido fica lembrado neste navegador; quem chega por um
-// link de produto (Resumo do dia, busca) cai no Paraná.
+// Grosso e Rio Grande do Sul ficam em CotacoesEstados.jsx. O estado escolhido fica lembrado neste navegador
+// (src/estados.js, o mesmo do Resumo do dia); quem chega por um link (Resumo do dia, busca) cai no estado e
+// no produto do link, e um link só de produto, no Paraná.
 const ATUALIZAR_MS = 30 * 60 * 1000; // o DERAL publica uma vez por dia útil
 const REGIAO_DA_ESCOLA = "Cornélio Procópio";
 const PAGINA_DERAL = "https://www.agricultura.pr.gov.br/Cotacao-Diaria-SIMA";
-const ESTADOS = [["PR", "Paraná", "diária · DERAL"], ["SP", "São Paulo", "diária · IEA"], ["MS", "Mato Grosso do Sul", "diária · Famasul"], ["MT", "Mato Grosso", "diária · IMEA"], ["RS", "Rio Grande do Sul", "semanal · Emater"]];
-const LS_ESTADO = "agroinfo.estadoDasCotacoes";
-function estadoLembrado() {
-  try {
-    const salvo = localStorage.getItem(LS_ESTADO);
-    if (ESTADOS.some(([sigla]) => sigla === salvo)) return salvo;
-  } catch { /* sem storage: Paraná */ }
-  return "PR";
-}
 
 const apelido = nome => APELIDOS.find(([re]) => re.test(nome))?.[1] ?? nome.split(" ").slice(0, 2).join(" ");
 const ordem = nome => { const i = APELIDOS.findIndex(([re]) => re.test(nome)); return i < 0 ? 99 : i; };
@@ -104,12 +97,9 @@ function MapaDePrecos({ regioes, precos, onVerRegiao }) {
   );
 }
 
-export default function CotacoesCooperativas({ produtoInicial, children }) {
-  const [estado, setEstado] = useState(() => (produtoInicial ? "PR" : estadoLembrado()));
-  const escolherEstado = (sigla) => {
-    setEstado(sigla);
-    try { localStorage.setItem(LS_ESTADO, sigla); } catch { /* ignora */ }
-  };
+export default function CotacoesCooperativas({ estadoInicial, produtoInicial, children }) {
+  const [estado, setEstado] = useState(() => estadoInicial ?? (produtoInicial ? "PR" : estadoLembrado()));
+  const escolherEstado = (sigla) => { setEstado(sigla); lembrarEstado(sigla); };
   const [cotacao, setCotacao] = useState(null);
   const [erro, setErro] = useState(false);
   const [escolhido, setEscolhido] = useState(produtoInicial ?? "Soja");
@@ -143,18 +133,18 @@ export default function CotacoesCooperativas({ produtoInicial, children }) {
         <h2 className="text-sm font-bold text-green-800">Cotações Cooperativas</h2>
         <p className="text-xs text-slate-600 mt-1">Quanto o produtor recebe em cada estado, pela fonte oficial de cada um. Escolha o estado:</p>
         <div className="flex flex-wrap gap-2 mt-2" role="group" aria-label="Estado">
-          {ESTADOS.map(([sigla, nome, frequencia]) => (
+          {ESTADOS.map(({ sigla, nome, frequencia, fonte }) => (
             <button key={sigla} type="button" onClick={() => escolherEstado(sigla)} aria-pressed={estado === sigla}
               className="rounded-lg border px-3 py-1.5 text-left text-xs"
               style={estado === sigla ? { background: "#166534", borderColor: "#166534", color: "#fff" } : { background: "#fff", borderColor: "#bbf7d0", color: "#166534" }}>
               <strong className="block text-sm">{nome}</strong>
-              <span style={{ opacity: 0.8 }}>{frequencia}</span>
+              <span style={{ opacity: 0.8 }}>{frequencia} · {fonte}</span>
             </button>
           ))}
         </div>
       </section>
 
-      {estado !== "PR" && <CotacaoDoEstado sigla={estado} />}
+      {estado !== "PR" && <CotacaoDoEstado sigla={estado} produtoInicial={estado === estadoInicial ? produtoInicial : undefined} />}
       {estado === "PR" && <>
       <section className="rounded-xl border bg-white p-3 shadow-sm">
         <h2 className="text-sm font-bold text-green-800">Paraná</h2>

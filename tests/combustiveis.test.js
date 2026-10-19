@@ -22,6 +22,7 @@ test('combustíveis: preço do Paraná, do Brasil e das cidades paranaenses, com
   assert.deepEqual(r.produtos.map(p => p.nome), ['Diesel S10'], 'só os produtos pesquisados no Paraná');
   const [diesel] = r.produtos;
   assert.deepEqual(diesel.parana, { medio: 7.28, minimo: 6.49, maximo: 8.4, postos: 197 });
+  assert.deepEqual(diesel.estados, { PARANA: 7.28, 'SANTA CATARINA': 7.5 }, 'média de cada estado');
   assert.equal(diesel.brasil, 7.33);
   assert.deepEqual(diesel.cidades.map(c => [c.cidade, c.medio]), [['Cornélio Procópio', 7.81], ['Londrina', 7.43]]);
 });

@@ -564,7 +564,7 @@ export default function App() {
         {tab === "clima" && <ClimaAgricola key={alvo?.cidade ? alvo.n : "clima"} cidadeInicial={alvo?.cidade ?? null} />}
         {tab === "calculadoras" && <Calculadoras key={alvo?.calculadora ? alvo.n : "calculadoras"} inicial={alvo?.calculadora} dolar={dolar} />}
         {tab === "aprender" && <Aprender onPerguntar={ASSISTENTE_URL && !CASTOR_EM_CONSTRUCAO ? (texto => irPara({ castor: texto })) : null} />}
-        {tab === "cooperativas" && <CotacoesCooperativas key={alvo?.produto ? alvo.n : "pr"} produtoInicial={alvo?.produto}>
+        {tab === "cooperativas" && <CotacoesCooperativas key={alvo?.produto || alvo?.estado ? alvo.n : "pr"} estadoInicial={alvo?.estado} produtoInicial={alvo?.produto}>
           <CommodityQuotes key={alvo?.commodity || alvo?.buscaCommodity ? alvo.n : "commodities"} adicionar={alvo?.commodity} buscaInicial={alvo?.buscaCommodity} refresh={count} onViewChart={viewChart} />
           <Combustiveis />
         </CotacoesCooperativas>}

@@ -2,11 +2,13 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { CHICAGO } from "../catalogo";
 import { sacaPorChicago } from "../calculos";
 import { avisosDaPrevisao, buscarClima, cidadeGuardada, climaGuardado, guardarCidade, procurarCidade, resumoDaChuva } from "../clima";
-import { frasesDoDia, operacoesEmAndamento, precoNaRegiao } from "../inicio";
+import { estadoLembrado, estadoPorSigla, lembrarEstado } from "../estados";
+import { frasesDoDia, operacoesEmAndamento, precosDoEstado, referenciaDoEstado } from "../inicio";
 
-// Dados do dia usados pelo "Resumo do dia" e pelo "Jornal do dia": cotações (Chicago, preços da
-// região, diesel), o tempo da cidade que o visitante escolheu (lembrada neste navegador), o
-// andamento das lavouras e as manchetes. Cada parte carrega sozinha: { dados, em } quando chega
+// Dados do dia usados pelo "Resumo do dia" e pelo "Jornal do dia": cotações (Chicago, preços do
+// estado escolhido, diesel), o tempo da cidade que o visitante escolheu (lembrada neste navegador), o
+// andamento das lavouras e as manchetes. O estado é o mesmo da aba Cotações Cooperativas (lembrado
+// neste navegador); no Paraná, os preços são os da região de Cornélio Procópio. Cada parte carrega sozinha: { dados, em } quando chega
 // (em = hora da resposta), { erro } se a fonte falhar.
 export const REGIAO = "Cornélio Procópio";
 const SOJA_EM_CHICAGO = CHICAGO.find(item => item.key === "soja");
@@ -25,18 +27,19 @@ const MINUTO = 60000;
 // falhar), fica na tela o que já tinha chegado. Nas rodadas automáticas vale a cópia que o servidor
 // guarda por alguns minutos; na pedida pelo botão ("fresca"), o endereço leva a hora, o que faz o
 // servidor ir de novo às fontes. "fim" é a hora em que a última tentativa terminou, com ou sem sucesso.
+// Quando o endereço muda (outro estado), o que era do endereço anterior não aparece mais.
 function useConsulta(url, rodada) {
   const [estado, setEstado] = useState({});
   useEffect(() => {
     let ativo = true;
-    const endereco = rodada.fresca ? `${url}&agora=${Date.now()}` : url;
+    const endereco = rodada.fresca ? `${url}${url.includes("?") ? "&" : "?"}agora=${Date.now()}` : url;
     fetch(endereco, { signal: AbortSignal.timeout(45000), cache: "no-store" })
       .then(r => (r.ok ? r.json() : Promise.reject(new Error("indisponível"))))
-      .then(dados => { if (ativo) setEstado({ dados, em: Date.now(), fim: Date.now() }); })
-      .catch(() => { if (ativo) setEstado(anterior => (anterior.dados ? { ...anterior, fim: Date.now() } : { erro: true, fim: Date.now() })); });
+      .then(dados => { if (ativo) setEstado({ dados, em: Date.now(), fim: Date.now(), de: url }); })
+      .catch(() => { if (ativo) setEstado(anterior => (anterior.dados && anterior.de === url ? { ...anterior, fim: Date.now() } : { erro: true, fim: Date.now(), de: url })); });
     return () => { ativo = false; };
   }, [url, rodada]);
-  return estado;
+  return estado.de === url ? estado : {};
 }
 
 // dolar e variacaoDoDolar vêm do App, que já consulta as moedas a cada minuto.
@@ -70,8 +73,11 @@ export default function useResumoDoDia({ dolar, variacaoDoDolar }) {
     setRodada(r => ({ n: r.n + 1, fresca: true }));
     setRodadaDoClima(r => r + 1);
   }, []);
+  const [sigla, setSigla] = useState(estadoLembrado);
+  const escolherEstado = useCallback(nova => { setSigla(nova); lembrarEstado(nova); }, []);
+  const estado = estadoPorSigla(sigla);
   const chicago = useConsulta("/api/market?type=bolsas", rodada);
-  const parana = useConsulta("/api/market?type=pr", rodada);
+  const doEstado = useConsulta(estado.endereco, rodada);
   const combustiveis = useConsulta("/api/market?type=combustiveis", rodada);
   const safra = useConsulta("/api/market?type=safra", rodada);
   const noticias = useConsulta("/api/news?feed=agro", rodada);
@@ -115,8 +121,12 @@ export default function useResumoDoDia({ dolar, variacaoDoDolar }) {
 
   const sojaNaBolsa = chicago.dados?.contratos.find(c => c.symbol === SOJA_EM_CHICAGO.symbol);
   const sojaEmReais = sojaNaBolsa && dolar ? sacaPorChicago({ chicago: sojaNaBolsa.value, dolar, kgDoBushel: SOJA_EM_CHICAGO.kg }).noPorto : null;
-  const daRegiao = ["Soja", "Milho", "Boi"].map(produto => ({ produto, preco: precoNaRegiao(parana.dados, produto, REGIAO) }));
-  const diesel = combustiveis.dados?.produtos.find(p => p.nome === "Diesel S10");
+  const daRegiao = precosDoEstado(estado.sigla, doEstado.dados, REGIAO);
+  const referencia = referenciaDoEstado(estado.sigla, doEstado.dados);
+  // diesel S10 do estado escolhido: no Paraná, o resumo do estado; nos outros, a média da planilha da ANP
+  const dieselDaAnp = combustiveis.dados?.produtos.find(p => p.nome === "Diesel S10");
+  const diesel = !dieselDaAnp ? null : estado.sigla === "PR" ? { medio: dieselDaAnp.parana.medio, semanaAnterior: dieselDaAnp.semanaAnterior }
+    : dieselDaAnp.estados?.[estado.anp] != null ? { medio: dieselDaAnp.estados[estado.anp], semanaAnterior: dieselDaAnp.estadosAnterior?.[estado.anp] ?? null } : null;
   // o tempo só vale se for da cidade que está escolhida agora
   const daCidade = cidade && clima.de === cidade.nome ? clima : {};
   const doTempo = daCidade.dados || !guardado ? daCidade : { dados: guardado };
@@ -129,13 +139,13 @@ export default function useResumoDoDia({ dolar, variacaoDoDolar }) {
   const noCampo = safra.dados?.parana ? operacoesEmAndamento(safra.dados.parana.culturas).slice(0, 4) : [];
   // hora da resposta mais recente entre as fontes do resumo (null enquanto nenhuma chegou) e hora em
   // que a última delas terminou a tentativa mais recente (para saber quando a atualização acabou)
-  const fontes = [chicago, parana, combustiveis, safra, noticias, mercado];
+  const fontes = [chicago, doEstado, combustiveis, safra, noticias, mercado];
   const atualizadoEm = Math.max(0, ...fontes.map(c => c.em ?? 0)) || null;
   const respondidoEm = Math.min(...fontes.map(c => c.fim ?? 0)) || null;
   const frases = frasesDoDia({ dolar, variacaoDoDolar, variacaoDaSoja: sojaNaBolsa?.change, cidade: hoje ? cidade.nome : null, hoje, avisos });
 
   return {
-    chicago, parana, combustiveis, safra, noticias, mercado,
+    chicago, doEstado, estado, escolherEstado, referencia, combustiveis, safra, noticias, mercado,
     cidade, busca, setBusca, procurar, erroDaBusca, atualizadoEm, respondidoEm, atualizar,
     sojaNaBolsa, sojaEmReais, daRegiao, diesel, doTempo, hoje, proximosDias, semana, chuva, avisos, noCampo, frases,
   };

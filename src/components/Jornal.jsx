@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { Download, Image, MapPin, Printer, RefreshCw, Search, Share2, X } from "lucide-react";
 import { getWmo, WEEK } from "../clima";
-import { diaDoBoletim, horaDaCotacao, organizarNoticias, textosDoJornal } from "../inicio";
+import { ESTADOS } from "../estados";
+import { horaDaCotacao, organizarNoticias, rotuloDoPreco, textosDoJornal } from "../inicio";
 import Enfeite from "./Enfeite";
 import useResumoDoDia, { REGIAO } from "./useResumoDoDia";
 
@@ -36,7 +37,7 @@ const encurtar = (texto, limite = 110) => (texto.length <= limite ? texto : `${t
 const Trecho = ({ assunto, children }) => <p style={{ marginBottom: 8 }}><strong className="uppercase" style={{ fontSize: "0.86em", letterSpacing: "0.06em" }}>{assunto} — </strong>{children}</p>;
 
 export default function Jornal({ dolar, variacaoDoDolar, moedas, indicadores }) {
-  const { chicago, parana, combustiveis, safra, noticias, mercado, cidade, busca, setBusca, procurar, erroDaBusca, atualizadoEm, respondidoEm, atualizar,
+  const { chicago, doEstado, estado, escolherEstado, referencia, combustiveis, safra, noticias, mercado, cidade, busca, setBusca, procurar, erroDaBusca, atualizadoEm, respondidoEm, atualizar,
     sojaNaBolsa, sojaEmReais, daRegiao, diesel, doTempo, hoje, semana, chuva, avisos, noCampo, frases } = useResumoDoDia({ dolar, variacaoDoDolar });
   // a edição leva a data e a hora da atualização mais recente dos dados (o resumo se atualiza sozinho)
   const [aberturaDaAba] = useState(() => Date.now());
@@ -56,7 +57,7 @@ export default function Jornal({ dolar, variacaoDoDolar, moedas, indicadores }) 
   const folha = useRef(null);
   useEffect(() => () => { if (imagem?.url) URL.revokeObjectURL(imagem.url); }, [imagem]);
 
-  const carregando = [chicago, parana, combustiveis, safra, noticias, mercado].some(c => !c.dados && !c.erro) || Boolean(cidade && !hoje && !doTempo.erro);
+  const carregando = [chicago, doEstado, combustiveis, safra, noticias, mercado].some(c => !c.dados && !c.erro) || Boolean(cidade && !hoje && !doTempo.erro);
   const nomeDoArquivo = `agroinfo-jornal-${fechamento.getFullYear()}-${String(fechamento.getMonth() + 1).padStart(2, "0")}-${String(fechamento.getDate()).padStart(2, "0")}.png`;
   // A folha vira imagem com a biblioteca html2canvas, baixada só quando alguém pede. A imagem pronta
   // aparece na tela com os botões de baixar e compartilhar: assim eles agem direto no toque da pessoa
@@ -82,12 +83,12 @@ export default function Jornal({ dolar, variacaoDoDolar, moedas, indicadores }) 
     { assunto: "Agronegócio", consulta: noticias, itens: doAgro },
     { assunto: "Economia", consulta: mercado, itens: organizarNoticias(mercado.dados?.items, "economia", 3, doAgro) },
   ];
-  const textos = textosDoJornal({ dolar, variacaoDoDolar, sojaEmReais, variacaoDaSoja: sojaNaBolsa?.change, daRegiao, regiao: REGIAO, diesel, noCampo, moedas, indicadores });
+  const textos = textosDoJornal({ dolar, variacaoDoDolar, sojaEmReais, variacaoDaSoja: sojaNaBolsa?.change, daRegiao, regiao: REGIAO, estado, diesel, noCampo, moedas, indicadores });
   const cotacoes = [
     ["Dólar comercial", dolar ? reais(dolar) : null, "", variacao(variacaoDoDolar)],
     ["Soja em Chicago", sojaEmReais != null ? reais(sojaEmReais) : sojaNaBolsa ? decimal(sojaNaBolsa.value, 2) : null, sojaEmReais != null ? "por saca" : "US¢/bushel", variacao(sojaNaBolsa?.change)],
-    ["Diesel S10 no Paraná", diesel ? reais(diesel.parana.medio) : null, "por litro", diesel?.semanaAnterior ? variacao((diesel.parana.medio - diesel.semanaAnterior) / diesel.semanaAnterior * 100) : ""],
-    ...daRegiao.map(({ produto, preco }) => [`${produto} ${preco && !preco.daRegiao ? "no Paraná" : "na região"}`, preco ? reais(preco.valor) : null, preco ? `por ${UNIDADES[preco.unidade.toLowerCase()] ?? preco.unidade}` : "", variacao(preco?.variacaoPct)]),
+    [`Diesel S10 ${estado.no} ${estado.sigla}`, diesel ? reais(diesel.medio) : null, "por litro", diesel?.semanaAnterior ? variacao((diesel.medio - diesel.semanaAnterior) / diesel.semanaAnterior * 100) : ""],
+    ...daRegiao.map(({ produto, preco }) => [rotuloDoPreco(produto, preco, estado, REGIAO, true), preco ? reais(preco.valor) : null, preco ? `por ${UNIDADES[preco.unidade.toLowerCase()] ?? preco.unidade}` : "", variacao(preco?.variacaoPct)]),
   ];
   const aviso = !avisos ? null : avisos.geada.length ? ["Risco de geada", avisos.geada] : avisos.chuvaForte.length ? ["Chuva forte prevista", avisos.chuvaForte] : avisos.calor.length ? ["Calor forte previsto", avisos.calor] : null;
   const BOTAO = "inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs sm:text-sm font-bold disabled:opacity-50";
@@ -107,6 +108,12 @@ export default function Jornal({ dolar, variacaoDoDolar, moedas, indicadores }) 
         </form>
         {erroDaBusca && <p role="alert" className="text-xs text-amber-800 mt-1.5">{erroDaBusca}</p>}
         {!cidade && <p className="text-xs text-amber-800 mt-1.5">Digite a cidade acima para o jornal trazer a previsão do tempo de 7 dias.</p>}
+        <label className="flex items-center gap-1.5 mt-2 text-xs text-slate-600">
+          Preços e diesel do estado
+          <select value={estado.sigla} onChange={e => escolherEstado(e.target.value)} className="rounded border bg-white px-1.5 py-0.5 text-xs font-bold text-green-800" style={{ borderColor: "#bbf7d0" }}>
+            {ESTADOS.map(e => <option key={e.sigla} value={e.sigla}>{e.nome}</option>)}
+          </select>
+        </label>
         {cidade && doTempo.erro && <p role="alert" className="text-xs text-amber-800 mt-1.5">{doTempo.desistiu ? "O serviço de clima não respondeu. Toque em “Buscar” para tentar de novo." : "O serviço de clima está demorando a responder. O jornal continua tentando sozinho: a previsão entra na folha assim que chegar."}</p>}
         <div className="flex flex-wrap gap-2 mt-3">
           <button type="button" onClick={() => window.print()} disabled={carregando} className={BOTAO} style={{ background: "#166534", color: "#fff" }}><Printer size={14} aria-hidden="true" />Imprimir ou salvar em PDF</button>
@@ -167,7 +174,7 @@ export default function Jornal({ dolar, variacaoDoDolar, moedas, indicadores }) 
                 </div>
               ))}
             </div>
-            <p className="italic" style={{ fontSize: 11, color: "#555", marginTop: 4 }}>Cotações do dia. Chicago {horaDaCotacao(sojaNaBolsa?.date, fechamento) ?? "com atraso"}; região de {REGIAO} (DERAL{diaDoBoletim(parana.dados?.data) ? `, boletim de ${diaDoBoletim(parana.dados.data)}` : ""}); diesel: variação da semana.</p>
+            <p className="italic" style={{ fontSize: 11, color: "#555", marginTop: 4 }}>Cotações do dia. Chicago {horaDaCotacao(sojaNaBolsa?.date, fechamento) ?? "com atraso"}; {estado.sigla === "PR" ? `região de ${REGIAO}` : `${estado.nome}, média${daRegiao.some(i => i.preco?.regionais) ? " das regionais" : ""}`} ({estado.fonte}{referencia ? `, ${referencia}` : ""}); diesel: variação da semana.</p>
 
             <div className="grid grid-cols-1 gap-x-5 gap-y-3 sm:grid-cols-2 print:grid-cols-2" style={{ marginTop: 12 }}>
               {colunasDeNoticias.map(({ assunto, consulta, itens }) => (
@@ -221,7 +228,7 @@ export default function Jornal({ dolar, variacaoDoDolar, moedas, indicadores }) 
         </section>
 
         <footer style={{ marginTop: 8, fontSize: 9.5, lineHeight: 1.4, color: "#555", fontFamily: SEM_SERIFA, breakInside: "avoid" }}>
-          <p>Fontes: AwesomeAPI (dólar), Yahoo Finance (Chicago, com atraso), DERAL/SEAB-PR (preços e safra), ANP (diesel), Open-Meteo (tempo), Google Notícias e Banco Central. Edição fechada às {fechamento.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}.</p>
+          <p>Fontes: AwesomeAPI (dólar), Yahoo Finance (Chicago, com atraso), {estado.sigla === "PR" ? "DERAL/SEAB-PR (preços e safra)" : `${estado.fonte} (preços ${estado.de} ${estado.nome}), DERAL/SEAB-PR (safra)`}, ANP (diesel), Open-Meteo (tempo), Google Notícias e Banco Central. Edição fechada às {fechamento.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}.</p>
           <p>agronahora.com.br</p>
         </footer>
       </article>

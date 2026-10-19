@@ -1,6 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { precoNaRegiao, operacoesEmAndamento, frasesDoDia, textosDoJornal, horaDaCotacao, diaDoBoletim, organizarNoticias, rubricaDe } from '../src/inicio.js';
+import { precoNaRegiao, operacoesEmAndamento, frasesDoDia, textosDoJornal, horaDaCotacao, diaDoBoletim, organizarNoticias, rubricaDe, precosDoEstado, rotuloDoPreco, referenciaDoEstado } from '../src/inicio.js';
+import { estadoPorSigla } from '../src/estados.js';
 
 const cotacao = {
   regioes: ['Apucarana', 'Cornélio Procópio'],
@@ -50,7 +51,7 @@ test('jornal do dia: textos corridos do mercado, do campo e da economia', () => 
   const r = textosDoJornal({
     dolar: 5.004, variacaoDoDolar: 0.27, sojaEmReais: 142.88, variacaoDaSoja: -0.66, regiao: 'Cornélio Procópio',
     daRegiao: [{ produto: 'Soja', preco: { valor: 134, unidade: 'sc 60 Kg', daRegiao: true } }, { produto: 'Milho', preco: null }, { produto: 'Boi', preco: { valor: 367.51, unidade: 'arroba', daRegiao: false } }],
-    diesel: { parana: { medio: 7.41 } },
+    diesel: { medio: 7.41 },
     noCampo: [{ operacao: 'Plantio', cultura: 'Soja (1ª safra)', safra: '26/27', pct: 15, mes: 'set/26' }, { operacao: 'Colheita', cultura: 'Trigo', safra: '25/26', pct: 46.5, mes: 'set/26' }],
     moedas: [{ id: 'usd', nome: 'Dólar Comercial', valor: 5.004 }, { id: 'eur', nome: 'Euro', valor: 5.62 }, { id: 'ars', nome: 'Peso Argentino', valor: 0.0033 }, { id: 'gbp', nome: 'Libra Esterlina', valor: null }],
     indicadores: [{ nome: 'IPCA', periodo: 'set/26', valor: '+0,82%' }, { nome: 'Selic', periodo: '', valor: '13,75% a.a.' }, { nome: 'CDI', periodo: '', valor: 'Carregando…' }],
@@ -91,4 +92,36 @@ test('jornal do dia: notícias por assunto, sem repetir tema e, na economia, só
   assert.equal(rubricaDe('Geada atinge lavouras de trigo no Paraná', 'agro'), 'Clima');
   assert.equal(rubricaDe('Cooperativa inaugura nova unidade', 'agro'), 'Geral');
   assert.equal(rubricaDe('Custo do confinamento amplia diferença de lucro', 'agro'), 'Pecuária');
+});
+
+test('resumo do dia em outros estados: média do estado, média das regionais em SP e média da semana no RS', () => {
+  const mt = { produtos: [
+    { nome: 'Soja', unidade: 'saca de 60 kg', data: '2026-10-16', mediaEstado: 135.78, variacaoEstado: -0.39, locais: [] },
+    { nome: 'Boi gordo', unidade: 'arroba', data: '2026-10-16', mediaEstado: 348.11, variacaoEstado: 0.63, locais: [] },
+  ] };
+  const [soja, milho, boi] = precosDoEstado('MT', mt);
+  assert.deepEqual(soja, { produto: 'Soja', nomeNaFonte: 'Soja', preco: { valor: 135.78, unidade: 'saca', daRegiao: false, variacaoPct: -0.39 } });
+  assert.equal(milho.preco, null, 'produto que a fonte não trouxe');
+  assert.equal(boi.nomeNaFonte, 'Boi gordo'); assert.equal(boi.preco.unidade, 'arroba');
+  assert.equal(rotuloDoPreco('Soja', soja.preco, estadoPorSigla('MT')), 'Soja em Mato Grosso (média)');
+  assert.equal(rotuloDoPreco('Soja', soja.preco, estadoPorSigla('MT'), '', true), 'Soja em MT');
+  assert.equal(referenciaDoEstado('MT', mt), '16/10');
+
+  const sp = { produtos: [{ nome: 'Soja', unidade: 'saca de 60 kg', data: '2026-10-16', desde: '2026-10-14', mediaEstado: null, locais: [{ valor: 139.75 }, { valor: 145 }, { valor: 156.5 }] }] };
+  const [sojaSp] = precosDoEstado('SP', sp);
+  assert.deepEqual(sojaSp.preco, { valor: 147.08, unidade: 'saca', daRegiao: false, variacaoPct: null, regionais: 3, minimo: 139.75, maximo: 156.5 });
+  assert.equal(rotuloDoPreco('Soja', sojaSp.preco, estadoPorSigla('SP')), 'Soja em São Paulo (média das regionais)');
+  assert.equal(referenciaDoEstado('SP', sp), 'de 14/10 a 16/10');
+
+  const rs = { semana: { de: '12/10/2026', ate: '16/10/2026' }, produtos: [{ nome: 'Soja', unidade: '60 kg', medio: 138.32, semanaAnterior: 139.71 }, { nome: 'Boi', unidade: 'kg vivo', medio: 12.61, semanaAnterior: 12.44 }] };
+  const [sojaRs, , boiRs] = precosDoEstado('RS', rs);
+  assert.equal(sojaRs.preco.valor, 138.32); assert.equal(sojaRs.preco.variacaoPct, -0.99); assert.equal(boiRs.preco.unidade, 'kg vivo');
+  assert.equal(referenciaDoEstado('RS', rs), 'semana de 12/10 a 16/10');
+  assert.equal(referenciaDoEstado('PR', { data: '16/10/2026 11:25' }), 'boletim de 16/10');
+
+  const textos = textosDoJornal({ estado: estadoPorSigla('RS'), daRegiao: [sojaRs, boiRs], diesel: { medio: 6.9 } });
+  assert.deepEqual(textos.mercado.map(t => t.replace(/\u00a0/g, ' ')), [
+    'No Rio Grande do Sul, as médias da semana são: soja, R$ 138,32 a saca; boi, R$ 12,61 o quilo vivo.',
+    'O diesel S10 custa em média R$ 6,90 o litro nos postos do Rio Grande do Sul.',
+  ]);
 });

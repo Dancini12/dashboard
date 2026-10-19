@@ -29,7 +29,8 @@ function tabela(abas, nome) {
 }
 const resumo = l => ({ medio: preco(l['PREÇO MÉDIO REVENDA']), minimo: preco(l['PREÇO MÍNIMO REVENDA']), maximo: preco(l['PREÇO MÁXIMO REVENDA']), postos: preco(l['NÚMERO DE POSTOS PESQUISADOS']) });
 
-// Abas BRASIL, ESTADOS e MUNICIPIOS → preços do Paraná, do Brasil e de cada cidade paranaense pesquisada.
+// Abas BRASIL, ESTADOS e MUNICIPIOS → preços do Paraná, do Brasil e de cada cidade paranaense pesquisada,
+// e o preço médio de cada estado (para o Resumo do dia de quem escolheu outro estado).
 export function lerCombustiveis(abas) {
   const [brasil, estados, municipios] = ['BRASIL', 'ESTADOS', 'MUNICIPIOS'].map(nome => tabela(abas, nome));
   const produtos = PRODUTOS.map(([codigo, nome]) => {
@@ -37,6 +38,7 @@ export function lerCombustiveis(abas) {
     if (!parana) return null;
     return {
       nome, parana: resumo(parana),
+      estados: Object.fromEntries(estados.filter(l => texto(l.PRODUTO) === codigo).map(l => [texto(l.ESTADOS), preco(l['PREÇO MÉDIO REVENDA'])])),
       brasil: preco(brasil.find(l => texto(l.PRODUTO) === codigo)?.['PREÇO MÉDIO REVENDA']),
       cidades: municipios.filter(l => texto(l.ESTADO) === ESTADO && texto(l.PRODUTO) === codigo)
         .map(l => ({ cidade: nomeDaCidade(texto(l['MUNICÍPIO'])), ...resumo(l) })).sort((a, b) => a.cidade.localeCompare(b.cidade, 'pt-BR')),
@@ -64,7 +66,10 @@ export async function combustiveisDoParana() {
   const [semana, semanaAnterior] = await Promise.all([planilha(atual), anterior ? planilha(anterior).catch(() => null) : null]);
   return {
     ...semana, arquivo: atual, fonte: 'ANP · Levantamento de Preços de Combustíveis',
-    // preço médio do Paraná na semana anterior, para a variação
-    produtos: semana.produtos.map(p => ({ ...p, semanaAnterior: semanaAnterior?.produtos.find(a => a.nome === p.nome)?.parana.medio ?? null })),
+    // preço médio do Paraná (e de cada estado) na semana anterior, para a variação
+    produtos: semana.produtos.map(p => {
+      const anterior = semanaAnterior?.produtos.find(a => a.nome === p.nome);
+      return { ...p, semanaAnterior: anterior?.parana.medio ?? null, estadosAnterior: anterior?.estados ?? {} };
+    }),
   };
 }

@@ -17,6 +17,7 @@ export default defineConfig(({ mode }) => {
           req.query = Object.fromEntries(new URL(req.url, 'http://localhost').searchParams);
           res.status = code => { res.statusCode = code; return res; };
           res.json = data => { res.setHeader('Content-Type', 'application/json'); res.end(JSON.stringify(data)); };
+          res.send = data => res.end(data);
           funcao(req, res);
         });
       }

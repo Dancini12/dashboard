@@ -203,8 +203,10 @@ function NoticiasTab({ busca }) {
     setCd(NEWS_INTERVAL);
   }, [feeds]);
 
+  // primeira busca logo depois de montar (fora do corpo do efeito, que não deve mudar estado direto)
   useEffect(() => {
-    fetchNews();
+    const t = setTimeout(fetchNews, 0);
+    return () => clearTimeout(t);
   }, [fetchNews]);
 
   useEffect(() => {

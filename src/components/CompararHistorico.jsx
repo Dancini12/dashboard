@@ -27,13 +27,13 @@ function Dica({ active, payload, label, base }) {
   const linhas = (payload ?? []).filter(p => p.value != null).sort((a, b) => b.value - a.value);
   if (!active || !linhas.length) return null;
   return (
-    <div className="rounded-lg border bg-white px-2.5 py-2 text-xs shadow-md" style={{ borderColor: "#e0e0e0" }}>
-      <div className="font-semibold text-neutral-500">{label} · variação desde {base}</div>
+    <div className="rounded-lg border bg-white px-2.5 py-2 text-xs shadow-md" style={{ borderColor: "#e2e8f0" }}>
+      <div className="font-semibold text-slate-500">{label} · variação desde {base}</div>
       {linhas.map(p => (
         <div key={p.dataKey} className="flex items-center gap-2 mt-1">
           <span className="shrink-0 rounded-full" style={{ width: 12, height: 3, background: p.color }} />
-          <strong className="text-neutral-900" style={{ fontVariantNumeric: "tabular-nums" }}>{pct(p.value)}</strong>
-          <span className="text-neutral-600">{p.name}</span>
+          <strong className="text-slate-900" style={{ fontVariantNumeric: "tabular-nums" }}>{pct(p.value)}</strong>
+          <span className="text-slate-600">{p.name}</span>
         </div>
       ))}
     </div>
@@ -102,8 +102,8 @@ export default function CompararHistorico({ historico, nomes }) {
 
   return (
     <section id="comparar-historico" className="rounded-xl border bg-white p-3 shadow-sm" style={{ scrollMarginTop: 100 }}>
-      <h2 className="text-sm font-bold text-neutral-900">Comparar: qual subiu mais?</h2>
-      <p className="text-xs text-neutral-600 mt-1">
+      <h2 className="text-sm font-bold text-green-800">Comparar: qual subiu mais?</h2>
+      <p className="text-xs text-slate-600 mt-1">
         Escolha onde procurar e depois o item. Para comparar com outro, inclua mais um campo: eles ficam um abaixo do
         outro e o gráfico mostra quanto cada um subiu ou caiu no mesmo período.
       </p>
@@ -113,26 +113,26 @@ export default function CompararHistorico({ historico, nomes }) {
           const tipo = tipos.find(t => t.id === campo.tipo);
           const escolhido = escolhidos.find(e => e.campo.id === campo.id);
           return (
-            <div key={campo.id} className="rounded-lg border p-2" style={{ background: "#f6f6f6", borderColor: "#e0e0e0" }}>
+            <div key={campo.id} className="rounded-lg border p-2" style={{ background: "#f8fafc", borderColor: "#e2e8f0" }}>
               <div className="flex items-center gap-2">
                 <span className="shrink-0 rounded-full" style={{ width: 14, height: 4, background: CORES[campo.cor] }} aria-hidden="true" />
-                <span className="text-xs font-bold text-neutral-700">Item {i + 1}</span>
+                <span className="text-xs font-bold text-slate-700">Item {i + 1}</span>
                 {(campos.length > 1 || campo.tipo) && (
-                  <button type="button" onClick={() => tirar(campo.id)} className="ml-auto flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold text-neutral-600" style={{ background: "#e0e0e0" }}>
+                  <button type="button" onClick={() => tirar(campo.id)} className="ml-auto flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold text-slate-600" style={{ background: "#e2e8f0" }}>
                     <X size={11} aria-hidden="true" />{campos.length > 1 ? "Tirar" : "Limpar"}
                   </button>
                 )}
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2">
-                <label className="text-xs text-neutral-600">Onde procurar
-                  <select value={campo.tipo} onChange={e => mudar(campo.id, { tipo: e.target.value, item: "" })} className="block w-full rounded-lg border bg-white p-2 mt-1 text-sm text-neutral-900">
+                <label className="text-xs text-slate-600">Onde procurar
+                  <select value={campo.tipo} onChange={e => mudar(campo.id, { tipo: e.target.value, item: "" })} className="block w-full rounded-lg border bg-white p-2 mt-1 text-sm text-slate-900">
                     <option value="">Escolha…</option>
                     {tipos.map(t => <option key={t.id} value={t.id}>{t.nome}</option>)}
                   </select>
                 </label>
                 {tipo && (
-                  <label className="text-xs text-neutral-600">Qual item
-                    <select value={campo.item} onChange={e => mudar(campo.id, { item: e.target.value })} className="block w-full rounded-lg border bg-white p-2 mt-1 text-sm text-neutral-900">
+                  <label className="text-xs text-slate-600">Qual item
+                    <select value={campo.item} onChange={e => mudar(campo.id, { item: e.target.value })} className="block w-full rounded-lg border bg-white p-2 mt-1 text-sm text-slate-900">
                       <option value="">Escolha…</option>
                       {tipo.itens.map(item => {
                         const repetido = campos.some(c => c.id !== campo.id && c.item === item.chave);
@@ -142,13 +142,13 @@ export default function CompararHistorico({ historico, nomes }) {
                   </label>
                 )}
               </div>
-              {escolhido && !escolhido.serie && <p className="text-xs text-neutral-500 mt-1.5">Buscando o histórico…</p>}
+              {escolhido && !escolhido.serie && <p className="text-xs text-slate-500 mt-1.5">Buscando o histórico…</p>}
               {escolhido?.serie?.erro && (
-                <p role="alert" className="text-xs text-neutral-800 mt-1.5">
+                <p role="alert" className="text-xs text-amber-800 mt-1.5">
                   {escolhido.serie.erro} <button type="button" onClick={() => tentarDeNovo(escolhido.item.chave)} className="font-bold underline">Tentar de novo</button>
                 </p>
               )}
-              {escolhido?.serie?.valores && !escolhido.variacoes && <p className="text-xs text-neutral-800 mt-1.5">Este item não tem preço em {base}. Escolha um ano inicial mais recente.</p>}
+              {escolhido?.serie?.valores && !escolhido.variacoes && <p className="text-xs text-amber-800 mt-1.5">Este item não tem preço em {base}. Escolha um ano inicial mais recente.</p>}
             </div>
           );
         })}
@@ -156,12 +156,12 @@ export default function CompararHistorico({ historico, nomes }) {
 
       <div className="flex flex-wrap items-center gap-x-4 gap-y-2 mt-2">
         {campos.length < MAX_CAMPOS
-          ? <button type="button" onClick={incluir} className="flex items-center gap-1 rounded-full border px-3 py-1 text-xs font-bold" style={{ background: "#f2f2f2", borderColor: "#bdbdbd", color: "#111111" }}>
+          ? <button type="button" onClick={incluir} className="flex items-center gap-1 rounded-full border px-3 py-1 text-xs font-bold" style={{ background: "#f0fdf4", borderColor: "#bbf7d0", color: "#166534" }}>
               <Plus size={13} aria-hidden="true" />Incluir mais um item para comparar
             </button>
-          : <span className="text-xs text-neutral-500">Dá para comparar até {MAX_CAMPOS} itens de uma vez.</span>}
-        <label className="flex items-center gap-1.5 text-xs text-neutral-600">Comparar desde
-          <select value={base} onChange={e => setBase(Number(e.target.value))} className="rounded-lg border bg-white px-2 py-1 text-sm text-neutral-900">
+          : <span className="text-xs text-slate-500">Dá para comparar até {MAX_CAMPOS} itens de uma vez.</span>}
+        <label className="flex items-center gap-1.5 text-xs text-slate-600">Comparar desde
+          <select value={base} onChange={e => setBase(Number(e.target.value))} className="rounded-lg border bg-white px-2 py-1 text-sm text-slate-900">
             {todosOsAnos.slice(0, -1).map(ano => <option key={ano} value={ano}>{ano}</option>)}
           </select>
         </label>
@@ -169,7 +169,7 @@ export default function CompararHistorico({ historico, nomes }) {
 
       {ordem.length > 0 && (
         <div className="mt-4">
-          <h3 className="text-sm font-bold" style={{ color: "#111111" }}>
+          <h3 className="text-sm font-bold" style={{ color: "#14532d" }}>
             {ordem.length === 1 ? `${ordem[0].nome}: ${pct(ordem[0].final)} desde ${base}`
               : ordem[0].final > 0 ? `Quem mais subiu desde ${base}: ${ordem[0].nome} (${pct(ordem[0].final)})`
                 : `Nenhum subiu desde ${base}. Quem menos caiu: ${ordem[0].nome} (${pct(ordem[0].final)})`}
@@ -178,14 +178,14 @@ export default function CompararHistorico({ historico, nomes }) {
             <ol className="mt-2 space-y-1.5">
               {ordem.map((e, i) => (
                 <li key={e.campo.id} className="grid items-center gap-x-2 text-xs" style={{ gridTemplateColumns: "minmax(0, 1fr) 4.5rem" }}>
-                  <span className="truncate text-neutral-700"><span className="font-bold text-neutral-500">{i + 1}º</span> {e.nome}</span>
-                  <strong className="text-right text-neutral-900" style={{ fontVariantNumeric: "tabular-nums" }}>{pct(e.final)}</strong>
-                  <span className="relative col-span-2 block rounded" style={{ height: 14, background: "#efefef" }} title={`${e.nome}: ${pct(e.final)}`}>
+                  <span className="truncate text-slate-700"><span className="font-bold text-slate-500">{i + 1}º</span> {e.nome}</span>
+                  <strong className="text-right text-slate-900" style={{ fontVariantNumeric: "tabular-nums" }}>{pct(e.final)}</strong>
+                  <span className="relative col-span-2 block rounded" style={{ height: 14, background: "#f1f5f9" }} title={`${e.nome}: ${pct(e.final)}`}>
                     <span className="absolute inset-y-0" style={{
                       left: `${(Math.min(e.final, 0) - menor) / escala * 100}%`, width: `${Math.abs(e.final) / escala * 100}%`, minWidth: 2,
                       background: e.cor, borderRadius: e.final >= 0 ? "0 4px 4px 0" : "4px 0 0 4px",
                     }} />
-                    {menor < 0 && <span className="absolute inset-y-0" style={{ left: `${-menor / escala * 100}%`, width: 1, background: "#666666" }} />}
+                    {menor < 0 && <span className="absolute inset-y-0" style={{ left: `${-menor / escala * 100}%`, width: 1, background: "#64748b" }} />}
                   </span>
                 </li>
               ))}
@@ -196,19 +196,19 @@ export default function CompararHistorico({ historico, nomes }) {
 
       <div className="mt-4">
         {noGrafico.length > 1 && (
-          <ul className="flex flex-wrap gap-x-4 gap-y-1 mb-1 text-xs text-neutral-700">
+          <ul className="flex flex-wrap gap-x-4 gap-y-1 mb-1 text-xs text-slate-700">
             {noGrafico.map(e => <li key={e.campo.id} className="flex items-center gap-1.5"><span className="rounded-full" style={{ width: 14, height: 3, background: e.cor }} aria-hidden="true" />{e.nome}</li>)}
           </ul>
         )}
         <div className="relative" style={{ height: 300 }}>
           <ResponsiveContainer>
             <LineChart data={dados} margin={{ top: 10, right: 12, bottom: 4, left: 0 }}>
-              <CartesianGrid stroke="#e5e5e5" vertical={false} />
-              <XAxis dataKey="ano" tick={{ fontSize: 11, fill: "#666666" }} tickLine={false} axisLine={{ stroke: "#cccccc" }} padding={{ left: 14, right: 14 }} />
-              <YAxis width={50} tick={vazio ? false : { fontSize: 11, fill: "#666666" }} tickLine={false} axisLine={false} domain={vazio ? [0, 100] : ["auto", "auto"]}
+              <CartesianGrid stroke="#e5e7eb" vertical={false} />
+              <XAxis dataKey="ano" tick={{ fontSize: 11, fill: "#64748b" }} tickLine={false} axisLine={{ stroke: "#cbd5e1" }} padding={{ left: 14, right: 14 }} />
+              <YAxis width={50} tick={vazio ? false : { fontSize: 11, fill: "#64748b" }} tickLine={false} axisLine={false} domain={vazio ? [0, 100] : ["auto", "auto"]}
                 tickFormatter={v => `${v > 0 ? "+" : v < 0 ? "−" : ""}${Math.abs(Math.round(v))}%`} />
-              {!vazio && <ReferenceLine y={0} stroke="#8a8a8a" />}
-              {!vazio && <Tooltip cursor={{ stroke: "#8a8a8a" }} content={props => <Dica {...props} base={base} />} />}
+              {!vazio && <ReferenceLine y={0} stroke="#94a3b8" />}
+              {!vazio && <Tooltip cursor={{ stroke: "#94a3b8" }} content={props => <Dica {...props} base={base} />} />}
               {noGrafico.map(e => (
                 <Line key={e.campo.id} type="linear" dataKey={`s${e.campo.id}`} name={e.nome} stroke={e.cor} strokeWidth={2} connectNulls isAnimationActive={false}
                   dot={{ r: 4, fill: e.cor, stroke: "#fff", strokeWidth: 2 }} activeDot={{ r: 5, stroke: "#fff", strokeWidth: 2 }} />
@@ -216,7 +216,7 @@ export default function CompararHistorico({ historico, nomes }) {
             </LineChart>
           </ResponsiveContainer>
           {vazio && (
-            <p className="absolute inset-0 flex items-center justify-center px-6 text-center text-sm text-neutral-500 pointer-events-none">
+            <p className="absolute inset-0 flex items-center justify-center px-6 text-center text-sm text-slate-500 pointer-events-none">
               {escolhidos.length ? "O gráfico aparece assim que o histórico chegar." : "O gráfico fica vazio até você escolher o primeiro item acima."}
             </p>
           )}
@@ -224,13 +224,13 @@ export default function CompararHistorico({ historico, nomes }) {
       </div>
 
       {!vazio && (
-        <details className="mt-2 text-xs text-neutral-600">
-          <summary className="cursor-pointer font-semibold text-neutral-900">Ver os números em tabela</summary>
+        <details className="mt-2 text-xs text-slate-600">
+          <summary className="cursor-pointer font-semibold text-green-800">Ver os números em tabela</summary>
           <div className="mt-2 overflow-x-auto">
             <table className="w-full text-xs" style={{ fontVariantNumeric: "tabular-nums" }}>
-              <thead><tr style={{ background: "#111111", color: "#fff" }}><th className="py-1.5 px-2 text-left">Variação desde {base}</th>{anos.map(ano => <th key={ano} className="py-1.5 px-2 text-right">{ano}</th>)}</tr></thead>
+              <thead><tr style={{ background: "#166534", color: "#fff" }}><th className="py-1.5 px-2 text-left">Variação desde {base}</th>{anos.map(ano => <th key={ano} className="py-1.5 px-2 text-right">{ano}</th>)}</tr></thead>
               <tbody>{ordem.map((e, i) => (
-                <tr key={e.campo.id} style={{ background: i % 2 ? "#fff" : "#f6f6f6" }}>
+                <tr key={e.campo.id} style={{ background: i % 2 ? "#fff" : "#f8fafc" }}>
                   <td className="py-1 px-2 font-semibold whitespace-nowrap">{e.nome}</td>
                   {e.variacoes.map((v, j) => <td key={anos[j]} className="py-1 px-2 text-right">{v == null ? "—" : pct(v)}</td>)}
                 </tr>
@@ -240,7 +240,7 @@ export default function CompararHistorico({ historico, nomes }) {
         </details>
       )}
 
-      <p className="text-xs text-neutral-500 mt-3">
+      <p className="text-xs text-slate-500 mt-3">
         Como a conta é feita: a média dos preços de cada ano é comparada com a média do ano inicial. Chicago e Nova Iorque
         estão em dólar; commodities do Brasil e ações, em reais. Por isso a comparação é da variação em %, não do preço.
         O ponto de {ultimoAno} é a média do ano até agora (nas commodities do Brasil, o último valor da tabela abaixo).

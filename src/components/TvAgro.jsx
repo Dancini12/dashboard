@@ -10,7 +10,7 @@ import { CANAIS_AGRO, PLAYER_YOUTUBE, urlAoVivo, urlDoVideo, urlNoYouTube, urlRe
 // os vídeos recentes quando o player avisa erro. Esse endereço às vezes chega do YouTube sem a
 // transmissão pronta (player preto, que dá erro no play e não responde ao site): nesse caso a tela
 // carrega o player de novo, até 3 vezes.
-const TINTA = "#111111";
+const VERDE = "#166534";
 const VERMELHO = "#dc2626";
 const COM_YOUTUBE = CANAIS_AGRO.filter(c => c.channelId);
 const SEM_YOUTUBE = CANAIS_AGRO.filter(c => !c.channelId);
@@ -18,11 +18,11 @@ const SEM_YOUTUBE = CANAIS_AGRO.filter(c => !c.channelId);
 const quando = inicio => new Date(inicio).toLocaleString("pt-BR", { weekday: "long", day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
 
 const Aviso = ({ children }) => (
-  <div role="status" className="rounded-lg p-2.5 mt-3 text-xs sm:text-sm" style={{ background: "#f6f6f6", border: "1px solid #bdbdbd", color: "#111111" }}>{children}</div>
+  <div role="status" className="rounded-lg p-2.5 mt-3 text-xs sm:text-sm" style={{ background: "#fffbeb", border: "1px solid #fde68a", color: "#78350f" }}>{children}</div>
 );
 const NoAr = ({ claro }) => <span aria-hidden="true" className="inline-block shrink-0 rounded-full" style={{ width: 8, height: 8, background: VERMELHO, boxShadow: claro ? "0 0 0 2px rgba(255,255,255,0.85)" : "none" }} />;
 const BOTAO = "inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs sm:text-sm font-bold";
-const CONTORNO = { border: "1px solid #bdbdbd", color: TINTA, background: "#fff" };
+const CONTORNO = { border: "1px solid #bbf7d0", color: VERDE, background: "#fff" };
 
 export default function TvAgro({ inicial }) {
   // modo: "auto" segue a programação (ao vivo se o canal está no ar, senão vídeos recentes), "aoVivo"
@@ -107,8 +107,8 @@ export default function TvAgro({ inicial }) {
   return (
     <div className="space-y-4">
       <section className="rounded-xl border bg-white p-3 shadow-sm">
-        <h2 className="text-sm font-bold text-neutral-900">TV Agro · canais do agro ao vivo</h2>
-        <p className="text-xs text-neutral-600 mt-1">Canais gratuitos do agronegócio, exibidos pelo player oficial do YouTube. Escolha o canal e aperte o play: o vídeo não começa sozinho.</p>
+        <h2 className="text-sm font-bold text-green-800">TV Agro · canais do agro ao vivo</h2>
+        <p className="text-xs text-slate-600 mt-1">Canais gratuitos do agronegócio, exibidos pelo player oficial do YouTube. Escolha o canal e aperte o play: o vídeo não começa sozinho.</p>
         <div role="group" aria-label="Canais" className="flex flex-wrap gap-2 mt-3">
           {CANAIS_AGRO.map(c => {
             const ativo = c.id === canal?.id;
@@ -117,17 +117,17 @@ export default function TvAgro({ inicial }) {
               <button key={c.id} type="button" disabled={!c.channelId} aria-pressed={ativo} onClick={() => assistir(c.id)}
                 title={!c.channelId ? "Este canal não transmite pelo YouTube" : passando ? `Ao vivo agora${guia[c.id].titulo ? `: ${guia[c.id].titulo}` : ""}` : c.descricao}
                 className="inline-flex items-center gap-1.5 rounded-full px-3.5 py-2 text-xs sm:text-sm font-bold transition-colors disabled:cursor-not-allowed"
-                style={!c.channelId ? { background: "#efefef", color: "#8a8a8a" } : ativo ? { background: TINTA, color: "#fff" } : { background: "#f2f2f2", color: TINTA }}>
+                style={!c.channelId ? { background: "#f1f5f9", color: "#94a3b8" } : ativo ? { background: VERDE, color: "#fff" } : { background: "#f0fdf4", color: VERDE }}>
                 {passando && <NoAr claro={ativo} />}
                 <span>{c.nome}{passando && <span className="sr-only"> (ao vivo agora)</span>}{!c.channelId && <span className="font-normal"> · indisponível</span>}</span>
               </button>
             );
           })}
         </div>
-        {guia && <p className="flex items-center gap-1.5 text-xs text-neutral-500 mt-2"><NoAr />ao vivo agora no YouTube</p>}
+        {guia && <p className="flex items-center gap-1.5 text-xs text-slate-500 mt-2"><NoAr />ao vivo agora no YouTube</p>}
         {SEM_YOUTUBE.map(c => (
-          <p key={c.id} className="text-xs text-neutral-500 mt-2">
-            {c.nome} não transmite pelo YouTube. <a href={c.siteUrl} target="_blank" rel="noopener noreferrer" className="font-bold underline" style={{ color: TINTA }}>Assistir no site do canal</a>
+          <p key={c.id} className="text-xs text-slate-500 mt-2">
+            {c.nome} não transmite pelo YouTube. <a href={c.siteUrl} target="_blank" rel="noopener noreferrer" className="font-bold underline" style={{ color: VERDE }}>Assistir no site do canal</a>
           </p>
         ))}
       </section>
@@ -135,13 +135,13 @@ export default function TvAgro({ inicial }) {
       {canal ? (
         <section className="rounded-xl border bg-white p-3 shadow-sm">
           <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-            <h3 className="text-base font-bold" style={{ color: "#111111" }}>{canal.nome}</h3>
+            <h3 className="text-base font-bold" style={{ color: "#14532d" }}>{canal.nome}</h3>
             {!consultando && (aoVivo && noAr
               ? <span className="inline-flex items-center gap-1 rounded px-1.5 py-0.5 font-bold uppercase" style={{ background: "#fee2e2", color: "#991b1b", fontSize: 10 }}><NoAr />Ao vivo agora</span>
-              : <span className="rounded px-1.5 py-0.5 font-bold uppercase" style={{ background: "#efefef", color: "#333333", fontSize: 10 }}>{aoVivo ? "Transmissão ao vivo" : "Vídeos recentes"}</span>)}
+              : <span className="rounded px-1.5 py-0.5 font-bold uppercase" style={{ background: "#f1f5f9", color: "#334155", fontSize: 10 }}>{aoVivo ? "Transmissão ao vivo" : "Vídeos recentes"}</span>)}
           </div>
-          <p className="text-xs sm:text-sm text-neutral-600 mt-0.5">{canal.descricao}</p>
-          {aoVivo && noAr && info.titulo && <p className="text-xs sm:text-sm text-neutral-900 mt-1"><span className="text-neutral-500">No ar:</span> <strong>{info.titulo}</strong></p>}
+          <p className="text-xs sm:text-sm text-slate-600 mt-0.5">{canal.descricao}</p>
+          {aoVivo && noAr && info.titulo && <p className="text-xs sm:text-sm text-slate-900 mt-1"><span className="text-slate-500">No ar:</span> <strong>{info.titulo}</strong></p>}
 
           {semAoVivo && (
             <Aviso>
@@ -160,9 +160,9 @@ export default function TvAgro({ inicial }) {
             </Aviso>
           )}
 
-          <div className="relative mt-3 w-full overflow-hidden rounded-lg aspect-video" style={{ background: "#111111" }}>
+          <div className="relative mt-3 w-full overflow-hidden rounded-lg aspect-video" style={{ background: "#0f172a" }}>
             {consultando
-              ? <p className="absolute inset-0 flex items-center justify-center text-sm" style={{ color: "#cccccc" }}>Conferindo o que está no ar…</p>
+              ? <p className="absolute inset-0 flex items-center justify-center text-sm" style={{ color: "#cbd5e1" }}>Conferindo o que está no ar…</p>
               : <iframe key={`${player}#${carga}`} ref={quadro} onLoad={evento => setCarregado(evento.currentTarget)}
                   src={`${player}${player.includes("?") ? "&" : "?"}enablejsapi=1&origin=${encodeURIComponent(window.location.origin)}`}
                   title={aoVivo ? `${canal.nome} ao vivo no YouTube` : `Vídeos recentes de ${canal.nome} no YouTube`}
@@ -172,21 +172,21 @@ export default function TvAgro({ inicial }) {
 
           <div className="flex flex-wrap gap-2 mt-3">
             {aoVivo
-              ? <button type="button" onClick={() => setEscolha({ id: canal.id, modo: "recentes", recargas: 0 })} className={BOTAO} style={{ background: TINTA, color: "#fff" }}><History size={14} aria-hidden="true" />Ver vídeos recentes</button>
+              ? <button type="button" onClick={() => setEscolha({ id: canal.id, modo: "recentes", recargas: 0 })} className={BOTAO} style={{ background: VERDE, color: "#fff" }}><History size={14} aria-hidden="true" />Ver vídeos recentes</button>
               // com o canal fora do ar segundo a programação, "tentar de novo" insiste no ao vivo mesmo assim
-              : <button type="button" onClick={() => assistir(canal.id, semAoVivo && foraDoAr ? "aoVivo" : "auto")} className={BOTAO} style={{ background: TINTA, color: "#fff" }}><Radio size={14} aria-hidden="true" />{semAoVivo ? "Tentar o ao vivo de novo" : "Voltar para o ao vivo"}</button>}
+              : <button type="button" onClick={() => assistir(canal.id, semAoVivo && foraDoAr ? "aoVivo" : "auto")} className={BOTAO} style={{ background: VERDE, color: "#fff" }}><Radio size={14} aria-hidden="true" />{semAoVivo ? "Tentar o ao vivo de novo" : "Voltar para o ao vivo"}</button>}
             <a href={canal.siteUrl} target="_blank" rel="noopener noreferrer" className={BOTAO} style={CONTORNO}><ExternalLink size={14} aria-hidden="true" />Abrir no site do canal</a>
           </div>
           {aoVivo && !noAr && !semYouTube && (
-            <p className="text-xs text-neutral-500 mt-2">
+            <p className="text-xs text-slate-500 mt-2">
               O player avisou que a transmissão ainda vai começar, que o vídeo está indisponível ou que ocorreu um erro? Toque em “Ver vídeos recentes”, ou no nome do canal para carregar o ao vivo de novo.
             </p>
           )}
-          <p className="text-xs text-neutral-500 mt-1">No telão, use o botão de tela cheia no canto do player.</p>
+          <p className="text-xs text-slate-500 mt-1">No telão, use o botão de tela cheia no canto do player.</p>
         </section>
-      ) : <p className="text-sm text-neutral-500">Nenhum canal disponível no YouTube no momento.</p>}
+      ) : <p className="text-sm text-slate-500">Nenhum canal disponível no YouTube no momento.</p>}
 
-      <p className="text-xs text-neutral-500">
+      <p className="text-xs text-slate-500">
         Vídeos e transmissões: YouTube, nos canais oficiais de cada emissora. A programação e os anúncios são de responsabilidade dos canais.
       </p>
     </div>

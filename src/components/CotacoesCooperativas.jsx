@@ -46,13 +46,13 @@ const MAPA = {
   "Laranjeiras do Sul": [1, 3, "L. do Sul"], "Guarapuava": [2, 3], "Irati": [3, 3], "Curitiba": [5, 3],
   "Francisco Beltrão": [0, 4, "F. Beltrão"], "Pato Branco": [1, 4, "P. Branco"], "União da Vitória": [3, 4, "U. Vitória"],
 };
-// Faixas do preço, do ponto de vista de quem vende, em tons de cinza como num mapa de jornal: preto
-// nas regiões que pagam mais, cinza médio nas do meio e cinza-claro nas que pagam menos. Cada faixa
-// leva também um sinal (▲ ◆ ▼), para não depender só do tom.
+// Semáforo do preço, do ponto de vista de quem vende: verde nas regiões que pagam mais, amarelo
+// nas do meio e vermelho nas que pagam menos. Cada faixa leva também um sinal (▲ ◆ ▼), para não
+// depender só da cor.
 const FAIXAS = {
-  caro: { nome: "Pagam mais", sinal: "▲", fundo: "#111111", cor: "#fff" },
-  meio: { nome: "No meio", sinal: "◆", fundo: "#9e9e9e", cor: "#111111" },
-  barato: { nome: "Pagam menos", sinal: "▼", fundo: "#e0e0e0", cor: "#111111" },
+  caro: { nome: "Pagam mais", sinal: "▲", fundo: "#15803d", cor: "#fff" },
+  meio: { nome: "No meio", sinal: "◆", fundo: "#facc15", cor: "#422006" },
+  barato: { nome: "Pagam menos", sinal: "▼", fundo: "#dc2626", cor: "#fff" },
 };
 const duasCasas = v => v.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
@@ -63,10 +63,10 @@ function MapaDePrecos({ regioes, precos, onVerRegiao }) {
   const faixaDe = v => faixaDePreco(v, menor, maior);
   return (
     <div className="mt-3">
-      <strong className="block text-xs text-neutral-700">Onde o produtor recebe mais e onde recebe menos</strong>
+      <strong className="block text-xs text-slate-700">Onde o produtor recebe mais e onde recebe menos</strong>
       {maior === menor
-        ? <p className="text-xs text-neutral-600 mt-1">Hoje todas as regiões pesquisadas têm o mesmo preço: {reais(menor)}.</p>
-        : <ul className="flex flex-wrap gap-x-3 gap-y-1 mt-1 text-xs text-neutral-700">
+        ? <p className="text-xs text-slate-600 mt-1">Hoje todas as regiões pesquisadas têm o mesmo preço: {reais(menor)}.</p>
+        : <ul className="flex flex-wrap gap-x-3 gap-y-1 mt-1 text-xs text-slate-700">
             {Object.entries(FAIXAS).map(([faixa, f]) => {
               const daFaixa = valores.filter(v => faixaDe(v) === faixa);
               if (!daFaixa.length) return null;
@@ -86,16 +86,16 @@ function MapaDePrecos({ regioes, precos, onVerRegiao }) {
           const faixa = typeof valor === "number" ? FAIXAS[faixaDe(valor)] : null;
           return (
             <button key={regiao} type="button" onClick={() => onVerRegiao(regiao)} title={`${regiao}: ${valorDa(valor)}${faixa ? ` (${faixa === FAIXAS.meio ? "no meio" : `entre as que ${faixa.nome.toLowerCase()}`})` : ""}`} className="rounded-md px-0.5 py-1.5 text-center leading-tight"
-              style={{ gridColumn: coluna + 1, gridRow: linha + 1, background: faixa?.fundo ?? "#ffffff", color: faixa?.cor ?? "#666666", border: faixa ? "none" : "1px dashed #bdbdbd", boxShadow: regiao === REGIAO_DA_ESCOLA ? "inset 0 0 0 2px #ffffff, inset 0 0 0 4px #111111" : "none" }}>
+              style={{ gridColumn: coluna + 1, gridRow: linha + 1, background: faixa?.fundo ?? "#f1f5f9", color: faixa?.cor ?? "#64748b", outline: regiao === REGIAO_DA_ESCOLA ? "3px solid #0f172a" : "none", outlineOffset: -3 }}>
               <span className="block truncate" style={{ fontSize: "clamp(8.5px, 2.3vw, 10px)" }}>{curto ?? regiao}</span>
               <span className="block font-bold whitespace-nowrap" style={{ fontSize: 11 }}>{faixa ? <><span aria-hidden="true" style={{ fontSize: 8 }}>{faixa.sinal} </span>{duasCasas(valor)}</> : "—"}</span>
             </button>
           );
         })}
       </div>
-      <p className="text-xs text-neutral-500 mt-1.5">
-        Mapa esquemático: oeste à esquerda, norte em cima. Preto é onde o comprador paga mais pelo produto, cinza-claro onde paga menos. Os tons dividem em três
-        partes a distância entre o menor e o maior preço do dia e mudam sozinhas a cada boletim novo do DERAL. O contorno duplo, branco e preto, é a região de Santa Mariana. Toque em uma região para achá-la na tabela.
+      <p className="text-xs text-slate-500 mt-1.5">
+        Mapa esquemático: oeste à esquerda, norte em cima. Verde é onde o comprador paga mais pelo produto, vermelho onde paga menos. As cores dividem em três
+        partes a distância entre o menor e o maior preço do dia e mudam sozinhas a cada boletim novo do DERAL. O contorno escuro é a região de Santa Mariana. Toque em uma região para achá-la na tabela.
       </p>
     </div>
   );
@@ -132,14 +132,14 @@ export default function CotacoesCooperativas({ produtoInicial = "Soja", children
   return (
     <div className="space-y-4">
       <section className="rounded-xl border bg-white p-3 shadow-sm">
-        <h2 className="text-sm font-bold text-neutral-900">Cotações Cooperativas · Paraná</h2>
-        <p className="text-xs text-neutral-600 mt-1">
+        <h2 className="text-sm font-bold text-green-800">Cotações Cooperativas · Paraná</h2>
+        <p className="text-xs text-slate-600 mt-1">
           Quanto quem compra do produtor (cooperativas, cerealistas e indústrias) está pagando em cada região do
           Paraná, segundo o levantamento diário do DERAL, da Secretaria da Agricultura do estado. A região de
           Cornélio Procópio, onde fica Santa Mariana, aparece em destaque.
         </p>
         {cotacao && (
-          <div className="mt-3 flex gap-2 rounded-lg p-2.5 text-xs" style={{ background: "#f2f2f2", border: "1px solid #bdbdbd", color: "#111111" }}>
+          <div className="mt-3 flex gap-2 rounded-lg p-2.5 text-xs" style={{ background: "#eff6ff", border: "1px solid #bfdbfe", color: "#1e3a8a" }}>
             <Clock size={15} className="shrink-0 mt-0.5" aria-hidden="true" />
             <div>
               <div>
@@ -154,8 +154,8 @@ export default function CotacoesCooperativas({ produtoInicial = "Soja", children
             </div>
           </div>
         )}
-        <details className="mt-2 text-xs text-neutral-600">
-          <summary className="cursor-pointer font-semibold text-neutral-900">Como esta cotação é feita</summary>
+        <details className="mt-2 text-xs text-slate-600">
+          <summary className="cursor-pointer font-semibold text-green-800">Como esta cotação é feita</summary>
           <ul className="mt-2 space-y-1 pl-5" style={{ listStyle: "disc" }}>
             <li><strong>Quem levanta:</strong> o DERAL (Departamento de Economia Rural) da Secretaria da Agricultura e do Abastecimento do Paraná, pelo SIMA, o Sistema de Informação de Mercado Agrícola.</li>
             <li><strong>O que é:</strong> a "cotação de compra pelos atacadistas paranaenses", ou seja, o preço que os compradores atacadistas, como cooperativas, cerealistas e indústrias, pagam ao produtor, em reais por unidade (saca de 60 kg, arroba, kg ou tonelada).</li>
@@ -174,7 +174,7 @@ export default function CotacoesCooperativas({ produtoInicial = "Soja", children
               return (
                 <button key={p.nome} type="button" onClick={() => setEscolhido(nome)} aria-pressed={ativo}
                   className="rounded-full border px-3 py-1 text-xs font-bold"
-                  style={ativo ? { background: "#111111", borderColor: "#111111", color: "#fff" } : { background: "#f2f2f2", borderColor: "#bdbdbd", color: "#111111" }}>
+                  style={ativo ? { background: "#166534", borderColor: "#166534", color: "#fff" } : { background: "#f0fdf4", borderColor: "#bbf7d0", color: "#166534" }}>
                   {nome}
                 </button>
               );
@@ -183,9 +183,9 @@ export default function CotacoesCooperativas({ produtoInicial = "Soja", children
         )}
       </section>
 
-      {!cotacao && !erro && <p className="text-sm text-neutral-500">Carregando a cotação do DERAL…</p>}
+      {!cotacao && !erro && <p className="text-sm text-slate-500">Carregando a cotação do DERAL…</p>}
       {erro && !cotacao && (
-        <p role="alert" className="rounded-xl border p-3 text-sm text-neutral-800 bg-neutral-100">
+        <p role="alert" className="rounded-xl border p-3 text-sm text-amber-800 bg-amber-50">
           A cotação do DERAL não está disponível agora. Tente mais tarde ou veja direto no{" "}
           <a className="underline" href={PAGINA_DERAL} target="_blank" rel="noopener noreferrer">site do DERAL</a>.
         </p>
@@ -193,29 +193,29 @@ export default function CotacoesCooperativas({ produtoInicial = "Soja", children
 
       {produto && (
         <section className="rounded-xl border bg-white p-3 shadow-sm">
-          <h3 className="text-sm font-bold" style={{ color: "#111111" }}>
-            {produto.nome} <span className="text-xs font-normal text-neutral-500">· R$ por {unidadeLegivel(produto.unidade)}</span>
+          <h3 className="text-sm font-bold" style={{ color: "#14532d" }}>
+            {produto.nome} <span className="text-xs font-normal text-slate-500">· R$ por {unidadeLegivel(produto.unidade)}</span>
           </h3>
           <div className="mt-2 grid grid-cols-3 gap-2 text-xs">
             {produto.mediaEstado != null && (
-              <div className="rounded-lg p-2" style={{ background: "#f2f2f2" }}>
-                <div className="text-neutral-500">Média do Paraná</div>
-                <div className="text-base font-bold" style={{ color: "#111111" }}>{reais(produto.mediaEstado)}</div>
+              <div className="rounded-lg p-2" style={{ background: "#f0fdf4" }}>
+                <div className="text-slate-500">Média do Paraná</div>
+                <div className="text-base font-bold" style={{ color: "#166534" }}>{reais(produto.mediaEstado)}</div>
                 {produto.variacaoPct != null && (
-                  <div style={{ color: produto.variacaoPct > 0 ? "#15803d" : produto.variacaoPct < 0 ? "#b91c1c" : "#666666" }}>
+                  <div style={{ color: produto.variacaoPct > 0 ? "#15803d" : produto.variacaoPct < 0 ? "#b91c1c" : "#64748b" }}>
                     {produto.variacaoPct > 0 ? "+" : ""}{produto.variacaoPct.toLocaleString("pt-BR", { maximumFractionDigits: 2 })}% sobre o dia anterior
                   </div>
                 )}
               </div>
             )}
-            {maior && <div className="rounded-lg p-2" style={{ background: "#f6f6f6" }}><div className="text-neutral-500">Maior preço</div><div className="font-bold">{reais(maior[1])}</div><div className="text-neutral-500">{maior[0]}</div></div>}
-            {menor && <div className="rounded-lg p-2" style={{ background: "#f6f6f6" }}><div className="text-neutral-500">Menor preço</div><div className="font-bold">{reais(menor[1])}</div><div className="text-neutral-500">{menor[0]}</div></div>}
+            {maior && <div className="rounded-lg p-2" style={{ background: "#f8fafc" }}><div className="text-slate-500">Maior preço</div><div className="font-bold">{reais(maior[1])}</div><div className="text-slate-500">{maior[0]}</div></div>}
+            {menor && <div className="rounded-lg p-2" style={{ background: "#f8fafc" }}><div className="text-slate-500">Menor preço</div><div className="font-bold">{reais(menor[1])}</div><div className="text-slate-500">{menor[0]}</div></div>}
           </div>
           <MapaDePrecos regioes={cotacao.regioes} precos={produto.precos} onVerRegiao={verRegiao} />
           <div className="mt-3 overflow-x-auto">
             <table className="w-full text-xs">
               <thead>
-                <tr style={{ background: "#111111", color: "#fff" }}>
+                <tr style={{ background: "#166534", color: "#fff" }}>
                   <th className="py-1.5 px-2 text-left">Região</th>
                   <th className="py-1.5 px-2 text-right hidden sm:table-cell">Mínimo</th>
                   <th className="py-1.5 px-2 text-right">Mais comum</th>
@@ -226,18 +226,18 @@ export default function CotacoesCooperativas({ produtoInicial = "Soja", children
                 {cotacao.regioes.map((regiao, i) => {
                   const p = produto.precos[i];
                   const daEscola = regiao === REGIAO_DA_ESCOLA;
-                  const fundo = destaque === regiao ? "#dedede" : daEscola ? "#ececec" : i % 2 ? "#fff" : "#f6f6f6";
+                  const fundo = destaque === regiao ? "#dcfce7" : daEscola ? "#fef9c3" : i % 2 ? "#fff" : "#f8fafc";
                   return (
                     <tr key={regiao} id={`regiao-${regiao}`} style={{ background: fundo }}>
                       <td className="py-1 px-2 font-semibold">
                         {regiao}
-                        {daEscola && <span className="block sm:inline sm:ml-1 font-normal text-neutral-800" style={{ fontSize: 10.5 }}>região de Santa Mariana</span>}
+                        {daEscola && <span className="block sm:inline sm:ml-1 font-normal text-amber-800" style={{ fontSize: 10.5 }}>região de Santa Mariana</span>}
                       </td>
                       <td className="py-1 px-2 text-right font-mono hidden sm:table-cell">{valorDa(p.min)}</td>
                       <td className="py-1 px-2 text-right font-mono font-bold">
                         {valorDa(p.comum)}
                         {typeof p.min === "number" && typeof p.max === "number" && (
-                          <span className="block sm:hidden font-normal text-neutral-500" style={{ fontSize: 10.5 }}>{valorDa(p.min)} a {valorDa(p.max)}</span>
+                          <span className="block sm:hidden font-normal text-slate-500" style={{ fontSize: 10.5 }}>{valorDa(p.min)} a {valorDa(p.max)}</span>
                         )}
                       </td>
                       <td className="py-1 px-2 text-right font-mono hidden sm:table-cell">{valorDa(p.max)}</td>
@@ -247,29 +247,29 @@ export default function CotacoesCooperativas({ produtoInicial = "Soja", children
               </tbody>
             </table>
           </div>
-          <p className="text-xs text-neutral-500 mt-2">"—" = região não pesquisada para este produto · "s/ inf." = sem informação no dia.</p>
+          <p className="text-xs text-slate-500 mt-2">"—" = região não pesquisada para este produto · "s/ inf." = sem informação no dia.</p>
         </section>
       )}
 
       <section className="rounded-xl border bg-white p-3 shadow-sm">
-        <h2 className="text-sm font-bold text-neutral-900">Cooperativas do Paraná</h2>
-        <p className="text-xs text-neutral-600 mt-1">
+        <h2 className="text-sm font-bold text-green-800">Cooperativas do Paraná</h2>
+        <p className="text-xs text-slate-600 mt-1">
           Cada cooperativa divulga o próprio preço aos cooperados, no aplicativo ou na área do cooperado. Para ter uma
           referência, compare com a região da tabela mais próxima da sede.
         </p>
         <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-3">
           {COOPERATIVAS_PR.map(c => (
-            <li key={c.nome} className="rounded-lg border p-2 text-xs" style={{ background: "#f6f6f6", borderColor: "#e0e0e0" }}>
+            <li key={c.nome} className="rounded-lg border p-2 text-xs" style={{ background: "#f8fafc", borderColor: "#e2e8f0" }}>
               <div className="flex items-center justify-between gap-2">
-                <strong className="text-sm" style={{ color: "#111111" }}>{c.nome}</strong>
-                <a href={c.site} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-neutral-800 underline shrink-0">
+                <strong className="text-sm" style={{ color: "#14532d" }}>{c.nome}</strong>
+                <a href={c.site} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-blue-800 underline shrink-0">
                   Site <ExternalLink size={11} aria-hidden="true" />
                 </a>
               </div>
-              <div className="text-neutral-600 mt-0.5">Sede: {c.sede} · Recebe: {c.produtos}</div>
+              <div className="text-slate-600 mt-0.5">Sede: {c.sede} · Recebe: {c.produtos}</div>
               {c.regiao && cotacao && (
                 <button type="button" onClick={() => verRegiao(c.regiao)} className="mt-1.5 rounded-full border px-2 py-0.5 font-semibold"
-                  style={{ background: "#fff", borderColor: "#9e9e9e", color: "#111111" }}>
+                  style={{ background: "#fff", borderColor: "#86efac", color: "#166534" }}>
                   Ver região de {c.regiao} na tabela
                 </button>
               )}
@@ -278,7 +278,7 @@ export default function CotacoesCooperativas({ produtoInicial = "Soja", children
         </ul>
       </section>
 
-      <p className="text-xs text-neutral-500">
+      <p className="text-xs text-slate-500">
         Fonte: DERAL/SEAB-PR, Sistema de Informação de Mercado Agrícola (SIMA), cotação de compra pelos atacadistas
         paranaenses, publicada nos dias úteis.{" "}
         {cotacao?.arquivo && <a className="underline" href={cotacao.arquivo} target="_blank" rel="noopener noreferrer">Planilha do dia</a>}

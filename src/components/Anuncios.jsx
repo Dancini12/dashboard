@@ -36,11 +36,11 @@ export function AvisoDeCookies() {
     setEscolha(valor);
   };
   return (
-    <div role="dialog" aria-label="Aviso de cookies" className="fixed inset-x-0 bottom-0 print:hidden" style={{ zIndex: 60, background: "#ffffff", borderTop: "2px solid #111111", fontFamily: 'Georgia, "Times New Roman", serif', color: "#111111" }}>
+    <div role="dialog" aria-label="Aviso de cookies" className="fixed inset-x-0 bottom-0 print:hidden" style={{ zIndex: 60, background: "#ffffff", borderTop: "2px solid #166534", fontFamily: 'Georgia, "Times New Roman", serif', color: "#0f172a" }}>
       <div className="max-w-4xl mx-auto px-3 py-3 flex flex-wrap items-center gap-3 text-sm">
         <p className="flex-1" style={{ minWidth: 240 }}>Este site mostra anúncios do Google, que usam cookies para escolher o que aparece. Você decide se aceita anúncios personalizados. <a href="/privacidade" className="underline">Saiba mais</a>.</p>
-        <button type="button" onClick={() => escolher("necessarios")} className="px-3 py-2 text-xs font-bold" style={{ border: "1px solid #111111", background: "#ffffff" }}>Só os necessários</button>
-        <button type="button" onClick={() => escolher("todos")} className="px-3 py-2 text-xs font-bold" style={{ background: "#111111", color: "#ffffff" }}>Aceitar</button>
+        <button type="button" onClick={() => escolher("necessarios")} className="px-3 py-2 text-xs font-bold" style={{ border: "1px solid #bbf7d0", background: "#ffffff", color: "#166534" }}>Só os necessários</button>
+        <button type="button" onClick={() => escolher("todos")} className="px-3 py-2 text-xs font-bold" style={{ background: "#166534", color: "#ffffff" }}>Aceitar</button>
       </div>
     </div>
   );
@@ -57,7 +57,7 @@ export function Anuncio() {
   if (!CLIENTE_ADSENSE || !BLOCO_ADSENSE) return null;
   return (
     <aside className="my-5 print:hidden" aria-label="Publicidade">
-      <p className="text-center uppercase" style={{ fontSize: 9, letterSpacing: "0.12em", color: "#666666", fontFamily: "system-ui, sans-serif" }}>Publicidade</p>
+      <p className="text-center uppercase" style={{ fontSize: 9, letterSpacing: "0.12em", color: "#64748b", fontFamily: "system-ui, sans-serif" }}>Publicidade</p>
       <ins ref={espaco} className="adsbygoogle" style={{ display: "block" }} data-ad-client={CLIENTE_ADSENSE} data-ad-slot={BLOCO_ADSENSE} data-ad-format="auto" data-full-width-responsive="true" />
     </aside>
   );

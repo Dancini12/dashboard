@@ -9,6 +9,6 @@ export function VarBadge({ val }) {
 export function Card({ children, className = "", style = {}, id }) {
   return <div id={id} className={`rounded-xl border shadow-sm ${className}`} style={{ scrollMarginTop: 100, background: "rgba(255,255,255,0.9)", borderColor: "rgba(0,0,0,0.06)", ...style }}>{children}</div>;
 }
-export function SecTitle({ icon: I, title, color = "#111111" }) {
+export function SecTitle({ icon: I, title, color = "#1a3a5c" }) {
   return <div className="flex items-center gap-2 mb-3"><div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: color }}><I size={13} color="#fff" /></div><h2 className="text-sm font-bold" style={{ color }}>{title}</h2></div>;
 }

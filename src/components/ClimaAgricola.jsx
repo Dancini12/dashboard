@@ -7,8 +7,8 @@ import { avisosDaPrevisao, buscarClima, buscarPrevisao, emojiDoTempo, getWmo, gu
 // caiu, a chuva prevista, a umidade do solo e os avisos para a lavoura, a partir do Open-Meteo (o
 // mesmo serviço do Resumo do dia). Os valores passados são estimativas do modelo para o
 // ponto escolhido, não a leitura de um pluviômetro.
-const ESCURO = "#333333";      // o que já choveu
-const CLARO = "#aaaaaa"; // previsão (mesmo tom, mais claro)
+const AZUL = "#2a78d6";      // o que já choveu
+const AZUL_CLARO = "#86b6ef"; // previsão (mesmo tom, mais claro)
 const mm = v => `${v.toLocaleString("pt-BR", { minimumFractionDigits: 0, maximumFractionDigits: 1 })} mm`;
 const diaMes = data => `${data.slice(8, 10)}/${data.slice(5, 7)}`;
 const diaDaSemana = data => WEEK[new Date(`${data}T12:00:00`).getDay()];
@@ -20,23 +20,23 @@ function Dica({ active, payload }) {
   const dia = payload?.[0]?.payload;
   if (!active || !dia) return null;
   return (
-    <div className="rounded-lg border bg-white px-2.5 py-2 text-xs shadow-md" style={{ borderColor: "#e0e0e0" }}>
-      <div className="font-semibold text-neutral-500">{diaDaSemana(dia.data)}, {diaMes(dia.data)} · {dia.previsto != null ? "previsão" : "já choveu"}</div>
-      <div className="mt-1"><strong className="text-neutral-900">{mm(dia.chuva ?? 0)}</strong>{dia.previsto != null && dia.probabilidade != null && <span className="text-neutral-600"> · {dia.probabilidade}% de chance</span>}</div>
+    <div className="rounded-lg border bg-white px-2.5 py-2 text-xs shadow-md" style={{ borderColor: "#e2e8f0" }}>
+      <div className="font-semibold text-slate-500">{diaDaSemana(dia.data)}, {diaMes(dia.data)} · {dia.previsto != null ? "previsão" : "já choveu"}</div>
+      <div className="mt-1"><strong className="text-slate-900">{mm(dia.chuva ?? 0)}</strong>{dia.previsto != null && dia.probabilidade != null && <span className="text-slate-600"> · {dia.probabilidade}% de chance</span>}</div>
     </div>
   );
 }
 function Numero({ rotulo, valor, detalhe, destaque }) {
   return (
-    <div className="rounded-lg p-2.5" style={{ background: destaque ? "#f2f2f2" : "#f6f6f6" }}>
-      <div className="text-xs text-neutral-500">{rotulo}</div>
-      <div className="text-lg font-black" style={{ color: destaque ? "#111111" : "#111111" }}>{valor}</div>
-      {detalhe && <div className="text-xs text-neutral-500">{detalhe}</div>}
+    <div className="rounded-lg p-2.5" style={{ background: destaque ? "#eff6ff" : "#f8fafc" }}>
+      <div className="text-xs text-slate-500">{rotulo}</div>
+      <div className="text-lg font-black" style={{ color: destaque ? "#1e3a8a" : "#0f172a" }}>{valor}</div>
+      {detalhe && <div className="text-xs text-slate-500">{detalhe}</div>}
     </div>
   );
 }
 const Aviso = ({ tom, icone, titulo, children }) => (
-  <div className="flex gap-2 rounded-lg p-2.5 text-xs" style={tom === "alerta" ? { background: "#fef2f2", border: "1px solid #fecaca", color: "#7f1d1d" } : { background: "#f2f2f2", border: "1px solid #bdbdbd", color: "#111111" }}>
+  <div className="flex gap-2 rounded-lg p-2.5 text-xs" style={tom === "alerta" ? { background: "#fef2f2", border: "1px solid #fecaca", color: "#7f1d1d" } : { background: "#f0fdf4", border: "1px solid #bbf7d0", color: "#14532d" }}>
     <span aria-hidden="true">{icone}</span><div><strong>{titulo}</strong> {children}</div>
   </div>
 );
@@ -52,73 +52,73 @@ function PrevisaoDoTempo({ dias, hoje, porHora, semHoras, escolhido, onEscolher 
   const chove = (dia.chuva ?? 0) >= 0.1;
   return (
     <section id="previsao-tempo" className="rounded-xl border bg-white p-3 shadow-sm" style={{ scrollMarginTop: 100 }}>
-      <h3 className="text-sm font-bold" style={{ color: "#111111" }}>Previsão do tempo</h3>
+      <h3 className="text-sm font-bold" style={{ color: "#14532d" }}>Previsão do tempo</h3>
       {agora && (
         <div className="flex flex-wrap items-center gap-x-6 gap-y-2 mt-2">
           <div className="flex items-center gap-3">
             <span style={{ fontSize: 44, lineHeight: 1 }} aria-hidden="true">{emojiDoTempo(agora.tempo, agora.deDia)}</span>
             <div>
-              <div className="text-3xl font-black text-neutral-900" style={{ lineHeight: 1 }}>{Math.round(agora.temperatura)} °C</div>
-              <div className="text-xs font-semibold text-neutral-700 mt-1">{getWmo(agora.tempo).label} · agora, às {agora.hora.slice(11, 16)}</div>
+              <div className="text-3xl font-black text-slate-900" style={{ lineHeight: 1 }}>{Math.round(agora.temperatura)} °C</div>
+              <div className="text-xs font-semibold text-slate-700 mt-1">{getWmo(agora.tempo).label} · agora, às {agora.hora.slice(11, 16)}</div>
             </div>
           </div>
-          <dl className="flex flex-wrap gap-x-5 gap-y-1 text-xs text-neutral-600">
-            <div><dt className="inline">Sensação de </dt><dd className="inline font-bold text-neutral-900">{Math.round(agora.sensacao)} °C</dd></div>
-            <div><dt className="inline">Umidade do ar: </dt><dd className="inline font-bold text-neutral-900">{agora.umidade}%</dd></div>
-            <div><dt className="inline">Vento: </dt><dd className="inline font-bold text-neutral-900">{Math.round(agora.vento)} km/h</dd></div>
+          <dl className="flex flex-wrap gap-x-5 gap-y-1 text-xs text-slate-600">
+            <div><dt className="inline">Sensação de </dt><dd className="inline font-bold text-slate-900">{Math.round(agora.sensacao)} °C</dd></div>
+            <div><dt className="inline">Umidade do ar: </dt><dd className="inline font-bold text-slate-900">{agora.umidade}%</dd></div>
+            <div><dt className="inline">Vento: </dt><dd className="inline font-bold text-slate-900">{Math.round(agora.vento)} km/h</dd></div>
           </dl>
         </div>
       )}
-      <p className="text-xs text-neutral-600 mt-3">Próximos 7 dias. Toque em um dia para ver como ele vai ser.</p>
+      <p className="text-xs text-slate-600 mt-3">Próximos 7 dias. Toque em um dia para ver como ele vai ser.</p>
       <div role="group" aria-label="Dia da previsão" className="grid grid-cols-4 sm:grid-cols-7 gap-1.5 mt-1.5">
         {dias.map(d => {
           const ativo = d.data === dia.data;
           return (
             <button key={d.data} type="button" aria-pressed={ativo} onClick={() => onEscolher(d.data)} title={getWmo(d.tempo).label}
-              className="rounded-lg border px-1 py-2 text-center" style={ativo ? { background: "#f2f2f2", borderColor: "#111111" } : { background: "#fff", borderColor: "#e0e0e0" }}>
-              <span className="block text-xs font-bold" style={{ color: ativo ? "#111111" : "#333333" }}>{d.data === hoje ? "Hoje" : diaDaSemana(d.data)}</span>
-              <span className="block text-neutral-500" style={{ fontSize: 10 }}>{diaMes(d.data)}</span>
+              className="rounded-lg border px-1 py-2 text-center" style={ativo ? { background: "#f0fdf4", borderColor: "#166534" } : { background: "#fff", borderColor: "#e2e8f0" }}>
+              <span className="block text-xs font-bold" style={{ color: ativo ? "#166534" : "#334155" }}>{d.data === hoje ? "Hoje" : diaDaSemana(d.data)}</span>
+              <span className="block text-slate-500" style={{ fontSize: 10 }}>{diaMes(d.data)}</span>
               <span className="block my-1" style={{ fontSize: 24, lineHeight: 1 }} aria-hidden="true">{getWmo(d.tempo).emoji}</span>
-              <span className="block text-xs"><strong className="text-neutral-900">{grau(d.maxima)}</strong> <span className="text-neutral-500">{grau(d.minima)}</span></span>
-              <span className="block text-neutral-600" style={{ fontSize: 10 }}>{mm(d.chuva ?? 0)}</span>
-              <span className="block text-neutral-500" style={{ fontSize: 10 }}>{d.probabilidade != null ? `${d.probabilidade}% de chance` : "\u00a0"}</span>
+              <span className="block text-xs"><strong className="text-slate-900">{grau(d.maxima)}</strong> <span className="text-slate-500">{grau(d.minima)}</span></span>
+              <span className="block text-slate-600" style={{ fontSize: 10 }}>{mm(d.chuva ?? 0)}</span>
+              <span className="block text-slate-500" style={{ fontSize: 10 }}>{d.probabilidade != null ? `${d.probabilidade}% de chance` : "\u00a0"}</span>
             </button>
           );
         })}
       </div>
 
       <div className="mt-3">
-        <h4 className="text-sm font-bold text-neutral-900">{dia.data === hoje ? "Hoje" : diaPorExtenso(dia.data)}, {diaMes(dia.data)} · {getWmo(dia.tempo).label}</h4>
-        <p className="text-xs text-neutral-600 mt-0.5">
+        <h4 className="text-sm font-bold text-slate-900">{dia.data === hoje ? "Hoje" : diaPorExtenso(dia.data)}, {diaMes(dia.data)} · {getWmo(dia.tempo).label}</h4>
+        <p className="text-xs text-slate-600 mt-0.5">
           Mínima de {Math.round(dia.minima)} °C e máxima de {Math.round(dia.maxima)} °C.{" "}
           {chove ? `Chuva prevista de ${mm(dia.chuva)}${dia.probabilidade != null ? `, com ${dia.probabilidade}% de chance` : ""}.` : `Sem chuva prevista${dia.probabilidade ? ` (chance de ${dia.probabilidade}%)` : ""}.`}
         </p>
         {periodos.length > 0 ? (
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-2">
             {periodos.map(p => (
-              <div key={p.nome} className="rounded-lg p-2.5" style={{ background: "#f6f6f6" }}>
-                <div className="text-xs text-neutral-500"><strong className="text-neutral-700">{p.nome}</strong> · {p.de}h às {p.ate}h</div>
+              <div key={p.nome} className="rounded-lg p-2.5" style={{ background: "#f8fafc" }}>
+                <div className="text-xs text-slate-500"><strong className="text-slate-700">{p.nome}</strong> · {p.de}h às {p.ate}h</div>
                 <div className="flex items-center gap-2 mt-1">
                   <span style={{ fontSize: 24, lineHeight: 1 }} aria-hidden="true">{emojiDoTempo(p.tempo, p.deDia)}</span>
-                  <span className="text-base font-black text-neutral-900">{grau(p.minima)} a {grau(p.maxima)}</span>
+                  <span className="text-base font-black text-slate-900">{grau(p.minima)} a {grau(p.maxima)}</span>
                 </div>
-                <div className="text-xs text-neutral-700 mt-1">{getWmo(p.tempo).label}</div>
-                <div className="text-xs text-neutral-500">Chuva: {mm(p.chuva)}{p.probabilidade != null && ` · ${p.probabilidade}% de chance`}</div>
-                <div className="text-xs text-neutral-500">Vento de até {Math.round(p.vento)} km/h</div>
+                <div className="text-xs text-slate-700 mt-1">{getWmo(p.tempo).label}</div>
+                <div className="text-xs text-slate-500">Chuva: {mm(p.chuva)}{p.probabilidade != null && ` · ${p.probabilidade}% de chance`}</div>
+                <div className="text-xs text-slate-500">Vento de até {Math.round(p.vento)} km/h</div>
               </div>
             ))}
           </div>
-        ) : <p className="text-xs text-neutral-500 mt-2">{semHoras ? "O detalhe por período não está disponível agora." : "Buscando o detalhe por período…"}</p>}
+        ) : <p className="text-xs text-slate-500 mt-2">{semHoras ? "O detalhe por período não está disponível agora." : "Buscando o detalhe por período…"}</p>}
         {horas.length > 0 && (
-          <details className="mt-2 text-xs text-neutral-600">
-            <summary className="cursor-pointer font-semibold text-neutral-900">Ver hora a hora</summary>
+          <details className="mt-2 text-xs text-slate-600">
+            <summary className="cursor-pointer font-semibold text-green-800">Ver hora a hora</summary>
             <div className="mt-2 overflow-x-auto">
               <table className="w-full text-xs">
-                <thead><tr style={{ background: "#111111", color: "#fff" }}>
+                <thead><tr style={{ background: "#166534", color: "#fff" }}>
                   <th className="py-1.5 px-2 text-left">Hora</th><th className="py-1.5 px-2 text-left">Tempo</th><th className="py-1.5 px-2 text-right">Temp.</th><th className="py-1.5 px-2 text-right">Chuva</th><th className="py-1.5 px-2 text-right">Chance</th><th className="py-1.5 px-2 text-right">Vento</th>
                 </tr></thead>
                 <tbody>{horas.map((h, i) => (
-                  <tr key={h.hora} style={{ background: i % 2 ? "#fff" : "#f6f6f6" }}>
+                  <tr key={h.hora} style={{ background: i % 2 ? "#fff" : "#f8fafc" }}>
                     <td className="py-1 px-2 font-semibold whitespace-nowrap">{h.hora.slice(11, 13)}h</td>
                     <td className="py-1 px-2 whitespace-nowrap">{emojiDoTempo(h.tempo, h.deDia)} <span className="hidden sm:inline">{getWmo(h.tempo).label}</span></td>
                     <td className="py-1 px-2 text-right font-mono whitespace-nowrap">{grau(h.temperatura)}</td>
@@ -188,19 +188,19 @@ export default function ClimaAgricola({ cidadeInicial = null }) {
     <div className="space-y-4">
       <section className="rounded-xl border bg-white p-3 shadow-sm">
         <h2 className="sr-only">Clima para a lavoura</h2>
-        <p className="text-xs text-neutral-600">A previsão do tempo dia a dia, quanto choveu, quanto deve chover, como está a água no solo e se há risco de geada ou calor forte nos próximos 15 dias.</p>
+        <p className="text-xs text-slate-600">A previsão do tempo dia a dia, quanto choveu, quanto deve chover, como está a água no solo e se há risco de geada ou calor forte nos próximos 15 dias.</p>
         <form onSubmit={procurar} className="flex gap-1.5 mt-3">
           <label className="relative flex-1 min-w-0">
             <span className="sr-only">Cidade</span>
-            <MapPin size={13} className="absolute" style={{ left: 9, top: "50%", transform: "translateY(-50%)", color: "#666666" }} aria-hidden="true" />
+            <MapPin size={13} className="absolute" style={{ left: 9, top: "50%", transform: "translateY(-50%)", color: "#64748b" }} aria-hidden="true" />
             <input value={busca} onChange={e => setBusca(e.target.value)} onFocus={e => e.target.select()} placeholder="Digite a cidade (ex.: Londrina)" className="block w-full rounded-lg border bg-white text-sm" style={{ padding: "7px 10px 7px 28px" }} />
           </label>
-          <button type="submit" className="flex items-center gap-1 rounded-lg px-3 text-xs font-bold text-white" style={{ background: "#111111" }}><Search size={12} aria-hidden="true" />Buscar</button>
+          <button type="submit" className="flex items-center gap-1 rounded-lg px-3 text-xs font-bold text-white" style={{ background: "#166534" }}><Search size={12} aria-hidden="true" />Buscar</button>
         </form>
-        {erroDaBusca && <p role="alert" className="text-xs text-neutral-800 mt-1.5">{erroDaBusca}</p>}
-        {!local && !erroDaBusca && <p className="text-xs text-neutral-500 mt-2">Escolha uma cidade para ver a previsão do tempo, a chuva e a água no solo.</p>}
-        {carregando && <p className="text-xs text-neutral-500 mt-2">Buscando o clima de {local.nome}…</p>}
-        {estado.erro && <p role="alert" className="text-xs text-neutral-800 mt-2">{clima ? "Não foi possível atualizar agora; os dados abaixo são os últimos recebidos." : "O serviço de clima não respondeu. Tente novamente em alguns minutos."}</p>}
+        {erroDaBusca && <p role="alert" className="text-xs text-amber-800 mt-1.5">{erroDaBusca}</p>}
+        {!local && !erroDaBusca && <p className="text-xs text-slate-500 mt-2">Escolha uma cidade para ver a previsão do tempo, a chuva e a água no solo.</p>}
+        {carregando && <p className="text-xs text-slate-500 mt-2">Buscando o clima de {local.nome}…</p>}
+        {estado.erro && <p role="alert" className="text-xs text-amber-800 mt-2">{clima ? "Não foi possível atualizar agora; os dados abaixo são os últimos recebidos." : "O serviço de clima não respondeu. Tente novamente em alguns minutos."}</p>}
       </section>
 
       {clima && <>
@@ -209,7 +209,7 @@ export default function ClimaAgricola({ cidadeInicial = null }) {
           escolhido={diaEscolhido} onEscolher={setDiaEscolhido} />
 
         <section className="rounded-xl border bg-white p-3 shadow-sm space-y-2">
-          <h3 className="text-sm font-bold" style={{ color: "#111111" }}>Avisos para os próximos 15 dias</h3>
+          <h3 className="text-sm font-bold" style={{ color: "#14532d" }}>Avisos para os próximos 15 dias</h3>
           {avisos.geada.length
             ? <Aviso tom="alerta" icone="❄️" titulo="Risco de geada:">mínima de 3 °C ou menos em {listaDeDias(avisos.geada)} (menor: {Math.min(...avisos.geada.map(d => d.minima)).toLocaleString("pt-BR")} °C).</Aviso>
             : <Aviso icone="✅" titulo="Sem risco de geada:">a menor mínima prevista é de {Math.min(...previsao.map(d => d.minima)).toLocaleString("pt-BR")} °C.</Aviso>}
@@ -218,7 +218,7 @@ export default function ClimaAgricola({ cidadeInicial = null }) {
         </section>
 
         <section className="rounded-xl border bg-white p-3 shadow-sm">
-          <h3 className="text-sm font-bold" style={{ color: "#111111" }}>Chuva</h3>
+          <h3 className="text-sm font-bold" style={{ color: "#14532d" }}>Chuva</h3>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-2">
             <Numero rotulo="Últimos 7 dias" valor={mm(resumo.ultimos7)} />
             <Numero rotulo="Últimos 30 dias" valor={mm(resumo.ultimos30)} />
@@ -227,59 +227,59 @@ export default function ClimaAgricola({ cidadeInicial = null }) {
             <Numero destaque rotulo="Previsão: próximos 15 dias" valor={mm(resumo.proximos15)} />
             <Numero rotulo="Dias seguidos sem chuva" valor={resumo.diasSemChuva} detalhe="menos de 1 mm no dia conta como seco" />
           </div>
-          <ul className="flex flex-wrap gap-x-4 gap-y-1 mt-4 mb-1 text-xs text-neutral-700">
-            <li className="flex items-center gap-1.5"><span className="rounded-sm" style={{ width: 10, height: 10, background: ESCURO }} aria-hidden="true" />Já choveu (últimos 30 dias)</li>
-            <li className="flex items-center gap-1.5"><span className="rounded-sm" style={{ width: 10, height: 10, background: CLARO }} aria-hidden="true" />Previsão (hoje e próximos 14 dias)</li>
-            <li className="text-neutral-500">Milímetros por dia</li>
+          <ul className="flex flex-wrap gap-x-4 gap-y-1 mt-4 mb-1 text-xs text-slate-700">
+            <li className="flex items-center gap-1.5"><span className="rounded-sm" style={{ width: 10, height: 10, background: AZUL }} aria-hidden="true" />Já choveu (últimos 30 dias)</li>
+            <li className="flex items-center gap-1.5"><span className="rounded-sm" style={{ width: 10, height: 10, background: AZUL_CLARO }} aria-hidden="true" />Previsão (hoje e próximos 14 dias)</li>
+            <li className="text-slate-500">Milímetros por dia</li>
           </ul>
           <div style={{ height: 240 }}>
             <ResponsiveContainer>
               <BarChart data={grafico} margin={{ top: 14, right: 8, bottom: 4, left: 0 }} barCategoryGap={2}>
-                <CartesianGrid stroke="#e5e5e5" vertical={false} />
-                <XAxis dataKey="rotulo" tick={{ fontSize: 10, fill: "#666666" }} tickLine={false} axisLine={{ stroke: "#cccccc" }} interval={4} />
-                <YAxis width={30} tick={{ fontSize: 10, fill: "#666666" }} tickLine={false} axisLine={false} />
-                <Tooltip cursor={{ fill: "#efefef" }} content={<Dica />} />
-                <ReferenceLine x={diaMes(clima.hoje)} stroke="#8a8a8a" label={{ value: "hoje", position: "top", fontSize: 10, fill: "#666666" }} />
-                <Bar dataKey="choveu" stackId="chuva" fill={ESCURO} radius={[3, 3, 0, 0]} maxBarSize={24} isAnimationActive={false} />
-                <Bar dataKey="previsto" stackId="chuva" fill={CLARO} radius={[3, 3, 0, 0]} maxBarSize={24} isAnimationActive={false} />
+                <CartesianGrid stroke="#e5e7eb" vertical={false} />
+                <XAxis dataKey="rotulo" tick={{ fontSize: 10, fill: "#64748b" }} tickLine={false} axisLine={{ stroke: "#cbd5e1" }} interval={4} />
+                <YAxis width={30} tick={{ fontSize: 10, fill: "#64748b" }} tickLine={false} axisLine={false} />
+                <Tooltip cursor={{ fill: "#f1f5f9" }} content={<Dica />} />
+                <ReferenceLine x={diaMes(clima.hoje)} stroke="#94a3b8" label={{ value: "hoje", position: "top", fontSize: 10, fill: "#64748b" }} />
+                <Bar dataKey="choveu" stackId="chuva" fill={AZUL} radius={[3, 3, 0, 0]} maxBarSize={24} isAnimationActive={false} />
+                <Bar dataKey="previsto" stackId="chuva" fill={AZUL_CLARO} radius={[3, 3, 0, 0]} maxBarSize={24} isAnimationActive={false} />
               </BarChart>
             </ResponsiveContainer>
           </div>
-          <p className="text-xs text-neutral-600 mt-2">
+          <p className="text-xs text-slate-600 mt-2">
             <strong>Balanço dos últimos 30 dias:</strong> choveu {mm(resumo.ultimos30)} e o ar retirou cerca de {mm(resumo.evapotranspiracao30)} do solo e das plantas (evapotranspiração de referência).
             {saldo >= 0 ? ` Sobrou ${mm(saldo)}: o período repôs água no solo.` : ` Faltaram ${mm(-saldo)}: o solo perdeu mais água do que recebeu.`}
           </p>
         </section>
 
         <section className="rounded-xl border bg-white p-3 shadow-sm">
-          <h3 className="text-sm font-bold" style={{ color: "#111111" }}>Água no solo</h3>
-          <p className="text-xs text-neutral-600 mt-1">Parte do volume do solo ocupada por água, em três profundidades. Compare com a semana passada para ver se o solo está secando ou enchendo.</p>
+          <h3 className="text-sm font-bold" style={{ color: "#14532d" }}>Água no solo</h3>
+          <p className="text-xs text-slate-600 mt-1">Parte do volume do solo ocupada por água, em três profundidades. Compare com a semana passada para ver se o solo está secando ou enchendo.</p>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mt-2">
             {clima.solo.map(s => {
               const mudou = (s.agora - s.semanaPassada) * 100;
               return (
-                <div key={s.camada} className="rounded-lg p-2.5" style={{ background: "#f6f6f6" }}>
-                  <div className="text-xs text-neutral-500">{s.camada} · {s.papel}</div>
-                  <div className="text-lg font-black text-neutral-900">{(s.agora * 100).toLocaleString("pt-BR", { maximumFractionDigits: 0 })}%</div>
-                  <div className="rounded-full overflow-hidden mt-1" style={{ height: 6, background: "#e5e5e5" }}><div style={{ height: "100%", width: `${Math.min(100, s.agora * 200)}%`, background: ESCURO }} /></div>
-                  <div className="text-xs text-neutral-500 mt-1">{Math.abs(mudou) < 0.5 ? "igual à semana passada" : `${mudou > 0 ? "▲" : "▼"} ${Math.abs(mudou).toLocaleString("pt-BR", { maximumFractionDigits: 0 })} ponto${Math.abs(mudou) >= 1.5 ? "s" : ""} ${mudou > 0 ? "acima" : "abaixo"} da semana passada`}</div>
+                <div key={s.camada} className="rounded-lg p-2.5" style={{ background: "#f8fafc" }}>
+                  <div className="text-xs text-slate-500">{s.camada} · {s.papel}</div>
+                  <div className="text-lg font-black text-slate-900">{(s.agora * 100).toLocaleString("pt-BR", { maximumFractionDigits: 0 })}%</div>
+                  <div className="rounded-full overflow-hidden mt-1" style={{ height: 6, background: "#cde2fb" }}><div style={{ height: "100%", width: `${Math.min(100, s.agora * 200)}%`, background: AZUL }} /></div>
+                  <div className="text-xs text-slate-500 mt-1">{Math.abs(mudou) < 0.5 ? "igual à semana passada" : `${mudou > 0 ? "▲" : "▼"} ${Math.abs(mudou).toLocaleString("pt-BR", { maximumFractionDigits: 0 })} ponto${Math.abs(mudou) >= 1.5 ? "s" : ""} ${mudou > 0 ? "acima" : "abaixo"} da semana passada`}</div>
                 </div>
               );
             })}
           </div>
-          <p className="text-xs text-neutral-500 mt-2">A barra vai de 0 a 50%. O ponto em que a planta começa a sofrer depende do tipo de solo: o argiloso segura mais água que o arenoso.</p>
+          <p className="text-xs text-slate-500 mt-2">A barra vai de 0 a 50%. O ponto em que a planta começa a sofrer depende do tipo de solo: o argiloso segura mais água que o arenoso.</p>
         </section>
 
         <section className="rounded-xl border bg-white p-3 shadow-sm">
-          <h3 className="text-sm font-bold" style={{ color: "#111111" }}>Previsão para os próximos 15 dias</h3>
+          <h3 className="text-sm font-bold" style={{ color: "#14532d" }}>Previsão para os próximos 15 dias</h3>
           <div className="mt-2 overflow-x-auto">
             <table className="w-full text-xs">
-              <thead><tr style={{ background: "#111111", color: "#fff" }}>
+              <thead><tr style={{ background: "#166534", color: "#fff" }}>
                 <th className="py-1.5 px-2 text-left">Dia</th><th className="py-1.5 px-2 text-left">Tempo</th><th className="py-1.5 px-2 text-right">Mín. / máx.</th><th className="py-1.5 px-2 text-right">Chuva</th><th className="py-1.5 px-2 text-right">Chance</th>
               </tr></thead>
               <tbody>{previsao.map((d, i) => (
-                <tr key={d.data} style={{ background: i % 2 ? "#fff" : "#f6f6f6" }}>
-                  <td className="py-1 px-2 font-semibold whitespace-nowrap">{i === 0 ? "Hoje" : diaDaSemana(d.data)} <span className="font-normal text-neutral-500">{diaMes(d.data)}</span></td>
+                <tr key={d.data} style={{ background: i % 2 ? "#fff" : "#f8fafc" }}>
+                  <td className="py-1 px-2 font-semibold whitespace-nowrap">{i === 0 ? "Hoje" : diaDaSemana(d.data)} <span className="font-normal text-slate-500">{diaMes(d.data)}</span></td>
                   <td className="py-1 px-2 whitespace-nowrap">{getWmo(d.tempo).emoji} <span className="hidden sm:inline">{getWmo(d.tempo).label}</span></td>
                   <td className="py-1 px-2 text-right font-mono whitespace-nowrap">{Math.round(d.minima)}° / {Math.round(d.maxima)}°</td>
                   <td className="py-1 px-2 text-right font-mono font-bold whitespace-nowrap">{mm(d.chuva ?? 0)}</td>
@@ -291,7 +291,7 @@ export default function ClimaAgricola({ cidadeInicial = null }) {
         </section>
       </>}
 
-      <p className="text-xs text-neutral-500">
+      <p className="text-xs text-slate-500">
         Fonte: Open-Meteo.com. A chuva e a umidade do solo são estimativas de modelo para o ponto da cidade, não a medição de um pluviômetro: na sua
         propriedade o valor pode ser diferente. A previsão perde precisão depois do sétimo dia.
       </p>

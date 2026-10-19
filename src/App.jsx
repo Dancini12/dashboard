@@ -13,7 +13,7 @@ import BuscaAgro from "./components/BuscaAgro";
 import Enfeite from "./components/Enfeite";
 import { Anuncio, AvisoDeCookies } from "./components/Anuncios";
 import { lazy, Suspense, useState, useEffect, useRef, useCallback, useMemo } from "react";
-import { RefreshCw, BookOpen, BarChart3, DollarSign, ChevronDown, ChevronUp, ArrowRight, Newspaper, ExternalLink, Warehouse, Landmark, CloudRain, Calculator, GraduationCap, Sprout, Ship, House, Tv, Printer } from "lucide-react";
+import { RefreshCw, BookOpen, BarChart3, Wheat, DollarSign, ChevronDown, ChevronUp, ArrowRight, Newspaper, ExternalLink, Warehouse, Landmark, CloudRain, Calculator, GraduationCap, Sprout, Ship, House, Tv, Printer } from "lucide-react";
 
 // O código de cada aba só é baixado quando ela é aberta: a primeira página chega mais rápido, e os
 // gráficos (a parte mais pesada) vêm só com as abas que os usam.
@@ -87,7 +87,7 @@ const GLOSSARIO = [
 
 function PriceRow({ emoji, nome, sub, valor, prev, varPct, unidade, flash, alt, semValor = "…" }) {
   if (valor == null) return (
-    <div className="flex items-center justify-between py-2 px-3 rounded-lg" style={{ background: alt ? "#f6f6f6" : "transparent" }}>
+    <div className="flex items-center justify-between py-2 px-3 rounded-lg" style={{ background: alt ? "#f0f7ff" : "transparent" }}>
       <div className="flex items-center gap-1.5 min-w-0"><span className="text-sm shrink-0">{emoji}</span><span className="text-sm font-semibold truncate">{nome}</span></div>
       <span className="text-xs opacity-50">{semValor}</span>
     </div>
@@ -97,11 +97,11 @@ function PriceRow({ emoji, nome, sub, valor, prev, varPct, unidade, flash, alt, 
   const changed = prev != null && Math.abs(diff) > 0.0001;
   const dec = valor < 1 ? 4 : 2;
   return (
-    <div className="flex items-center justify-between py-2 px-3 rounded-lg transition-all duration-700" style={{ background: flash ? (up ? "rgba(34,197,94,0.15)" : "rgba(239,68,68,0.15)") : alt ? "#f6f6f6" : "transparent" }}>
+    <div className="flex items-center justify-between py-2 px-3 rounded-lg transition-all duration-700" style={{ background: flash ? (up ? "rgba(34,197,94,0.15)" : "rgba(239,68,68,0.15)") : alt ? "#f0f7ff" : "transparent" }}>
       <div className="flex items-center gap-1.5 min-w-0"><span className="text-sm shrink-0">{emoji}</span><span className="text-sm font-semibold truncate">{nome}</span>{sub && <span className="text-xs opacity-40 hidden sm:inline">{sub}</span>}</div>
       <div className="flex items-center gap-2 shrink-0">
         {changed && <span className="hidden sm:flex items-center gap-1 text-xs opacity-35"><span className="line-through">R$ {fmt(prev, dec)}</span><ArrowRight size={9} /></span>}
-        <span className="text-sm font-bold" style={{ color: "#111111" }}>{unidade === "pts" ? `${fmtInt(valor)} pts` : `R$ ${fmt(valor, dec)}`}</span>
+        <span className="text-sm font-bold" style={{ color: "#1a3a5c" }}>{unidade === "pts" ? `${fmtInt(valor)} pts` : `R$ ${fmt(valor, dec)}`}</span>
         {changed && <span className="font-bold" style={{ color: up ? "#16a34a" : "#dc2626", fontSize: 10 }}>{up ? "▲" : "▼"}</span>}
         {varPct != null && <VarBadge val={varPct} />}
       </div>
@@ -112,19 +112,19 @@ function PriceRow({ emoji, nome, sub, valor, prev, varPct, unidade, flash, alt, 
 // Cartões de moedas e de indicadores da economia, mostrados no fim da página inicial.
 function MoedasCard({ moedas, pm, flash, situacao, atualizadoEm }) {
   return (
-    <Card id="card-moedas" className="p-3"><SecTitle icon={DollarSign} title="Moedas" color="#111111" />{moedas.map((m, i) => <PriceRow key={m.id} emoji={m.emoji} nome={m.nome} valor={m.valor} prev={pm[m.id]} varPct={m.var} flash={flash.has(m.id)} alt={i % 2 === 0} semValor={situacao === "indisponivel" ? "indisponível agora" : "buscando…"} />)}<div className="mt-2 text-xs opacity-50 text-right">{situacao === "desatualizado" ? `🟡 A fonte não respondeu agora: valores das ${atualizadoEm}` : situacao === "indisponivel" ? "🟡 Fonte das moedas indisponível agora" : atualizadoEm ? `Atualizado às ${atualizadoEm} · nova consulta a cada 60 segundos` : "Buscando as cotações…"} · Fonte: AwesomeAPI</div></Card>
+    <Card id="card-moedas" className="p-3"><SecTitle icon={DollarSign} title="Moedas" color="#1a5276" />{moedas.map((m, i) => <PriceRow key={m.id} emoji={m.emoji} nome={m.nome} valor={m.valor} prev={pm[m.id]} varPct={m.var} flash={flash.has(m.id)} alt={i % 2 === 0} semValor={situacao === "indisponivel" ? "indisponível agora" : "buscando…"} />)}<div className="mt-2 text-xs opacity-50 text-right">{situacao === "desatualizado" ? `🟡 A fonte não respondeu agora: valores das ${atualizadoEm}` : situacao === "indisponivel" ? "🟡 Fonte das moedas indisponível agora" : atualizadoEm ? `Atualizado às ${atualizadoEm} · nova consulta a cada 60 segundos` : "Buscando as cotações…"} · Fonte: AwesomeAPI</div></Card>
   );
 }
 function IndicadoresCard({ indicadores }) {
   return (
-    <Card id="card-indicadores" className="p-3"><SecTitle icon={BarChart3} title="Indicadores Econômicos" color="#111111" /><div className="grid grid-cols-2 md:grid-cols-3 gap-2">{indicadores.map((ind, i) => (<div key={i} className="rounded-lg p-2 text-center" style={{ background: i % 2 === 0 ? "#f6f6f6" : "#efefef" }}><div className="text-xs font-semibold opacity-60">{ind.nome} {ind.periodo && `(${ind.periodo})`}</div><div className="text-base font-bold" style={{ color: "#111111" }}>{ind.valor}</div><div className="text-xs opacity-40">{ind.desc}</div></div>))}</div><div className="mt-2 text-xs opacity-50 text-right">Fonte: Banco Central (SGS), com dados do IBGE e da FGV · atualização automática</div></Card>
+    <Card id="card-indicadores" className="p-3"><SecTitle icon={BarChart3} title="Indicadores Econômicos" color="#6b21a8" /><div className="grid grid-cols-2 md:grid-cols-3 gap-2">{indicadores.map((ind, i) => (<div key={i} className="rounded-lg p-2 text-center" style={{ background: i % 2 === 0 ? "#faf5ff" : "#f5f3ff" }}><div className="text-xs font-semibold opacity-60">{ind.nome} {ind.periodo && `(${ind.periodo})`}</div><div className="text-base font-bold" style={{ color: "#6b21a8" }}>{ind.valor}</div><div className="text-xs opacity-40">{ind.desc}</div></div>))}</div><div className="mt-2 text-xs opacity-50 text-right">Fonte: Banco Central (SGS), com dados do IBGE e da FGV · atualização automática</div></Card>
   );
 }
 
 const NEWS_FEEDS = {
-  agro:    { label: "🌾 Agronegócio", cor: "#111111", bg: "#f2f2f2" },
-  mercado: { label: "💰 Mercado",      cor: "#111111", bg: "#f6f6f6" },
-  internacional: { label: "🌎 Mercado internacional", cor: "#111111", bg: "#f2f2f2",
+  agro:    { label: "🌾 Agronegócio", cor: "#166534", bg: "#f0fdf4" },
+  mercado: { label: "💰 Mercado",      cor: "#1a5276", bg: "#f0f7ff" },
+  internacional: { label: "🌎 Mercado internacional", cor: "#0f766e", bg: "#f0fdfa",
     desc: "O que acontece nos maiores mercados do mundo (Bolsa de Chicago, USDA, China, Estados Unidos, Argentina, Europa e Índia) e mexe com o preço do produto aqui no Brasil." },
 };
 
@@ -178,7 +178,7 @@ const NEWS_INTERVAL = 5 * 60;
 function NoticiasTab({ busca }) {
   // quem buscou um assunto no topo do site vê primeiro as notícias sobre ele
   const feeds = useMemo(() => (busca ? {
-    busca: { label: `🔎 ${busca}`, cor: "#111111", bg: "#f6f6f6", desc: `Notícias dos últimos 30 dias sobre "${busca}".`, url: `/api/news?feed=busca&q=${encodeURIComponent(busca)}` },
+    busca: { label: `🔎 ${busca}`, cor: "#9a3412", bg: "#fff7ed", desc: `Notícias dos últimos 30 dias sobre "${busca}".`, url: `/api/news?feed=busca&q=${encodeURIComponent(busca)}` },
     ...NEWS_FEEDS,
   } : NEWS_FEEDS), [busca]);
   const [feed, setFeed] = useState(busca ? "busca" : "agro");
@@ -225,16 +225,16 @@ function NoticiasTab({ busca }) {
     <div className="space-y-3">
       <Card className="p-3">
         <div className="flex items-center gap-2 mb-2">
-          <Newspaper size={13} style={{ color: "#111111" }} />
+          <Newspaper size={13} style={{ color: "#166534" }} />
           <div className="flex-1">
-            <div className="h-2 rounded-full overflow-hidden" style={{ background: "#e5e5e5" }}>
-              <div className="h-full rounded-full transition-all duration-1000" style={{ width: `${pct}%`, background: "#111111" }} />
+            <div className="h-2 rounded-full overflow-hidden" style={{ background: "#e5e7eb" }}>
+              <div className="h-full rounded-full transition-all duration-1000" style={{ width: `${pct}%`, background: "#22c55e" }} />
             </div>
           </div>
-          <span className="font-mono font-bold px-2 py-0.5 rounded text-xs" style={{ background: "#f2f2f2", color: "#111111" }}>
+          <span className="font-mono font-bold px-2 py-0.5 rounded text-xs" style={{ background: "#f0fdf4", color: "#166534" }}>
             {String(mm).padStart(2, "0")}:{String(ss).padStart(2, "0")}
           </span>
-          <button onClick={fetchNews} title="Atualizar agora" className="p-1 rounded-md" style={{ background: "#efefef" }}>
+          <button onClick={fetchNews} title="Atualizar agora" className="p-1 rounded-md" style={{ background: "#f1f5f9" }}>
             <RefreshCw size={12} style={{ animation: loading ? "spin 1s linear infinite" : "none" }} />
           </button>
         </div>
@@ -292,8 +292,8 @@ function NoticiasTab({ busca }) {
 function GlossarioTab({ inicial }) {
   const [open, setOpen] = useState(inicial ?? null);
   return (
-    <Card className="p-3"><SecTitle icon={BookOpen} title="Glossário" color="#111111" /><div className="space-y-1">{GLOSSARIO.map((g, i) => (
-      <div key={i} id={`glossario-${i}`} style={{ scrollMarginTop: 100 }}><button onClick={() => setOpen(open === i ? null : i)} className="w-full flex items-center justify-between py-2 px-3 rounded-lg text-sm text-left" style={{ background: open === i ? "#e8e8e8" : i % 2 === 0 ? "#f6f6f6" : "#fff", border: "1px solid #bdbdbd" }}><span className="font-semibold">{g.icon} {g.termo}</span>{open === i ? <ChevronUp size={13} /> : <ChevronDown size={13} />}</button>{open === i && <div className="px-4 py-2 text-sm rounded-b-lg" style={{ background: "#f2f2f2", borderLeft: "3px solid #111111", color: "#111111" }}>{g.def}</div>}</div>
+    <Card className="p-3"><SecTitle icon={BookOpen} title="Glossário" color="#b45309" /><div className="space-y-1">{GLOSSARIO.map((g, i) => (
+      <div key={i} id={`glossario-${i}`} style={{ scrollMarginTop: 100 }}><button onClick={() => setOpen(open === i ? null : i)} className="w-full flex items-center justify-between py-2 px-3 rounded-lg text-sm text-left" style={{ background: open === i ? "#fef3c7" : i % 2 === 0 ? "#fffbeb" : "#fff", border: "1px solid #fde68a" }}><span className="font-semibold">{g.icon} {g.termo}</span>{open === i ? <ChevronUp size={13} /> : <ChevronDown size={13} />}</button>{open === i && <div className="px-4 py-2 text-sm rounded-b-lg" style={{ background: "#fefce8", borderLeft: "3px solid #f59e0b", color: "#78350f" }}>{g.def}</div>}</div>
     ))}</div></Card>
   );
 }
@@ -492,30 +492,31 @@ export default function App() {
   const dataPorExtenso = clock.toLocaleDateString("pt-BR", { weekday: "long", day: "numeric", month: "long", year: "numeric" }).replace(/^./, letra => letra.toUpperCase());
 
   return (
-    <div className="min-h-screen bg-white print:min-h-0" style={{ color: "#111111" }}>
-      {/* Visual de jornal clássico (classe "jornal", regras em src/index.css): cabeçalho como o título de um
-          jornal, com o enfeite, o nome em letras grandes e a data entre dois fios.
+    <div className="min-h-screen print:min-h-0 print:!bg-none print:!bg-white" style={{ background: "linear-gradient(180deg,#f8fafc 0%,#ecfdf5 50%,#f0f9ff 100%)", color: "#0f172a" }}>
+      {/* Formato de jornal (classe "jornal", regras em src/index.css) com as cores do campo: cabeçalho como o
+          título de um jornal, em verde, com o enfeite (losango do meio cor de trigo), o nome em letras grandes
+          e a data entre dois fios.
           Na impressão (aba Jornal do dia) sai só o conteúdo: cabeçalho, menu, rodapé, mascote e contador ficam de fora. */}
       <header className="jornal max-w-4xl mx-auto px-3 pt-4 print:hidden">
-        <Enfeite />
-        <h1 className="text-center font-bold uppercase" style={{ fontSize: "min(64px, 6.9vw)", lineHeight: 1.2, padding: "2px 0 4px" }}>Informativo Agrícola</h1>
-        <div className="py-1.5 text-center text-xs sm:text-sm" style={{ borderTop: "1px solid #111111", borderBottom: "4px solid #111111" }}>{dataPorExtenso}</div>
+        <Enfeite cor="#166534" destaque="#d4a017" />
+        <h1 className="text-center font-bold uppercase" style={{ fontSize: "min(64px, 6.9vw)", lineHeight: 1.2, padding: "2px 0 4px", color: "#14532d" }}>Informativo Agrícola</h1>
+        <div className="flex items-center justify-center gap-2 py-1.5 text-xs sm:text-sm" style={{ borderTop: "1px solid #166534", borderBottom: "4px solid #166534", color: "#14532d" }}><Wheat size={14} color="#ca8a04" aria-hidden="true" />{dataPorExtenso}<Wheat size={14} color="#ca8a04" aria-hidden="true" /></div>
       </header>
-      <nav className="jornal sticky top-0 z-50 bg-white print:hidden" style={{ borderBottom: "1px solid #111111" }}>
+      <nav className="jornal sticky top-0 z-50 print:hidden" style={{ background: "rgba(255,255,255,0.94)", backdropFilter: "blur(12px)", borderBottom: "1px solid #bbf7d0" }}>
         <div className="relative max-w-4xl mx-auto px-3">
           <div className="flex items-center gap-2 sm:gap-3 py-2">
-            <span className="shrink-0 font-bold" style={{ fontFamily: '"Times New Roman", Times, Georgia, serif', fontSize: 18, letterSpacing: "-0.01em" }}>AgroInfo</span>
+            <span className="shrink-0 font-bold" style={{ fontFamily: '"Times New Roman", Times, Georgia, serif', fontSize: 18, letterSpacing: "-0.01em", color: "#166534" }}>AgroInfo</span>
             <BuscaAgro itens={INDICE_BUSCA} onEscolher={irPara} comCastor={!!ASSISTENTE_URL} />
             <div className="flex items-center gap-2 shrink-0">
-              <div className="flex items-center gap-2 text-xs" style={{ color: "#666666" }}>{count > 0 && <span className="hidden sm:flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: "#b91c1c" }} />Ao vivo</span>}<span>{clock.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}</span></div>
+              <div className="flex items-center gap-2 text-xs" style={{ color: "#64748b" }}>{count > 0 && <span className="hidden sm:flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: "#22c55e" }} />Ao vivo</span>}<span>{clock.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}</span></div>
               <BotaoMascote visivel={mascote} onClick={() => mostrarMascote(!mascote)} />
             </div>
           </div>
-          <div className="-mb-px overflow-x-auto"><div className="flex gap-0.5 w-max sm:w-auto sm:flex-wrap sm:justify-center">{TABS.map(t => { const I = TAB_ICONS[t]; return (<button key={t} onClick={() => trocarAba(t)} className="flex items-center gap-1 px-2.5 py-2 text-xs whitespace-nowrap" style={{ color: tab === t ? "#111111" : "#444444", fontWeight: 700, borderBottom: tab === t ? "3px solid #111111" : "3px solid transparent" }}><I size={12} />{TAB_LABELS[t]}</button>); })}</div></div>
+          <div className="-mb-px overflow-x-auto"><div className="flex gap-0.5 w-max sm:w-auto sm:flex-wrap sm:justify-center">{TABS.map(t => { const I = TAB_ICONS[t]; return (<button key={t} onClick={() => trocarAba(t)} className="flex items-center gap-1 px-2.5 py-2 text-xs whitespace-nowrap" style={{ color: tab === t ? "#166534" : "#475569", fontWeight: 700, borderBottom: tab === t ? "3px solid #166534" : "3px solid transparent" }}><I size={12} />{TAB_LABELS[t]}</button>); })}</div></div>
         </div>
       </nav>
       <div id="conteudo" className="jornal max-w-4xl mx-auto px-3 py-4 print:max-w-none print:p-0" style={{ scrollMarginTop: 100 }}>
-        <Suspense fallback={<p className="py-12 text-center text-sm text-neutral-500">Carregando a aba…</p>}>
+        <Suspense fallback={<p className="py-12 text-center text-sm text-slate-500">Carregando a aba…</p>}>
         {tab === "inicio" && <Inicio onIr={irPara} onCastor={ASSISTENTE_URL ? () => mostrarMascote(true) : null}
           dolar={dolar ?? (dataSource === "indisponivel" ? null : undefined)} variacaoDoDolar={dataSource === "real" ? moedas.find(m => m.id === "usd")?.var : null}>
           <MoedasCard moedas={moedas} pm={pm} flash={flash} situacao={dataSource} atualizadoEm={moedasEm} />
@@ -544,7 +545,7 @@ export default function App() {
         {tab !== "tv" && tab !== "jornal" && <Anuncio key={tab} />}
       </div>
       <footer className="jornal max-w-4xl mx-auto px-3 print:hidden">
-        <p className="text-center py-3 text-xs" style={{ borderTop: "1px solid #111111", color: "#666666" }}>Informativo Agrícola · agronahora.com.br · <a href="/sobre" className="underline">Sobre e contato</a> · <a href="/privacidade" className="underline">Política de privacidade</a></p>
+        <p className="text-center py-3 text-xs" style={{ borderTop: "1px solid #166534", color: "#64748b" }}>Informativo Agrícola · agronahora.com.br · <a href="/sobre" className="underline">Sobre e contato</a> · <a href="/privacidade" className="underline">Política de privacidade</a></p>
       </footer>
       {/* o mascote e o contador continuam com a letra e o visual de antes */}
       <div className="print:hidden" style={{ fontFamily: "system-ui, sans-serif" }}>

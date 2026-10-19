@@ -1,7 +1,9 @@
 # Aba "Cotações Cooperativas", Rio Grande do Sul: preços recebidos pelos produtores gaúchos, do boletim
 # semanal "Cotações Agropecuárias" da Emater/RS-Ascar (um PDF por semana, publicado às quintas). Lê do PDF
 # o resumo do estado (mínimo, médio e máximo), a comparação com a semana, o mês e o ano anteriores e a
-# tabela por município, e grava public/dados/precos-rs.json, que a aba lê. Uma rotina do GitHub
+# tabela por município, e grava public/dados/precos-rs.json, que a aba lê. A média de cada semana também
+# vai para public/dados/precos-rs-historico.json, o gráfico semana a semana da aba (para preencher semanas
+# antigas: python3 scripts/precos-rs.py --desde 2025-01-01). Uma rotina do GitHub
 # (.github/workflows/precos-rs.yml) roda este script todo dia e só publica quando sai boletim novo.
 # Para rodar à mão: pip install pypdf==6.19.0 e depois python3 scripts/precos-rs.py
 # (ou, para testar um PDF já baixado: python3 scripts/precos-rs.py --pdf arquivo.pdf --saida teste.json)
@@ -14,6 +16,7 @@ from pypdf import PdfReader
 PAGINA = "https://www.emater.tche.br/site/info-agro/precos_semanais.php"
 UA = "Mozilla/5.0 (compatible; AgroInfo/1.0; +https://agronahora.com.br)"
 DESTINO = pathlib.Path(__file__).resolve().parent.parent / "public" / "dados" / "precos-rs.json"
+HISTORICO = DESTINO.parent / "precos-rs-historico.json"
 NUM = r"\d{1,3}(?:\.\d{3})*,\d{2}"
 UNIDADE = r"\d+\s*kg|kg vivo|kg|litro|l|dúzia|cabeça|t"
 
@@ -150,11 +153,92 @@ def ler(conteudo, endereco):
     }
 
 
+def iso(dia):  # "16/10/2026" → "2026-10-16"
+    return f"{dia[6:]}-{dia[3:5]}-{dia[:2]}"
+
+
+def semana_do_boletim(dados):
+    # o que o histórico guarda de um boletim: a semana e a média do estado de cada produto
+    return {"boletim": dados["boletim"], "de": iso(dados["semana"]["de"]), "ate": iso(dados["semana"]["ate"]), "pdf": dados["pdf"],
+            "medias": {p["nome"]: p["medio"] for p in dados["produtos"]}}
+
+
+def guardar_no_historico(semanas, caminho=HISTORICO):
+    # junta as semanas novas às já guardadas (o boletim é a chave) e grava em ordem de data
+    historico = json.loads(caminho.read_text()) if caminho.exists() else {}
+    porBoletim = {s["boletim"]: s for s in historico.get("semanas", [])}
+    novas = [s for s in semanas if s["boletim"] and s["boletim"] not in porBoletim]
+    if not novas:
+        return 0
+    for s in novas:
+        porBoletim[s["boletim"]] = s
+    unidades = historico.get("unidades", {})
+    caminho.write_text(json.dumps({
+        "fonte": "Emater/RS-Ascar, Cotações Agropecuárias: média semanal do estado dos preços recebidos pelos produtores",
+        "unidades": unidades, "semanas": sorted(porBoletim.values(), key=lambda s: s["ate"]),
+    }, ensure_ascii=False, indent=1) + "\n")
+    return len(novas)
+
+
+def boletins_desde(inicio):
+    # Boletins antigos, pelo padrão do nome: um por semana, em geral na quinta (às vezes outro dia útil,
+    # quando há feriado). Tenta quinta, quarta, sexta, terça e segunda de cada semana, de hoje para trás.
+    dia = datetime.date.today()
+    dia -= datetime.timedelta(days=(dia.weekday() - 3) % 7)  # última quinta
+    while dia >= inicio:
+        for desvio in (0, -1, 1, -2, -3):
+            d = dia + datetime.timedelta(days=desvio)
+            endereco = f"https://www.emater.tche.br/site/arquivos_pdf/precos/preco_{d:%d%m%Y}.pdf"
+            try:
+                pedido = urllib.request.Request(endereco, headers={"User-Agent": UA})
+                with urllib.request.urlopen(pedido, timeout=60) as resposta:
+                    conteudo = resposta.read()
+                if conteudo[:4] == b"%PDF":
+                    yield endereco, conteudo
+                    break
+            except Exception:
+                continue
+        dia -= datetime.timedelta(days=7)
+        time.sleep(1)  # sem pressa: um pedido por segundo ao site da Emater
+
+
+def preencher_historico(inicio):
+    semanas, unidades = [], {}
+    for endereco, conteudo in boletins_desde(inicio):
+        try:
+            leitor = PdfReader(io.BytesIO(conteudo))
+            primeira = leitor.pages[0].extract_text()
+            produtos = resumo(primeira)
+            boletim = re.search(r"nº\s*(\d+)", primeira)
+            semana = re.search(r"Semana de (\d{2}/\d{2}/\d{4}) a (\d{2}/\d{2}/\d{4})", primeira)
+            if len(produtos) < 3 or not boletim or not semana:
+                raise RuntimeError("fora do formato")
+            dados = {"boletim": int(boletim.group(1)), "semana": {"de": semana.group(1), "ate": semana.group(2)}, "pdf": endereco, "produtos": list(produtos.values())}
+            semanas.append(semana_do_boletim(dados))
+            for p in produtos.values():
+                unidades.setdefault(p["nome"], p["unidade"])
+            print(f"  nº {dados['boletim']}: {semana.group(1)} a {semana.group(2)}")
+        except Exception as erro:
+            print(f"  {endereco}: {erro}", file=sys.stderr)
+    guardar_unidades(unidades)
+    print(f"{guardar_no_historico(semanas)} semanas novas no histórico.")
+
+
+def guardar_unidades(unidades, caminho=HISTORICO):
+    historico = json.loads(caminho.read_text()) if caminho.exists() else {"semanas": []}
+    historico["unidades"] = {**unidades, **historico.get("unidades", {})}
+    caminho.write_text(json.dumps(historico, ensure_ascii=False, indent=1) + "\n")
+
+
 def main():
     argumentos = argparse.ArgumentParser()
     argumentos.add_argument("--pdf", help="ler um PDF já baixado em vez de buscar o último no site")
     argumentos.add_argument("--saida", help="onde gravar (padrão: public/dados/precos-rs.json)")
+    argumentos.add_argument("--desde", help="preencher o histórico com os boletins desde esta data (AAAA-MM-DD)")
     a = argumentos.parse_args()
+    if a.desde:
+        preencher_historico(datetime.date.fromisoformat(a.desde))
+        return
     via = os.environ.get("EMATER_VIA")
     if a.pdf:
         endereco, conteudo = a.pdf, pathlib.Path(a.pdf).read_bytes()
@@ -165,6 +249,10 @@ def main():
         endereco = ultimo_boletim()
         conteudo = baixar(endereco)
     dados = ler(conteudo, endereco)
+    if not a.saida and dados["boletim"] and dados["semana"]:
+        guardar_unidades({p["nome"]: p["unidade"] for p in dados["produtos"]})
+        if guardar_no_historico([semana_do_boletim(dados)]):
+            print(f"Semana do boletim nº {dados['boletim']} incluída no histórico.")
     destino = pathlib.Path(a.saida) if a.saida else DESTINO
     anterior = json.loads(destino.read_text()) if destino.exists() else {}
     if anterior.get("pdf") == dados["pdf"] and anterior.get("produtos") == dados["produtos"]:

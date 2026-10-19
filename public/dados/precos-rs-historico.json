@@ -1,0 +1,1692 @@
+{
+ "fonte": "Emater/RS-Ascar, Cotações Agropecuárias: média semanal do estado dos preços recebidos pelos produtores",
+ "unidades": {
+  "Arroz": "50 kg",
+  "Boi": "kg vivo",
+  "Búfalo": "kg vivo",
+  "Cordeiro": "kg vivo",
+  "Feijão": "60 kg",
+  "Milho": "60 kg",
+  "Soja": "60 kg",
+  "Suíno": "kg vivo",
+  "Trigo": "60 kg",
+  "Vaca": "kg vivo",
+  "Leite": "Litro"
+ },
+ "semanas": [
+  {
+   "boletim": 2369,
+   "de": "2024-12-30",
+   "ate": "2025-01-03",
+   "pdf": "https://www.emater.tche.br/site/arquivos_pdf/precos/preco_02012025.pdf",
+   "medias": {
+    "Arroz": 98.1,
+    "Boi": 10.51,
+    "Búfalo": 10.55,
+    "Cordeiro": 10.5,
+    "Feijão": 241.67,
+    "Milho": 67.75,
+    "Soja": 127.46,
+    "Suíno": 5.85,
+    "Trigo": 65.25,
+    "Vaca": 9.3
+   }
+  },
+  {
+   "boletim": 2370,
+   "de": "2025-01-06",
+   "ate": "2025-01-10",
+   "pdf": "https://www.emater.tche.br/site/arquivos_pdf/precos/preco_09012025.pdf",
+   "medias": {
+    "Arroz": 98.28,
+    "Boi": 10.59,
+    "Cordeiro": 10.04,
+    "Feijão": 273.75,
+    "Milho": 67.02,
+    "Soja": 127.29,
+    "Suíno": 6.05,
+    "Trigo": 65.29,
+    "Vaca": 9.43
+   }
+  },
+  {
+   "boletim": 2371,
+   "de": "2025-01-13",
+   "ate": "2025-01-17",
+   "pdf": "https://www.emater.tche.br/site/arquivos_pdf/precos/preco_16012025.pdf",
+   "medias": {
+    "Arroz": 98.87,
+    "Boi": 10.74,
+    "Búfalo": 9.54,
+    "Cordeiro": 10.18,
+    "Feijão": 231.43,
+    "Milho": 66.74,
+    "Soja": 128.45,
+    "Suíno": 6.15,
+    "Trigo": 65.62,
+    "Vaca": 9.57
+   }
+  },
+  {
+   "boletim": 2372,
+   "de": "2025-01-20",
+   "ate": "2025-01-24",
+   "pdf": "https://www.emater.tche.br/site/arquivos_pdf/precos/preco_23012025.pdf",
+   "medias": {
+    "Arroz": 97.98,
+    "Boi": 10.87,
+    "Búfalo": 9.56,
+    "Cordeiro": 10.46,
+    "Feijão": 269.5,
+    "Milho": 65.38,
+    "Soja": 128.52,
+    "Suíno": 6.15,
+    "Trigo": 65.38,
+    "Vaca": 9.61,
+    "Leite": 2.54
+   }
+  },
+  {
+   "boletim": 2373,
+   "de": "2025-01-27",
+   "ate": "2025-01-31",
+   "pdf": "https://www.emater.tche.br/site/arquivos_pdf/precos/preco_30012025.pdf",
+   "medias": {
+    "Arroz": 98.04,
+    "Boi": 10.79,
+    "Búfalo": 8.92,
+    "Cordeiro": 10.13,
+    "Feijão": 232.5,
+    "Milho": 67.45,
+    "Soja": 126.5,
+    "Suíno": 6.15,
+    "Trigo": 65.93,
+    "Vaca": 9.63
+   }
+  },
+  {
+   "boletim": 2374,
+   "de": "2025-02-03",
+   "ate": "2025-02-07",
+   "pdf": "https://www.emater.tche.br/site/arquivos_pdf/precos/preco_06022025.pdf",
+   "medias": {
+    "Arroz": 99.51,
+    "Boi": 10.84,
+    "Búfalo": 9.02,
+    "Cordeiro": 10.24,
+    "Feijão": 222.5,
+    "Milho": 67.79,
+    "Soja": 124.34,
+    "Suíno": 6.15,
+    "Trigo": 66.44,
+    "Vaca": 9.63
+   }
+  },
+  {
+   "boletim": 2375,
+   "de": "2025-02-10",
+   "ate": "2025-02-14",
+   "pdf": "https://www.emater.tche.br/site/arquivos_pdf/precos/preco_13022025.pdf",
+   "medias": {
+    "Arroz": 99.29,
+    "Boi": 10.78,
+    "Búfalo": 9.04,
+    "Cordeiro": 10.46,
+    "Feijão": 224.38,
+    "Milho": 67.63,
+    "Soja": 124.91,
+    "Suíno": 6.45,
+    "Trigo": 67.6,
+    "Vaca": 9.73
+   }
+  },
+  {
+   "boletim": 2376,
+   "de": "2025-02-17",
+   "ate": "2025-02-21",
+   "pdf": "https://www.emater.tche.br/site/arquivos_pdf/precos/preco_20022025.pdf",
+   "medias": {
+    "Arroz": 96.93,
+    "Boi": 10.85,
+    "Búfalo": 8.68,
+    "Cordeiro": 10.45,
+    "Feijão": 228.89,
+    "Leite": 2.52,
+    "Milho": 67.64,
+    "Soja": 125.13,
+    "Suíno": 6.45,
+    "Trigo": 67.82,
+    "Vaca": 9.7
+   }
+  },
+  {
+   "boletim": 2378,
+   "de": "2025-03-03",
+   "ate": "2025-03-07",
+   "pdf": "https://www.emater.tche.br/site/arquivos_pdf/precos/preco_06032025.pdf",
+   "medias": {
+    "Arroz": 90.09,
+    "Boi": 10.88,
+    "Búfalo": 8.63,
+    "Cordeiro": 10.29,
+    "Feijão": 222.86,
+    "Milho": 66.91,
+    "Soja": 126.95,
+    "Suíno": 6.65,
+    "Trigo": 69.36,
+    "Vaca": 9.7
+   }
+  },
+  {
+   "boletim": 2379,
+   "de": "2025-03-10",
+   "ate": "2025-03-14",
+   "pdf": "https://www.emater.tche.br/site/arquivos_pdf/precos/preco_13032025.pdf",
+   "medias": {
+    "Arroz": 88.16,
+    "Boi": 10.97,
+    "Búfalo": 8.9,
+    "Cordeiro": 10.23,
+    "Feijão": 230.0,
+    "Milho": 68.29,
+    "Soja": 128.44,
+    "Suíno": 7.74,
+    "Trigo": 70.17,
+    "Vaca": 9.71
+   }
+  },
+  {
+   "boletim": 2380,
+   "de": "2025-03-17",
+   "ate": "2025-03-21",
+   "pdf": "https://www.emater.tche.br/site/arquivos_pdf/precos/preco_20032025.pdf",
+   "medias": {
+    "Arroz": 83.16,
+    "Boi": 10.89,
+    "Búfalo": 8.91,
+    "Cordeiro": 10.12,
+    "Feijão": 262.22,
+    "Leite": 2.53,
+    "Milho": 68.89,
+    "Soja": 128.0,
+    "Suíno": 6.32,
+    "Trigo": 71.92,
+    "Vaca": 9.72
+   }
+  },
+  {
+   "boletim": 2381,
+   "de": "2025-03-24",
+   "ate": "2025-03-28",
+   "pdf": "https://www.emater.tche.br/site/arquivos_pdf/precos/preco_27032025.pdf",
+   "medias": {
+    "Arroz": 81.24,
+    "Boi": 10.8,
+    "Búfalo": 8.7,
+    "Cordeiro": 9.93,
+    "Feijão": 213.0,
+    "Milho": 69.67,
+    "Soja": 127.6,
+    "Suíno": 7.49,
+    "Trigo": 71.92,
+    "Vaca": 9.65
+   }
+  },
+  {
+   "boletim": 2382,
+   "de": "2025-03-31",
+   "ate": "2025-04-04",
+   "pdf": "https://www.emater.tche.br/site/arquivos_pdf/precos/preco_03042025.pdf",
+   "medias": {
+    "Arroz": 78.73,
+    "Boi": 10.83,
+    "Búfalo": 8.9,
+    "Cordeiro": 10.19,
+    "Feijão": 215.0,
+    "Milho": 70.64,
+    "Soja": 127.38,
+    "Suíno": 7.49,
+    "Trigo": 73.67,
+    "Vaca": 9.54
+   }
+  },
+  {
+   "boletim": 2384,
+   "de": "2025-04-14",
+   "ate": "2025-04-18",
+   "pdf": "https://www.emater.tche.br/site/arquivos_pdf/precos/preco_17042025.pdf",
+   "medias": {
+    "Arroz": 76.08,
+    "Boi": 10.76,
+    "Búfalo": 8.53,
+    "Cordeiro": 10.18,
+    "Feijão": 213.5,
+    "Leite": 2.58,
+    "Milho": 68.76,
+    "Soja": 128.31,
+    "Suíno": 6.4,
+    "Trigo": 74.43,
+    "Vaca": 9.58
+   }
+  },
+  {
+   "boletim": 2385,
+   "de": "2025-04-21",
+   "ate": "2025-04-25",
+   "pdf": "https://www.emater.tche.br/site/arquivos_pdf/precos/preco_24042025.pdf",
+   "medias": {
+    "Arroz": 76.08,
+    "Boi": 10.82,
+    "Búfalo": 9.28,
+    "Cordeiro": 10.17,
+    "Feijão": 228.33,
+    "Milho": 68.24,
+    "Soja": 127.24,
+    "Suíno": 6.32,
+    "Trigo": 74.5,
+    "Vaca": 9.71
+   }
+  },
+  {
+   "boletim": 2386,
+   "de": "2025-04-28",
+   "ate": "2025-05-02",
+   "pdf": "https://www.emater.tche.br/site/arquivos_pdf/precos/preco_30042025.pdf",
+   "medias": {
+    "Arroz": 76.49,
+    "Boi": 10.72,
+    "Búfalo": 8.84,
+    "Cordeiro": 10.19,
+    "Feijão": 215.0,
+    "Milho": 67.66,
+    "Soja": 123.65,
+    "Suíno": 7.59,
+    "Trigo": 73.81,
+    "Vaca": 9.65
+   }
+  },
+  {
+   "boletim": 2387,
+   "de": "2025-05-05",
+   "ate": "2025-05-09",
+   "pdf": "https://www.emater.tche.br/site/arquivos_pdf/precos/preco_08052025.pdf",
+   "medias": {
+    "Arroz": 76.06,
+    "Boi": 10.63,
+    "Búfalo": 8.76,
+    "Cordeiro": 10.19,
+    "Feijão": 176.25,
+    "Milho": 65.88,
+    "Soja": 120.71,
+    "Suíno": 6.36,
+    "Trigo": 73.13,
+    "Vaca": 9.55
+   }
+  },
+  {
+   "boletim": 2388,
+   "de": "2025-05-12",
+   "ate": "2025-05-16",
+   "pdf": "https://www.emater.tche.br/site/arquivos_pdf/precos/preco_16052025.pdf",
+   "medias": {
+    "Arroz": 75.99,
+    "Boi": 10.67,
+    "Búfalo": 9.09,
+    "Cordeiro": 10.44,
+    "Feijão": 195.0,
+    "Milho": 65.48,
+    "Soja": 121.8,
+    "Suíno": 6.49,
+    "Trigo": 71.73,
+    "Vaca": 9.53
+   }
+  },
+  {
+   "boletim": 2389,
+   "de": "2025-05-19",
+   "ate": "2025-05-23",
+   "pdf": "https://www.emater.tche.br/site/arquivos_pdf/precos/preco_22052025.pdf",
+   "medias": {
+    "Arroz": 74.4,
+    "Boi": 10.78,
+    "Búfalo": 9.08,
+    "Cordeiro": 10.44,
+    "Feijão": 209.44,
+    "Leite": 2.61,
+    "Milho": 64.37,
+    "Soja": 119.7,
+    "Suíno": 6.32,
+    "Trigo": 70.8,
+    "Vaca": 9.61
+   }
+  },
+  {
+   "boletim": 2390,
+   "de": "2025-05-26",
+   "ate": "2025-05-30",
+   "pdf": "https://www.emater.tche.br/site/arquivos_pdf/precos/preco_29052025.pdf",
+   "medias": {
+    "Arroz": 73.65,
+    "Boi": 10.78,
+    "Búfalo": 9.0,
+    "Cordeiro": 10.39,
+    "Feijão": 193.75,
+    "Milho": 63.32,
+    "Soja": 122.21,
+    "Suíno": 6.18,
+    "Trigo": 70.92,
+    "Vaca": 9.55
+   }
+  },
+  {
+   "boletim": 2391,
+   "de": "2025-06-02",
+   "ate": "2025-06-06",
+   "pdf": "https://www.emater.tche.br/site/arquivos_pdf/precos/preco_05062025.pdf",
+   "medias": {
+    "Arroz": 71.23,
+    "Boi": 10.7,
+    "Búfalo": 9.31,
+    "Cordeiro": 10.44,
+    "Feijão": 185.0,
+    "Milho": 63.14,
+    "Soja": 121.12,
+    "Suíno": 6.32,
+    "Trigo": 70.71,
+    "Vaca": 9.61
+   }
+  },
+  {
+   "boletim": 2392,
+   "de": "2025-06-09",
+   "ate": "2025-06-13",
+   "pdf": "https://www.emater.tche.br/site/arquivos_pdf/precos/preco_13062025.pdf",
+   "medias": {
+    "Arroz": 68.44,
+    "Boi": 10.73,
+    "Búfalo": 8.81,
+    "Cordeiro": 10.37,
+    "Feijão": 203.89,
+    "Milho": 64.44,
+    "Soja": 121.32,
+    "Suíno": 6.74,
+    "Trigo": 70.71,
+    "Vaca": 9.47
+   }
+  },
+  {
+   "boletim": 2393,
+   "de": "2025-06-16",
+   "ate": "2025-06-20",
+   "pdf": "https://www.emater.tche.br/site/arquivos_pdf/precos/preco_18062025.pdf",
+   "medias": {
+    "Arroz": 67.23,
+    "Boi": 10.88,
+    "Búfalo": 9.23,
+    "Cordeiro": 10.5,
+    "Feijão": 214.38,
+    "Leite": 2.54,
+    "Milho": 63.74,
+    "Soja": 122.26,
+    "Suíno": 6.74,
+    "Trigo": 70.63,
+    "Vaca": 9.52
+   }
+  },
+  {
+   "boletim": 2394,
+   "de": "2025-06-23",
+   "ate": "2025-06-27",
+   "pdf": "https://www.emater.tche.br/site/arquivos_pdf/precos/preco_26062025.pdf",
+   "medias": {
+    "Arroz": 66.34,
+    "Boi": 10.83,
+    "Búfalo": 9.4,
+    "Cordeiro": 10.41,
+    "Feijão": 184.29,
+    "Milho": 63.41,
+    "Soja": 122.18,
+    "Suíno": 6.32,
+    "Trigo": 70.6,
+    "Vaca": 9.61
+   }
+  },
+  {
+   "boletim": 2395,
+   "de": "2025-06-30",
+   "ate": "2025-07-04",
+   "pdf": "https://www.emater.tche.br/site/arquivos_pdf/precos/preco_03072025.pdf",
+   "medias": {
+    "Arroz": 65.99,
+    "Boi": 10.91,
+    "Búfalo": 9.42,
+    "Cordeiro": 10.7,
+    "Feijão": 198.13,
+    "Milho": 62.45,
+    "Soja": 120.24,
+    "Suíno": 6.32,
+    "Trigo": 70.5,
+    "Vaca": 9.7
+   }
+  },
+  {
+   "boletim": 2396,
+   "de": "2025-07-07",
+   "ate": "2025-07-11",
+   "pdf": "https://www.emater.tche.br/site/arquivos_pdf/precos/preco_10072025.pdf",
+   "medias": {
+    "Arroz": 65.12,
+    "Boi": 10.91,
+    "Búfalo": 9.81,
+    "Cordeiro": 10.87,
+    "Feijão": 207.86,
+    "Milho": 61.83,
+    "Soja": 120.21,
+    "Suíno": 6.78,
+    "Trigo": 70.09,
+    "Vaca": 9.52
+   }
+  },
+  {
+   "boletim": 2397,
+   "de": "2025-07-14",
+   "ate": "2025-07-18",
+   "pdf": "https://www.emater.tche.br/site/arquivos_pdf/precos/preco_17072025.pdf",
+   "medias": {
+    "Arroz": 65.63,
+    "Boi": 10.86,
+    "Búfalo": 9.56,
+    "Cordeiro": 11.04,
+    "Feijão": 208.57,
+    "Leite": 2.51,
+    "Milho": 61.84,
+    "Soja": 122.05,
+    "Suíno": 6.32,
+    "Trigo": 70.15,
+    "Vaca": 9.53
+   }
+  },
+  {
+   "boletim": 2398,
+   "de": "2025-07-21",
+   "ate": "2025-07-25",
+   "pdf": "https://www.emater.tche.br/site/arquivos_pdf/precos/preco_24072025.pdf",
+   "medias": {
+    "Arroz": 66.06,
+    "Boi": 10.78,
+    "Búfalo": 9.24,
+    "Cordeiro": 11.11,
+    "Feijão": 176.88,
+    "Milho": 62.05,
+    "Soja": 124.45,
+    "Suíno": 6.6,
+    "Trigo": 70.17,
+    "Vaca": 9.5
+   }
+  },
+  {
+   "boletim": 2399,
+   "de": "2025-07-28",
+   "ate": "2025-08-01",
+   "pdf": "https://www.emater.tche.br/site/arquivos_pdf/precos/preco_01082025.pdf",
+   "medias": {
+    "Arroz": 66.29,
+    "Boi": 10.55,
+    "Búfalo": 9.19,
+    "Cordeiro": 11.13,
+    "Feijão": 176.88,
+    "Milho": 62.0,
+    "Soja": 124.64,
+    "Suíno": 6.18,
+    "Trigo": 69.92,
+    "Vaca": 9.28
+   }
+  },
+  {
+   "boletim": 2400,
+   "de": "2025-08-04",
+   "ate": "2025-08-08",
+   "pdf": "https://www.emater.tche.br/site/arquivos_pdf/precos/preco_07082025.pdf",
+   "medias": {
+    "Arroz": 67.35,
+    "Boi": 10.48,
+    "Búfalo": 9.02,
+    "Cordeiro": 10.99,
+    "Feijão": 151.88,
+    "Milho": 61.98,
+    "Soja": 123.02,
+    "Suíno": 6.32,
+    "Trigo": 69.93,
+    "Vaca": 9.26
+   }
+  },
+  {
+   "boletim": 2401,
+   "de": "2025-08-11",
+   "ate": "2025-08-15",
+   "pdf": "https://www.emater.tche.br/site/arquivos_pdf/precos/preco_14082025.pdf",
+   "medias": {
+    "Arroz": 67.02,
+    "Boi": 10.2,
+    "Búfalo": 8.94,
+    "Cordeiro": 10.79,
+    "Feijão": 190.0,
+    "Milho": 61.85,
+    "Soja": 124.34,
+    "Suíno": 6.13,
+    "Trigo": 69.93,
+    "Vaca": 9.05
+   }
+  },
+  {
+   "boletim": 2402,
+   "de": "2025-08-18",
+   "ate": "2025-08-22",
+   "pdf": "https://www.emater.tche.br/site/arquivos_pdf/precos/preco_21082025.pdf",
+   "medias": {
+    "Arroz": 66.88,
+    "Boi": 10.38,
+    "Búfalo": 9.0,
+    "Cordeiro": 11.02,
+    "Feijão": 181.67,
+    "Leite": 2.45,
+    "Milho": 62.37,
+    "Soja": 125.22,
+    "Suíno": 6.32,
+    "Trigo": 69.88,
+    "Vaca": 9.17
+   }
+  },
+  {
+   "boletim": 2403,
+   "de": "2025-08-25",
+   "ate": "2025-08-29",
+   "pdf": "https://www.emater.tche.br/site/arquivos_pdf/precos/preco_28082025.pdf",
+   "medias": {
+    "Arroz": 66.62,
+    "Boi": 10.36,
+    "Búfalo": 9.0,
+    "Cordeiro": 11.32,
+    "Feijão": 175.63,
+    "Milho": 61.68,
+    "Soja": 126.12,
+    "Suíno": 6.35,
+    "Trigo": 69.93,
+    "Vaca": 9.14
+   }
+  },
+  {
+   "boletim": 2404,
+   "de": "2025-09-01",
+   "ate": "2025-09-05",
+   "pdf": "https://www.emater.tche.br/site/arquivos_pdf/precos/preco_04092025.pdf",
+   "medias": {
+    "Arroz": 66.12,
+    "Boi": 10.37,
+    "Búfalo": 9.0,
+    "Cordeiro": 11.3,
+    "Feijão": 175.63,
+    "Milho": 62.37,
+    "Soja": 124.71,
+    "Suíno": 6.38,
+    "Trigo": 69.86,
+    "Vaca": 9.14
+   }
+  },
+  {
+   "boletim": 2405,
+   "de": "2025-09-08",
+   "ate": "2025-09-12",
+   "pdf": "https://www.emater.tche.br/site/arquivos_pdf/precos/preco_11092025.pdf",
+   "medias": {
+    "Arroz": 65.73,
+    "Boi": 10.45,
+    "Búfalo": 9.15,
+    "Cordeiro": 11.38,
+    "Feijão": 185.71,
+    "Milho": 62.5,
+    "Soja": 124.15,
+    "Suíno": 6.38,
+    "Trigo": 70.08,
+    "Vaca": 9.2
+   }
+  },
+  {
+   "boletim": 2406,
+   "de": "2025-09-15",
+   "ate": "2025-09-19",
+   "pdf": "https://www.emater.tche.br/site/arquivos_pdf/precos/preco_18092025.pdf",
+   "medias": {
+    "Arroz": 65.06,
+    "Boi": 10.44,
+    "Búfalo": 9.15,
+    "Cordeiro": 11.49,
+    "Feijão": 176.43,
+    "Leite": 2.41,
+    "Milho": 61.92,
+    "Soja": 126.09,
+    "Suíno": 6.38,
+    "Trigo": 69.25,
+    "Vaca": 9.13
+   }
+  },
+  {
+   "boletim": 2407,
+   "de": "2025-09-22",
+   "ate": "2025-09-26",
+   "pdf": "https://www.emater.tche.br/site/arquivos_pdf/precos/preco_25092025.pdf",
+   "medias": {
+    "Arroz": 61.83,
+    "Boi": 10.45,
+    "Búfalo": 9.13,
+    "Cordeiro": 11.74,
+    "Feijão": 137.5,
+    "Milho": 61.53,
+    "Soja": 123.25,
+    "Suíno": 6.23,
+    "Trigo": 67.5,
+    "Vaca": 9.15
+   }
+  },
+  {
+   "boletim": 2408,
+   "de": "2025-09-29",
+   "ate": "2025-10-03",
+   "pdf": "https://www.emater.tche.br/site/arquivos_pdf/precos/preco_02102025.pdf",
+   "medias": {
+    "Arroz": 60.19,
+    "Boi": 10.48,
+    "Búfalo": 9.13,
+    "Cordeiro": 11.49,
+    "Feijão": 132.14,
+    "Milho": 61.91,
+    "Soja": 122.46,
+    "Suíno": 6.38,
+    "Trigo": 65.08,
+    "Vaca": 9.06
+   }
+  },
+  {
+   "boletim": 2409,
+   "de": "2025-10-06",
+   "ate": "2025-10-10",
+   "pdf": "https://www.emater.tche.br/site/arquivos_pdf/precos/preco_09102025.pdf",
+   "medias": {
+    "Arroz": 59.07,
+    "Boi": 10.32,
+    "Búfalo": 9.13,
+    "Cordeiro": 11.49,
+    "Feijão": 140.71,
+    "Milho": 62.06,
+    "Soja": 122.77,
+    "Suíno": 6.38,
+    "Trigo": 64.14,
+    "Vaca": 9.03
+   }
+  },
+  {
+   "boletim": 2410,
+   "de": "2025-10-13",
+   "ate": "2025-10-17",
+   "pdf": "https://www.emater.tche.br/site/arquivos_pdf/precos/preco_16102025.pdf",
+   "medias": {
+    "Arroz": 58.72,
+    "Boi": 10.55,
+    "Búfalo": 9.12,
+    "Cordeiro": 11.96,
+    "Feijão": 123.13,
+    "Leite": 2.32,
+    "Milho": 62.45,
+    "Soja": 123.15,
+    "Suíno": 6.38,
+    "Trigo": 62.92,
+    "Vaca": 9.05
+   }
+  },
+  {
+   "boletim": 2411,
+   "de": "2025-10-20",
+   "ate": "2025-10-24",
+   "pdf": "https://www.emater.tche.br/site/arquivos_pdf/precos/preco_23102025.pdf",
+   "medias": {
+    "Arroz": 57.53,
+    "Boi": 10.57,
+    "Búfalo": 9.02,
+    "Cordeiro": 11.45,
+    "Feijão": 129.38,
+    "Leite": 2.29,
+    "Milho": 62.75,
+    "Soja": 124.29,
+    "Suíno": 6.38,
+    "Trigo": 61.5,
+    "Vaca": 9.06
+   }
+  },
+  {
+   "boletim": 2412,
+   "de": "2025-10-27",
+   "ate": "2025-10-31",
+   "pdf": "https://www.emater.tche.br/site/arquivos_pdf/precos/preco_30102025.pdf",
+   "medias": {
+    "Arroz": 57.45,
+    "Boi": 10.56,
+    "Búfalo": 9.04,
+    "Cordeiro": 11.31,
+    "Feijão": 116.0,
+    "Milho": 62.56,
+    "Soja": 125.22,
+    "Trigo": 60.09,
+    "Vaca": 9.07
+   }
+  },
+  {
+   "boletim": 2413,
+   "de": "2025-11-03",
+   "ate": "2025-11-07",
+   "pdf": "https://www.emater.tche.br/site/arquivos_pdf/precos/preco_06112025.pdf",
+   "medias": {
+    "Arroz": 56.64,
+    "Boi": 10.55,
+    "Búfalo": 8.98,
+    "Cordeiro": 11.56,
+    "Feijão": 115.63,
+    "Milho": 62.31,
+    "Soja": 126.03,
+    "Suíno": 6.38,
+    "Trigo": 59.15,
+    "Vaca": 9.14
+   }
+  },
+  {
+   "boletim": 2414,
+   "de": "2025-11-10",
+   "ate": "2025-11-14",
+   "pdf": "https://www.emater.tche.br/site/arquivos_pdf/precos/preco_13112025.pdf",
+   "medias": {
+    "Arroz": 55.79,
+    "Boi": 10.52,
+    "Búfalo": 9.01,
+    "Cordeiro": 12.08,
+    "Feijão": 120.0,
+    "Milho": 62.52,
+    "Soja": 124.04,
+    "Suíno": 6.38,
+    "Trigo": 57.16,
+    "Vaca": 9.04
+   }
+  },
+  {
+   "boletim": 2415,
+   "de": "2025-11-17",
+   "ate": "2025-11-21",
+   "pdf": "https://www.emater.tche.br/site/arquivos_pdf/precos/preco_20112025.pdf",
+   "medias": {
+    "Arroz": 54.94,
+    "Boi": 10.57,
+    "Búfalo": 9.21,
+    "Cordeiro": 12.15,
+    "Feijão": 111.88,
+    "Leite": 2.22,
+    "Milho": 61.86,
+    "Soja": 125.24,
+    "Suíno": 6.38,
+    "Trigo": 55.23,
+    "Vaca": 9.15
+   }
+  },
+  {
+   "boletim": 2416,
+   "de": "2025-11-24",
+   "ate": "2025-11-28",
+   "pdf": "https://www.emater.tche.br/site/arquivos_pdf/precos/preco_27112025.pdf",
+   "medias": {
+    "Arroz": 54.68,
+    "Boi": 10.6,
+    "Búfalo": 9.45,
+    "Cordeiro": 12.73,
+    "Feijão": 111.43,
+    "Milho": 62.18,
+    "Soja": 126.03,
+    "Suíno": 6.23,
+    "Trigo": 55.09,
+    "Vaca": 9.21
+   }
+  },
+  {
+   "boletim": 2417,
+   "de": "2025-12-01",
+   "ate": "2025-12-05",
+   "pdf": "https://www.emater.tche.br/site/arquivos_pdf/precos/preco_04122025.pdf",
+   "medias": {
+    "Arroz": 54.7,
+    "Boi": 10.69,
+    "Búfalo": 9.1,
+    "Cordeiro": 12.74,
+    "Feijão": 111.25,
+    "Milho": 62.68,
+    "Soja": 126.82,
+    "Suíno": 5.75,
+    "Trigo": 54.55,
+    "Vaca": 9.24
+   }
+  },
+  {
+   "boletim": 2418,
+   "de": "2025-12-08",
+   "ate": "2025-12-12",
+   "pdf": "https://www.emater.tche.br/site/arquivos_pdf/precos/preco_11122025.pdf",
+   "medias": {
+    "Arroz": 53.31,
+    "Boi": 10.88,
+    "Búfalo": 9.18,
+    "Cordeiro": 12.56,
+    "Feijão": 113.82,
+    "Milho": 62.17,
+    "Soja": 126.52,
+    "Suíno": 6.89,
+    "Trigo": 54.42,
+    "Vaca": 9.43
+   }
+  },
+  {
+   "boletim": 2419,
+   "de": "2025-12-15",
+   "ate": "2025-12-19",
+   "pdf": "https://www.emater.tche.br/site/arquivos_pdf/precos/preco_18122025.pdf",
+   "medias": {
+    "Arroz": 53.42,
+    "Boi": 10.78,
+    "Búfalo": 8.91,
+    "Cordeiro": 12.73,
+    "Feijão": 115.3,
+    "Milho": 62.61,
+    "Soja": 126.38,
+    "Suíno": 6.41,
+    "Trigo": 54.65,
+    "Vaca": 9.37
+   }
+  },
+  {
+   "boletim": 2420,
+   "de": "2025-12-22",
+   "ate": "2025-12-26",
+   "pdf": "https://www.emater.tche.br/site/arquivos_pdf/precos/preco_25122025.pdf",
+   "medias": {
+    "Arroz": 52.53,
+    "Boi": 10.8,
+    "Búfalo": 8.94,
+    "Cordeiro": 12.86,
+    "Feijão": 119.78,
+    "Milho": 63.14,
+    "Soja": 127.31,
+    "Suíno": 6.42,
+    "Trigo": 54.07,
+    "Vaca": 9.43
+   }
+  },
+  {
+   "boletim": 2421,
+   "de": "2025-12-29",
+   "ate": "2026-01-02",
+   "pdf": "https://www.emater.tche.br/site/arquivos_pdf/precos/preco_01012026.pdf",
+   "medias": {
+    "Arroz": 53.99,
+    "Boi": 10.65,
+    "Búfalo": 9.2,
+    "Cordeiro": 12.71,
+    "Feijão": 116.35,
+    "Milho": 62.18,
+    "Soja": 127.09,
+    "Suíno": 6.43,
+    "Trigo": 54.35,
+    "Vaca": 9.32
+   }
+  },
+  {
+   "boletim": 2422,
+   "de": "2026-01-05",
+   "ate": "2026-01-09",
+   "pdf": "https://www.emater.tche.br/site/arquivos_pdf/precos/preco_08012026.pdf",
+   "medias": {
+    "Arroz": 53.13,
+    "Boi": 10.93,
+    "Búfalo": 9.16,
+    "Cordeiro": 12.78,
+    "Feijão": 118.91,
+    "Milho": 63.15,
+    "Soja": 126.18,
+    "Suíno": 6.7,
+    "Trigo": 54.6,
+    "Vaca": 9.52
+   }
+  },
+  {
+   "boletim": 2423,
+   "de": "2026-01-12",
+   "ate": "2026-01-16",
+   "pdf": "https://www.emater.tche.br/site/arquivos_pdf/precos/preco_15012026.pdf",
+   "medias": {
+    "Arroz": 52.56,
+    "Boi": 11.18,
+    "Búfalo": 9.32,
+    "Cordeiro": 12.8,
+    "Feijão": 116.88,
+    "Milho": 62.27,
+    "Soja": 124.3,
+    "Suíno": 6.51,
+    "Trigo": 54.8,
+    "Vaca": 9.71
+   }
+  },
+  {
+   "boletim": 2424,
+   "de": "2026-01-19",
+   "ate": "2026-01-23",
+   "pdf": "https://www.emater.tche.br/site/arquivos_pdf/precos/preco_22012026.pdf",
+   "medias": {
+    "Boi": 11.2,
+    "Búfalo": 8.81,
+    "Cordeiro": 12.78,
+    "Feijão": 110.0,
+    "Leite": 1.92,
+    "Milho": 61.4,
+    "Soja": 123.14,
+    "Suíno": 6.7,
+    "Trigo": 54.8,
+    "Vaca": 9.76
+   }
+  },
+  {
+   "boletim": 2425,
+   "de": "2026-01-26",
+   "ate": "2026-01-30",
+   "pdf": "https://www.emater.tche.br/site/arquivos_pdf/precos/preco_29012026.pdf",
+   "medias": {
+    "Arroz": 52.16,
+    "Boi": 11.28,
+    "Búfalo": 9.15,
+    "Cordeiro": 12.88,
+    "Feijão": 122.5,
+    "Milho": 60.0,
+    "Soja": 121.22,
+    "Suíno": 6.42,
+    "Trigo": 54.95,
+    "Vaca": 9.95
+   }
+  },
+  {
+   "boletim": 2426,
+   "de": "2026-02-02",
+   "ate": "2026-02-06",
+   "pdf": "https://www.emater.tche.br/site/arquivos_pdf/precos/preco_05022026.pdf",
+   "medias": {
+    "Arroz": 53.21,
+    "Boi": 11.4,
+    "Búfalo": 9.09,
+    "Cordeiro": 12.58,
+    "Feijão": 131.25,
+    "Milho": 60.7,
+    "Soja": 118.23,
+    "Suíno": 6.47,
+    "Trigo": 55.07,
+    "Vaca": 9.9
+   }
+  },
+  {
+   "boletim": 2427,
+   "de": "2026-02-09",
+   "ate": "2026-02-13",
+   "pdf": "https://www.emater.tche.br/site/arquivos_pdf/precos/preco_12022026.pdf",
+   "medias": {
+    "Arroz": 52.51,
+    "Boi": 11.33,
+    "Búfalo": 9.18,
+    "Cordeiro": 13.07,
+    "Feijão": 129.33,
+    "Milho": 59.34,
+    "Soja": 117.99,
+    "Suíno": 6.38,
+    "Trigo": 55.14,
+    "Vaca": 9.96
+   }
+  },
+  {
+   "boletim": 2428,
+   "de": "2026-02-16",
+   "ate": "2026-02-20",
+   "pdf": "https://www.emater.tche.br/site/arquivos_pdf/precos/preco_19022026.pdf",
+   "medias": {
+    "Arroz": 52.17,
+    "Boi": 11.2,
+    "Búfalo": 9.03,
+    "Cordeiro": 12.83,
+    "Feijão": 136.0,
+    "Leite": 1.92,
+    "Milho": 58.81,
+    "Soja": 118.25,
+    "Suíno": 6.46,
+    "Trigo": 55.0,
+    "Vaca": 9.86
+   }
+  },
+  {
+   "boletim": 2429,
+   "de": "2026-02-23",
+   "ate": "2026-02-27",
+   "pdf": "https://www.emater.tche.br/site/arquivos_pdf/precos/preco_26022026.pdf",
+   "medias": {
+    "Arroz": 53.26,
+    "Búfalo": 9.44,
+    "Cordeiro": 12.62,
+    "Feijão": 135.91,
+    "Leite": 1.93,
+    "Milho": 58.24,
+    "Soja": 118.15,
+    "Suíno": 6.31,
+    "Trigo": 55.0,
+    "Vaca": 10.05
+   }
+  },
+  {
+   "boletim": 2430,
+   "de": "2026-03-02",
+   "ate": "2026-03-06",
+   "pdf": "https://www.emater.tche.br/site/arquivos_pdf/precos/preco_05032026.pdf",
+   "medias": {
+    "Arroz": 53.14,
+    "Boi": 11.47,
+    "Búfalo": 9.56,
+    "Cordeiro": 12.86,
+    "Feijão": 136.11,
+    "Milho": 57.31,
+    "Soja": 117.79,
+    "Suíno": 6.42,
+    "Trigo": 55.56,
+    "Vaca": 10.11
+   }
+  },
+  {
+   "boletim": 2431,
+   "de": "2026-03-09",
+   "ate": "2026-03-13",
+   "pdf": "https://www.emater.tche.br/site/arquivos_pdf/precos/preco_12032026.pdf",
+   "medias": {
+    "Arroz": 54.68,
+    "Boi": 11.45,
+    "Búfalo": 9.55,
+    "Cordeiro": 12.93,
+    "Feijão": 143.89,
+    "Milho": 57.96,
+    "Soja": 119.69,
+    "Suíno": 6.32,
+    "Trigo": 56.47,
+    "Vaca": 10.09
+   }
+  },
+  {
+   "boletim": 2432,
+   "de": "2026-03-16",
+   "ate": "2026-03-20",
+   "pdf": "https://www.emater.tche.br/site/arquivos_pdf/precos/preco_19032026.pdf",
+   "medias": {
+    "Arroz": 55.52,
+    "Boi": 11.45,
+    "Búfalo": 9.3,
+    "Cordeiro": 12.86,
+    "Feijão": 144.5,
+    "Leite": 2.01,
+    "Milho": 57.55,
+    "Soja": 119.57,
+    "Suíno": 6.39,
+    "Trigo": 56.83,
+    "Vaca": 10.07
+   }
+  },
+  {
+   "boletim": 2433,
+   "de": "2026-03-23",
+   "ate": "2026-03-27",
+   "pdf": "https://www.emater.tche.br/site/arquivos_pdf/precos/preco_26032026.pdf",
+   "medias": {
+    "Arroz": 56.72,
+    "Boi": 11.49,
+    "Búfalo": 9.6,
+    "Cordeiro": 12.95,
+    "Feijão": 148.33,
+    "Milho": 57.5,
+    "Soja": 118.74,
+    "Suíno": 6.6,
+    "Trigo": 57.6,
+    "Vaca": 10.07
+   }
+  },
+  {
+   "boletim": 2434,
+   "de": "2026-03-30",
+   "ate": "2026-04-03",
+   "pdf": "https://www.emater.tche.br/site/arquivos_pdf/precos/preco_02042026.pdf",
+   "medias": {
+    "Arroz": 59.03,
+    "Boi": 11.59,
+    "Búfalo": 9.94,
+    "Cordeiro": 12.84,
+    "Feijão": 144.5,
+    "Milho": 57.5,
+    "Soja": 120.37,
+    "Suíno": 6.55,
+    "Trigo": 58.43,
+    "Vaca": 10.2
+   }
+  },
+  {
+   "boletim": 2435,
+   "de": "2026-04-06",
+   "ate": "2026-04-10",
+   "pdf": "https://www.emater.tche.br/site/arquivos_pdf/precos/preco_09042026.pdf",
+   "medias": {
+    "Arroz": 60.21,
+    "Boi": 11.54,
+    "Búfalo": 9.63,
+    "Cordeiro": 12.63,
+    "Feijão": 147.5,
+    "Milho": 57.8,
+    "Soja": 120.86,
+    "Suíno": 6.48,
+    "Trigo": 59.06,
+    "Vaca": 10.27
+   }
+  },
+  {
+   "boletim": 2436,
+   "de": "2026-04-13",
+   "ate": "2026-04-17",
+   "pdf": "https://www.emater.tche.br/site/arquivos_pdf/precos/preco_16042026.pdf",
+   "medias": {
+    "Arroz": 60.05,
+    "Boi": 11.61,
+    "Búfalo": 9.48,
+    "Cordeiro": 12.76,
+    "Feijão": 151.11,
+    "Milho": 58.0,
+    "Soja": 119.78,
+    "Suíno": 6.48,
+    "Trigo": 59.25,
+    "Vaca": 10.26
+   }
+  },
+  {
+   "boletim": 2437,
+   "de": "2026-04-20",
+   "ate": "2026-04-24",
+   "pdf": "https://www.emater.tche.br/site/arquivos_pdf/precos/preco_23042026.pdf",
+   "medias": {
+    "Arroz": 60.77,
+    "Boi": 11.57,
+    "Búfalo": 9.58,
+    "Cordeiro": 12.94,
+    "Feijão": 149.71,
+    "Leite": 2.23,
+    "Milho": 58.18,
+    "Soja": 117.22,
+    "Suíno": 6.38,
+    "Trigo": 60.46,
+    "Vaca": 10.28
+   }
+  },
+  {
+   "boletim": 2438,
+   "de": "2026-04-27",
+   "ate": "2026-05-01",
+   "pdf": "https://www.emater.tche.br/site/arquivos_pdf/precos/preco_30042026.pdf",
+   "medias": {
+    "Arroz": 60.93,
+    "Boi": 11.69,
+    "Búfalo": 9.49,
+    "Cordeiro": 12.64,
+    "Feijão": 143.73,
+    "Milho": 58.19,
+    "Soja": 115.25,
+    "Suíno": 6.36,
+    "Trigo": 61.11,
+    "Vaca": 10.33
+   }
+  },
+  {
+   "boletim": 2439,
+   "de": "2026-05-04",
+   "ate": "2026-05-08",
+   "pdf": "https://www.emater.tche.br/site/arquivos_pdf/precos/preco_07052026.pdf",
+   "medias": {
+    "Arroz": 61.37,
+    "Boi": 11.67,
+    "Búfalo": 9.58,
+    "Cordeiro": 12.69,
+    "Feijão": 145.6,
+    "Milho": 58.12,
+    "Soja": 115.92,
+    "Suíno": 6.36,
+    "Trigo": 62.24,
+    "Vaca": 10.38
+   }
+  },
+  {
+   "boletim": 2440,
+   "de": "2026-05-11",
+   "ate": "2026-05-15",
+   "pdf": "https://www.emater.tche.br/site/arquivos_pdf/precos/preco_14052026.pdf",
+   "medias": {
+    "Arroz": 59.74,
+    "Boi": 11.69,
+    "Búfalo": 9.57,
+    "Cordeiro": 12.96,
+    "Feijão": 161.1,
+    "Milho": 58.08,
+    "Soja": 114.52,
+    "Suíno": 6.36,
+    "Trigo": 63.09,
+    "Vaca": 10.45
+   }
+  },
+  {
+   "boletim": 2441,
+   "de": "2026-05-18",
+   "ate": "2026-05-22",
+   "pdf": "https://www.emater.tche.br/site/arquivos_pdf/precos/preco_21052026.pdf",
+   "medias": {
+    "Arroz": 58.9,
+    "Boi": 11.92,
+    "Búfalo": 9.61,
+    "Cordeiro": 13.23,
+    "Feijão": 158.13,
+    "Leite": 2.35,
+    "Milho": 58.24,
+    "Soja": 114.96,
+    "Suíno": 6.24,
+    "Trigo": 63.68,
+    "Vaca": 10.59
+   }
+  },
+  {
+   "boletim": 2442,
+   "de": "2026-05-25",
+   "ate": "2026-05-29",
+   "pdf": "https://www.emater.tche.br/site/arquivos_pdf/precos/preco_28052026.pdf",
+   "medias": {
+    "Arroz": 58.66,
+    "Boi": 11.9,
+    "Búfalo": 9.73,
+    "Cordeiro": 13.33,
+    "Feijão": 181.67,
+    "Milho": 58.76,
+    "Soja": 115.52,
+    "Suíno": 6.33,
+    "Trigo": 64.24,
+    "Vaca": 10.62
+   }
+  },
+  {
+   "boletim": 2443,
+   "de": "2026-06-01",
+   "ate": "2026-06-05",
+   "pdf": "https://www.emater.tche.br/site/arquivos_pdf/precos/preco_03062026.pdf",
+   "medias": {
+    "Arroz": 58.1,
+    "Boi": 11.93,
+    "Búfalo": 9.72,
+    "Cordeiro": 13.38,
+    "Feijão": 182.78,
+    "Milho": 59.27,
+    "Soja": 116.37,
+    "Suíno": 6.38,
+    "Trigo": 65.5,
+    "Vaca": 10.64
+   }
+  },
+  {
+   "boletim": 2444,
+   "de": "2026-06-08",
+   "ate": "2026-06-12",
+   "pdf": "https://www.emater.tche.br/site/arquivos_pdf/precos/preco_11062026.pdf",
+   "medias": {
+    "Arroz": 57.67,
+    "Boi": 12.05,
+    "Búfalo": 10.07,
+    "Cordeiro": 13.31,
+    "Feijão": 178.56,
+    "Milho": 58.98,
+    "Soja": 115.0,
+    "Suíno": 6.15,
+    "Trigo": 66.88,
+    "Vaca": 10.75
+   }
+  },
+  {
+   "boletim": 2445,
+   "de": "2026-06-15",
+   "ate": "2026-06-19",
+   "pdf": "https://www.emater.tche.br/site/arquivos_pdf/precos/preco_19062026.pdf",
+   "medias": {
+    "Arroz": 57.29,
+    "Boi": 12.22,
+    "Búfalo": 10.37,
+    "Cordeiro": 13.39,
+    "Feijão": 182.2,
+    "Leite": 2.38,
+    "Milho": 58.91,
+    "Soja": 115.36,
+    "Suíno": 6.31,
+    "Trigo": 67.94,
+    "Vaca": 10.91
+   }
+  },
+  {
+   "boletim": 2446,
+   "de": "2026-06-22",
+   "ate": "2026-06-26",
+   "pdf": "https://www.emater.tche.br/site/arquivos_pdf/precos/preco_25062026.pdf",
+   "medias": {
+    "Arroz": 57.08,
+    "Boi": 12.13,
+    "Búfalo": 10.04,
+    "Cordeiro": 13.52,
+    "Feijão": 179.73,
+    "Milho": 59.11,
+    "Soja": 116.35,
+    "Suíno": 6.1,
+    "Trigo": 68.26,
+    "Vaca": 10.86
+   }
+  },
+  {
+   "boletim": 2447,
+   "de": "2026-06-29",
+   "ate": "2026-07-03",
+   "pdf": "https://www.emater.tche.br/site/arquivos_pdf/precos/preco_02072026.pdf",
+   "medias": {
+    "Arroz": 57.95,
+    "Boi": 12.2,
+    "Búfalo": 10.01,
+    "Cordeiro": 13.99,
+    "Feijão": 180.5,
+    "Milho": 59.08,
+    "Soja": 118.24,
+    "Suíno": 5.85,
+    "Trigo": 69.67,
+    "Vaca": 10.88
+   }
+  },
+  {
+   "boletim": 2448,
+   "de": "2026-07-06",
+   "ate": "2026-07-10",
+   "pdf": "https://www.emater.tche.br/site/arquivos_pdf/precos/preco_09072026.pdf",
+   "medias": {
+    "Arroz": 58.14,
+    "Boi": 12.21,
+    "Búfalo": 10.17,
+    "Cordeiro": 13.98,
+    "Feijão": 183.0,
+    "Milho": 58.88,
+    "Soja": 121.12,
+    "Suíno": 5.94,
+    "Trigo": 69.59,
+    "Vaca": 10.89
+   }
+  },
+  {
+   "boletim": 2449,
+   "de": "2026-07-13",
+   "ate": "2026-07-17",
+   "pdf": "https://www.emater.tche.br/site/arquivos_pdf/precos/preco_16072026.pdf",
+   "medias": {
+    "Arroz": 59.37,
+    "Boi": 12.17,
+    "Búfalo": 9.9,
+    "Cordeiro": 13.96,
+    "Feijão": 183.13,
+    "Milho": 59.02,
+    "Soja": 122.95,
+    "Suíno": 5.9,
+    "Trigo": 70.0,
+    "Vaca": 10.82
+   }
+  },
+  {
+   "boletim": 2450,
+   "de": "2026-07-20",
+   "ate": "2026-07-24",
+   "pdf": "https://www.emater.tche.br/site/arquivos_pdf/precos/preco_23072026.pdf",
+   "medias": {
+    "Arroz": 60.69,
+    "Boi": 12.25,
+    "Búfalo": 10.15,
+    "Cordeiro": 13.92,
+    "Feijão": 180.2,
+    "Leite": 2.42,
+    "Milho": 59.04,
+    "Soja": 125.08,
+    "Suíno": 5.86,
+    "Trigo": 69.44,
+    "Vaca": 10.91
+   }
+  },
+  {
+   "boletim": 2451,
+   "de": "2026-07-27",
+   "ate": "2026-07-31",
+   "pdf": "https://www.emater.tche.br/site/arquivos_pdf/precos/preco_30072026.pdf",
+   "medias": {
+    "Arroz": 63.81,
+    "Boi": 12.23,
+    "Búfalo": 10.21,
+    "Cordeiro": 13.74,
+    "Feijão": 180.7,
+    "Milho": 58.94,
+    "Soja": 127.6,
+    "Suíno": 5.84,
+    "Trigo": 69.8,
+    "Vaca": 10.87
+   }
+  },
+  {
+   "boletim": 2452,
+   "de": "2026-08-03",
+   "ate": "2026-08-07",
+   "pdf": "https://www.emater.tche.br/site/arquivos_pdf/precos/preco_07082026.pdf",
+   "medias": {
+    "Arroz": 65.84,
+    "Boi": 12.32,
+    "Búfalo": 10.09,
+    "Cordeiro": 13.84,
+    "Feijão": 171.67,
+    "Milho": 59.26,
+    "Soja": 126.09,
+    "Suíno": 5.82,
+    "Trigo": 69.36,
+    "Vaca": 10.97
+   }
+  },
+  {
+   "boletim": 2453,
+   "de": "2026-08-10",
+   "ate": "2026-08-14",
+   "pdf": "https://www.emater.tche.br/site/arquivos_pdf/precos/preco_13082026.pdf",
+   "medias": {
+    "Arroz": 67.15,
+    "Boi": 12.42,
+    "Búfalo": 10.16,
+    "Cordeiro": 13.84,
+    "Feijão": 181.71,
+    "Milho": 59.0,
+    "Soja": 125.2,
+    "Suíno": 5.8,
+    "Trigo": 69.8,
+    "Vaca": 11.07
+   }
+  },
+  {
+   "boletim": 2454,
+   "de": "2026-08-17",
+   "ate": "2026-08-21",
+   "pdf": "https://www.emater.tche.br/site/arquivos_pdf/precos/preco_20082026.pdf",
+   "medias": {
+    "Arroz": 70.94,
+    "Boi": 12.45,
+    "Búfalo": 9.73,
+    "Cordeiro": 13.99,
+    "Feijão": 182.7,
+    "Milho": 59.32,
+    "Soja": 127.76,
+    "Suíno": 5.64,
+    "Trigo": 69.65,
+    "Vaca": 11.14
+   }
+  },
+  {
+   "boletim": 2455,
+   "de": "2026-08-24",
+   "ate": "2026-08-28",
+   "pdf": "https://www.emater.tche.br/site/arquivos_pdf/precos/preco_27082026.pdf",
+   "medias": {
+    "Arroz": 74.0,
+    "Boi": 12.48,
+    "Búfalo": 9.87,
+    "Cordeiro": 14.54,
+    "Feijão": 186.11,
+    "Leite": 2.48,
+    "Milho": 60.23,
+    "Soja": 131.38,
+    "Suíno": 5.28,
+    "Trigo": 69.81,
+    "Vaca": 11.18
+   }
+  },
+  {
+   "boletim": 2456,
+   "de": "2026-08-31",
+   "ate": "2026-09-04",
+   "pdf": "https://www.emater.tche.br/site/arquivos_pdf/precos/preco_03092026.pdf",
+   "medias": {
+    "Arroz": 75.74,
+    "Boi": 12.48,
+    "Búfalo": 9.55,
+    "Cordeiro": 14.54,
+    "Feijão": 190.71,
+    "Milho": 61.09,
+    "Soja": 136.0,
+    "Suíno": 5.09,
+    "Trigo": 69.93,
+    "Vaca": 11.22
+   }
+  },
+  {
+   "boletim": 2457,
+   "de": "2026-09-07",
+   "ate": "2026-09-11",
+   "pdf": "https://www.emater.tche.br/site/arquivos_pdf/precos/preco_10092026.pdf",
+   "medias": {
+    "Arroz": 77.08,
+    "Boi": 12.66,
+    "Búfalo": 9.84,
+    "Cordeiro": 14.81,
+    "Feijão": 193.75,
+    "Milho": 61.6,
+    "Soja": 139.48,
+    "Suíno": 4.9,
+    "Trigo": 69.88,
+    "Vaca": 11.29
+   }
+  },
+  {
+   "boletim": 2458,
+   "de": "2026-09-14",
+   "ate": "2026-09-18",
+   "pdf": "https://www.emater.tche.br/site/arquivos_pdf/precos/preco_17092026.pdf",
+   "medias": {
+    "Arroz": 78.76,
+    "Boi": 12.44,
+    "Búfalo": 10.12,
+    "Cordeiro": 14.86,
+    "Feijão": 186.1,
+    "Milho": 61.98,
+    "Soja": 140.83,
+    "Suíno": 5.27,
+    "Trigo": 71.39,
+    "Vaca": 11.22
+   }
+  },
+  {
+   "boletim": 2459,
+   "de": "2026-09-21",
+   "ate": "2026-09-25",
+   "pdf": "https://www.emater.tche.br/site/arquivos_pdf/precos/preco_24092026.pdf",
+   "medias": {
+    "Arroz": 79.4,
+    "Boi": 12.63,
+    "Búfalo": 10.41,
+    "Cordeiro": 14.79,
+    "Feijão": 186.6,
+    "Leite": 2.52,
+    "Milho": 61.54,
+    "Soja": 141.72,
+    "Suíno": 5.36,
+    "Trigo": 71.94,
+    "Vaca": 11.21
+   }
+  },
+  {
+   "boletim": 2460,
+   "de": "2026-09-28",
+   "ate": "2026-10-02",
+   "pdf": "https://www.emater.tche.br/site/arquivos_pdf/precos/preco_01102026.pdf",
+   "medias": {
+    "Arroz": 80.89,
+    "Boi": 12.52,
+    "Búfalo": 10.69,
+    "Cordeiro": 15.04,
+    "Feijão": 196.78,
+    "Milho": 62.67,
+    "Soja": 142.0,
+    "Suíno": 5.12,
+    "Trigo": 73.78,
+    "Vaca": 11.11
+   }
+  },
+  {
+   "boletim": 2461,
+   "de": "2026-10-05",
+   "ate": "2026-10-09",
+   "pdf": "https://www.emater.tche.br/site/arquivos_pdf/precos/preco_08102026.pdf",
+   "medias": {
+    "Arroz": 80.69,
+    "Boi": 12.44,
+    "Búfalo": 10.24,
+    "Cordeiro": 14.81,
+    "Feijão": 204.6,
+    "Milho": 62.44,
+    "Soja": 139.71,
+    "Suíno": 5.21,
+    "Trigo": 74.47,
+    "Vaca": 11.01
+   }
+  },
+  {
+   "boletim": 2462,
+   "de": "2026-10-12",
+   "ate": "2026-10-16",
+   "pdf": "https://www.emater.tche.br/site/arquivos_pdf/precos/preco_15102026.pdf",
+   "medias": {
+    "Arroz": 80.27,
+    "Boi": 12.61,
+    "Búfalo": 9.73,
+    "Cordeiro": 14.64,
+    "Feijão": 215.0,
+    "Milho": 62.95,
+    "Soja": 138.32,
+    "Suíno": 4.94,
+    "Trigo": 74.15,
+    "Vaca": 11.11
+   }
+  }
+ ]
+}

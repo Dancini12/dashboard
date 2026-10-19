@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Clock, Search } from "lucide-react";
+import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { FAIXAS_DE_PRECO as FAIXAS, faixaDePreco } from "../calculos";
 
 // Cotações de outros estados na aba "Cotações Cooperativas", cada um pela fonte oficial dele:
@@ -139,8 +140,40 @@ function Indisponivel({ children }) {
   return <p role="alert" className="rounded-xl border p-3 text-sm text-amber-800 bg-amber-50">{children}</p>;
 }
 
+// Média do RS semana a semana (public/dados/precos-rs-historico.json, guardado pelo mesmo script do boletim),
+// com a semana mais antiga, a mais alta e a mais baixa do período.
+function HistoricoSemanal({ historico, produto }) {
+  const pontos = (historico?.semanas ?? []).filter(s => s.medias?.[produto] != null)
+    .map(s => ({ ate: s.ate, rotulo: diaMesAno(s.ate).slice(0, 5) + "/" + s.ate.slice(2, 4), valor: s.medias[produto] }));
+  if (pontos.length < 4) return null;
+  const maior = pontos.reduce((a, p) => (p.valor > a.valor ? p : a)), menor = pontos.reduce((a, p) => (p.valor < a.valor ? p : a));
+  const primeiro = pontos[0], ultimo = pontos.at(-1);
+  const desde = (ultimo.valor - primeiro.valor) / primeiro.valor * 100;
+  return (
+    <div className="mt-3">
+      <strong className="block text-xs text-slate-700">Média do RS, semana a semana · desde {diaMesAno(primeiro.ate)}</strong>
+      <div style={{ height: 200 }} className="mt-1">
+        <ResponsiveContainer>
+          <LineChart data={pontos} margin={{ top: 5, right: 8, bottom: 0, left: -8 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+            <XAxis dataKey="rotulo" tick={{ fontSize: 9 }} minTickGap={36} />
+            <YAxis tick={{ fontSize: 9 }} domain={["auto", "auto"]} tickFormatter={v => v.toLocaleString("pt-BR")} />
+            <Tooltip formatter={v => [reais(v), "Média do RS"]} labelFormatter={(_, itens) => itens?.[0] ? `Semana até ${diaMesAno(itens[0].payload.ate)}` : ""} contentStyle={{ borderRadius: 8, fontSize: 11 }} />
+            <Line type="monotone" dataKey="valor" stroke="#166534" strokeWidth={2} dot={false} isAnimationActive={false} />
+          </LineChart>
+        </ResponsiveContainer>
+      </div>
+      <p className="text-xs text-slate-600 mt-1">
+        {pontos.length} semanas: de {reais(primeiro.valor)} para {reais(ultimo.valor)} (<span style={{ color: corDaVariacao(desde) }}>{porcento(desde)}</span>, em valores da época).
+        Mais alta: {reais(maior.valor)} ({diaMesAno(maior.ate)}); mais baixa: {reais(menor.valor)} ({diaMesAno(menor.ate)}).
+      </p>
+    </div>
+  );
+}
+
 function CotacaoRioGrandeDoSul({ produtoInicial }) {
   const { dados, erro } = useDados("/dados/precos-rs.json");
+  const { dados: historico } = useDados("/dados/precos-rs-historico.json");
   const [escolhido, setEscolhido] = useState(produtoInicial ?? "Soja");
   const produtos = useMemo(() => (dados?.produtos ?? []).slice().sort((a, b) => {
     const ia = ORDEM_RS.indexOf(a.nome), ib = ORDEM_RS.indexOf(b.nome);
@@ -196,6 +229,7 @@ function CotacaoRioGrandeDoSul({ produtoInicial }) {
               de um ano atrás ({c.anoAnterior}, corrigida pela inflação): <strong>{reais(produto.anoAnterior)}</strong>
             </p>
           )}
+          <HistoricoSemanal historico={historico} produto={produto.nome} />
           {municipios.length > 0
             ? <TabelaDeLocais key={produto.nome} locais={municipios} rotuloLocal="Município" />
             : <p className="mt-3 text-xs text-slate-500">O boletim desta semana não traz o preço por município para este produto.</p>}

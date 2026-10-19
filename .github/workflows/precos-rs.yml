@@ -23,6 +23,9 @@ jobs:
         with:
           python-version: '3.12'
       - name: Ler o boletim da Emater
+        env:
+          # o site da Emater não responde fora do Brasil: o PDF vem pelo site do AgroInfo (funções em São Paulo)
+          EMATER_VIA: https://agronahora.com.br/api/market?type=emater
         run: |
           pip install pypdf==6.19.0
           python scripts/precos-rs.py

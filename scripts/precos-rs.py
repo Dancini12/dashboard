@@ -5,7 +5,10 @@
 # (.github/workflows/precos-rs.yml) roda este script todo dia e só publica quando sai boletim novo.
 # Para rodar à mão: pip install pypdf==6.19.0 e depois python3 scripts/precos-rs.py
 # (ou, para testar um PDF já baixado: python3 scripts/precos-rs.py --pdf arquivo.pdf --saida teste.json)
-import argparse, datetime, io, json, pathlib, re, sys, time, urllib.request
+# O site da Emater não responde a acessos de fora do Brasil. A rotina do GitHub roda nos Estados Unidos e
+# por isso baixa o PDF pelo próprio site do AgroInfo, cujas funções rodam em São Paulo: basta pôr o
+# endereço em EMATER_VIA (https://agronahora.com.br/api/market?type=emater).
+import argparse, datetime, io, json, os, pathlib, re, sys, time, urllib.request
 from pypdf import PdfReader
 
 PAGINA = "https://www.emater.tche.br/site/info-agro/precos_semanais.php"
@@ -15,12 +18,12 @@ NUM = r"\d{1,3}(?:\.\d{3})*,\d{2}"
 UNIDADE = r"\d+\s*kg|kg vivo|kg|litro|l|dúzia|cabeça|t"
 
 
-def baixar(endereco):
+def baixar(endereco, com_cabecalhos=False):
     for tentativa in range(3):
         try:
             pedido = urllib.request.Request(endereco, headers={"User-Agent": UA})
             with urllib.request.urlopen(pedido, timeout=90) as resposta:
-                return resposta.read()
+                return (resposta.read(), resposta.headers) if com_cabecalhos else resposta.read()
         except Exception as erro:  # o site às vezes demora: espera e tenta de novo
             print(f"  {endereco}: {erro}", file=sys.stderr)
             time.sleep(10 * (tentativa + 1))
@@ -152,8 +155,15 @@ def main():
     argumentos.add_argument("--pdf", help="ler um PDF já baixado em vez de buscar o último no site")
     argumentos.add_argument("--saida", help="onde gravar (padrão: public/dados/precos-rs.json)")
     a = argumentos.parse_args()
-    endereco = a.pdf or ultimo_boletim()
-    conteudo = pathlib.Path(a.pdf).read_bytes() if a.pdf else baixar(endereco)
+    via = os.environ.get("EMATER_VIA")
+    if a.pdf:
+        endereco, conteudo = a.pdf, pathlib.Path(a.pdf).read_bytes()
+    elif via:  # pelo site do AgroInfo, que responde com o PDF e diz de onde ele veio
+        conteudo, cabecalhos = baixar(via, com_cabecalhos=True)
+        endereco = cabecalhos.get("X-Boletim") or via
+    else:
+        endereco = ultimo_boletim()
+        conteudo = baixar(endereco)
     dados = ler(conteudo, endereco)
     destino = pathlib.Path(a.saida) if a.saida else DESTINO
     anterior = json.loads(destino.read_text()) if destino.exists() else {}

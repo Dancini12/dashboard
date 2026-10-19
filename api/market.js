@@ -4,6 +4,7 @@ import { dadosDeSafra } from '../server/safra.js';
 import { combustiveisDoParana } from '../server/combustiveis.js';
 import { canaisAoVivo } from '../server/tv.js';
 import { cotacaoMatoGrosso } from '../server/imea.js';
+import { boletimDaEmater } from '../server/emater.js';
 import { exportacoesPorProduto, destinosDasExportacoes, comercioComPais, paisDoComex, LimiteDePedidos } from '../server/exportacoes.js';
 
 // Ativos liberados sem chave na BRAPI; com BRAPI_TOKEN no servidor, o plano define o resto.
@@ -231,6 +232,18 @@ export default async function handler(req, res) {
       return res.status(200).json(cotacao);
     } catch {
       return res.status(502).json({ error: 'Cotação do IMEA indisponível no momento.' });
+    }
+  }
+
+  if (type === 'emater') { // o PDF do boletim do RS, para a rotina do GitHub (ver server/emater.js)
+    try {
+      const { endereco, conteudo } = await boletimDaEmater();
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('X-Boletim', endereco);
+      res.setHeader('Cache-Control', 's-maxage=3600, stale-while-revalidate=3600');
+      return res.status(200).send(conteudo);
+    } catch {
+      return res.status(502).json({ error: 'Boletim da Emater indisponível no momento.' });
     }
   }
 

@@ -7,8 +7,8 @@ O endereço antigo, `agroinfo-dashboard.vercel.app`, e o `www.agronahora.com.br`
 Painel gratuito para estudantes e produtores acompanharem o mercado agrícola:
 
 - **Link direto para cada aba:** o endereço muda com a aba (`…/#tv`, `…/#exportacoes`, `…/#clima`), então dá para mandar o link de uma aba e usar o botão "voltar" do navegador entre elas.
-- **Busca no topo:** digite um produto, moeda, termo ou dúvida (ex.: "soja", "porco", "dólar", "o que é hedge") e vá direto à cotação, ao gráfico, ao glossário, às notícias ou ao Castor.
-- **Resumo do dia** (a página que abre o site, montada como a primeira página de um jornal): a manchete (a notícia mais recente do agronegócio), a coluna de notícias, o quadro das cotações do dia (dólar, soja em Chicago, preços da região e diesel), notícias de mercado, andamento da safra, o quadro azul-claro da previsão do tempo de 7 dias da cidade que o visitante digitar (o site lembra a cidade naquele aparelho), atalhos para as atividades, todas as moedas e os indicadores do Banco Central (Selic, IPCA, INPC, IGP-M, CDI, poupança).
+- **Busca no topo:** digite um produto, moeda, termo ou dúvida (ex.: "soja", "porco", "dólar", "o que é hedge") e vá direto à cotação, ao gráfico, ao glossário, às notícias ou ao Castor (enquanto o Castor está em construção, a busca não oferece perguntar a ele).
+- **Resumo do dia** (a página que abre o site, montada como a primeira página de um jornal): a manchete (a notícia mais recente do agronegócio com assunto definido), a coluna de notícias organizadas por assunto (uma por tema, como no Jornal do dia), o quadro das cotações do dia (dólar, soja em Chicago, preços da região e diesel), notícias de mercado, andamento da safra, o quadro azul-claro da previsão do tempo de 7 dias da cidade que o visitante digitar (o site lembra a cidade naquele aparelho), atalhos para as atividades, todas as moedas e os indicadores do Banco Central (Selic, IPCA, INPC, IGP-M, CDI, poupança).
 - **Jornal do dia:** o resumo do dia diagramado como a primeira página de um jornal clássico, em preto e branco e em uma folha só (manchete, texto em colunas, quadro de cotações, notícias e a previsão do tempo de 7 dias da cidade escolhida), para imprimir, salvar em PDF ou guardar como imagem (PNG) e compartilhar.
 - **Bolsas:** os 17 contratos agrícolas de Chicago (CBOT e CME) e de Nova Iorque (ICE) em tabelas, com variação do dia, próximos vencimentos e o valor convertido para saca, arroba, tonelada ou kg, em dólares e em reais; e a consulta de ações e fundos da B3.
 - **Cotações Cooperativas:** cotação diária do Paraná (DERAL/SEAB), por região, com mapa de onde se paga mais e menos; indicadores de preço do Brasil (CEPEA) e preço dos combustíveis no Paraná (ANP).
@@ -21,7 +21,7 @@ Painel gratuito para estudantes e produtores acompanharem o mercado agrícola:
 - **TV Agro:** canais do agro ao vivo pelo player oficial do YouTube (Canal Rural, Canal do Boi, Notícias Agrícolas e Embrapa), com a marcação de quem está no ar e os vídeos recentes de cada um quando não há transmissão. A lista de canais fica em `src/canaisAgro.js`.
 - **Evolução:** comparação de qual item subiu mais (o visitante escolhe em cascata entre Chicago, Nova Iorque, commodities do Brasil e ações, até 6 itens), gráficos e tabela de preços de 2020 a 2026 e histórico de ações.
 - **Glossário** com os termos do mercado.
-- **Castor:** assistente que responde dúvidas dos alunos sobre o mercado.
+- **Castor:** assistente que responde dúvidas dos alunos sobre o mercado. Por enquanto está em construção (`EM_CONSTRUCAO` em `src/components/AssistenteAgro.jsx`): responde só que está em construção, sem chamar o Apps Script, e os atalhos para perguntar a ele ficam escondidos.
 
 
 ---

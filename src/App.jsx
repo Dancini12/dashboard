@@ -1,5 +1,6 @@
 import VisitorCounter from "./components/VisitorCounter";
 import Mascote, { BotaoMascote } from "./components/Mascote";
+import { EM_CONSTRUCAO as CASTOR_EM_CONSTRUCAO } from "./components/AssistenteAgro";
 import useMascote from "./components/useMascote";
 import Combustiveis from "./components/Combustiveis";
 import Inicio from "./components/Inicio";
@@ -506,7 +507,7 @@ export default function App() {
         <div className="relative max-w-4xl mx-auto px-3">
           <div className="flex items-center gap-2 sm:gap-3 py-2">
             <span className="shrink-0 font-bold" style={{ fontFamily: '"Times New Roman", Times, Georgia, serif', fontSize: 18, letterSpacing: "-0.01em", color: "#166534" }}>AgroInfo</span>
-            <BuscaAgro itens={INDICE_BUSCA} onEscolher={irPara} comCastor={!!ASSISTENTE_URL} />
+            <BuscaAgro itens={INDICE_BUSCA} onEscolher={irPara} comCastor={!!ASSISTENTE_URL && !CASTOR_EM_CONSTRUCAO} />
             <div className="flex items-center gap-2 shrink-0">
               <div className="flex items-center gap-2 text-xs" style={{ color: "#64748b" }}>{count > 0 && <span className="hidden sm:flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: "#22c55e" }} />Ao vivo</span>}<span>{clock.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}</span></div>
               <BotaoMascote visivel={mascote} onClick={() => mostrarMascote(!mascote)} />
@@ -517,7 +518,7 @@ export default function App() {
       </nav>
       <div id="conteudo" className="jornal max-w-4xl mx-auto px-3 py-4 print:max-w-none print:p-0" style={{ scrollMarginTop: 100 }}>
         <Suspense fallback={<p className="py-12 text-center text-sm text-slate-500">Carregando a aba…</p>}>
-        {tab === "inicio" && <Inicio onIr={irPara} onCastor={ASSISTENTE_URL ? () => mostrarMascote(true) : null}
+        {tab === "inicio" && <Inicio onIr={irPara} onCastor={ASSISTENTE_URL && !CASTOR_EM_CONSTRUCAO ? () => mostrarMascote(true) : null}
           dolar={dolar ?? (dataSource === "indisponivel" ? null : undefined)} variacaoDoDolar={dataSource === "real" ? moedas.find(m => m.id === "usd")?.var : null}>
           <MoedasCard moedas={moedas} pm={pm} flash={flash} situacao={dataSource} atualizadoEm={moedasEm} />
           <IndicadoresCard indicadores={indicadores} />
@@ -531,7 +532,7 @@ export default function App() {
         {tab === "exportacoes" && <Exportacoes />}
         {tab === "clima" && <ClimaAgricola key={alvo?.cidade ? alvo.n : "clima"} cidadeInicial={alvo?.cidade ?? null} />}
         {tab === "calculadoras" && <Calculadoras key={alvo?.calculadora ? alvo.n : "calculadoras"} inicial={alvo?.calculadora} dolar={dolar} />}
-        {tab === "aprender" && <Aprender onPerguntar={ASSISTENTE_URL ? (texto => irPara({ castor: texto })) : null} />}
+        {tab === "aprender" && <Aprender onPerguntar={ASSISTENTE_URL && !CASTOR_EM_CONSTRUCAO ? (texto => irPara({ castor: texto })) : null} />}
         {tab === "cooperativas" && <CotacoesCooperativas key={alvo?.produto ? alvo.n : "pr"} produtoInicial={alvo?.produto}>
           <CommodityQuotes key={alvo?.commodity || alvo?.buscaCommodity ? alvo.n : "commodities"} adicionar={alvo?.commodity} buscaInicial={alvo?.buscaCommodity} refresh={count} onViewChart={viewChart} />
           <Combustiveis />

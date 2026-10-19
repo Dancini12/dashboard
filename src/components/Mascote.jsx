@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import { MessageCircle, X } from "lucide-react";
-import AssistenteAgro from "./AssistenteAgro";
+import { Construction, MessageCircle, X } from "lucide-react";
+import AssistenteAgro, { EM_CONSTRUCAO } from "./AssistenteAgro";
 import corpo from "./mascote/corpo.webp";
 import cabeca from "./mascote/cabeca.webp";
 import olhosMeio from "./mascote/olhos-meio.webp";
@@ -232,7 +232,9 @@ export default function Mascote({ onFechar, assistenteUrl, dadosPainel, pergunta
       </div>
       {assistenteUrl && !conversa && (
         <button type="button" className="mascote-duvida" onClick={alternarConversa}>
-          <MessageCircle size={13} strokeWidth={2.5} aria-hidden="true" />Tire sua dúvida
+          {EM_CONSTRUCAO
+            ? <><Construction size={13} strokeWidth={2.5} aria-hidden="true" />Em breve</>
+            : <><MessageCircle size={13} strokeWidth={2.5} aria-hidden="true" />Tire sua dúvida</>}
         </button>
       )}
       {assistenteUrl && (

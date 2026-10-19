@@ -1,6 +1,6 @@
 import { Calculator, ChevronRight, GitCompareArrows, GraduationCap, MapPin, MessageCircleQuestion, Search } from "lucide-react";
 import { getWmo, WEEK } from "../clima";
-import { diaDoBoletim, horaDaCotacao } from "../inicio";
+import { diaDoBoletim, horaDaCotacao, organizarNoticias } from "../inicio";
 import { Anuncio } from "./Anuncios";
 import useResumoDoDia, { REGIAO } from "./useResumoDoDia";
 
@@ -55,14 +55,14 @@ const Titulo = ({ children }) => <h2 className="font-bold uppercase" style={{ fo
 const VerMais = ({ onClick, children }) => (
   <button type="button" onClick={onClick} className="mt-2 inline-flex items-center gap-0.5 text-xs font-bold text-green-800 hover:underline">{children}<ChevronRight size={13} aria-hidden="true" /></button>
 );
-// Lista de manchetes com a fonte e a hora, como as notas de uma coluna de jornal.
-function Notas({ consulta, de = 0, ate = 3 }) {
-  const itens = consulta.dados?.items?.slice(de, ate) ?? [];
-  if (!itens.length) return <p className="text-xs text-slate-500 mt-2">{consulta.erro || consulta.dados ? "Notícias indisponíveis agora." : "Buscando as notícias…"}</p>;
+// Lista de manchetes com o assunto, a fonte e a hora, como as notas de uma coluna de jornal.
+function Notas({ consulta, itens }) {
+  if (!itens.length) return <p className="text-xs text-slate-500 mt-2">{consulta.erro ? "Notícias indisponíveis agora." : consulta.dados ? "Nenhuma notícia sobre o assunto agora." : "Buscando as notícias…"}</p>;
   return (
     <ul className="divide-y divide-slate-200">
       {itens.map(item => (
         <li key={item.link} className="py-2.5">
+          {item.rubrica && <span className="block font-bold uppercase" style={{ fontSize: 10, letterSpacing: "0.1em", color: VERDE, fontFamily: SEM_SERIFA }}>{item.rubrica}</span>}
           <a href={item.link} target="_blank" rel="noopener noreferrer" className="block font-bold leading-snug text-slate-900 hover:underline" style={{ fontSize: 15 }}>{item.title}</a>
           <span className="block mt-0.5 italic text-xs text-slate-500">{item.author}{item.pubDate && ` · ${haQuanto(item.pubDate)}`}</span>
         </li>
@@ -75,7 +75,12 @@ export default function Inicio({ dolar, variacaoDoDolar, onIr, onCastor, childre
   const { chicago, parana, combustiveis, safra, noticias, mercado, cidade, busca, setBusca, procurar, erroDaBusca,
     sojaNaBolsa, sojaEmReais, daRegiao, diesel, doTempo, hoje, semana, chuva, avisos, noCampo, atualizadoEm } = useResumoDoDia({ dolar, variacaoDoDolar });
   const estadoDe = consulta => (consulta.erro ? "erro" : "carregando");
-  const manchete = noticias.dados?.items?.[0];
+  // notícias por assunto, como no Jornal do dia: seis do agro sem repetir tema (se faltar assunto,
+  // completa com o que tiver) e três de economia que mexem com o agro, sem repetir as do agro. A manchete
+  // é a mais recente com assunto definido (uma nota "Geral" só abre a página se não houver outra).
+  const doAgro = organizarNoticias(noticias.dados?.items, "agro", 6);
+  const daEconomia = organizarNoticias(mercado.dados?.items, "economia", 3, doAgro);
+  const manchete = doAgro.find(item => item.rubrica !== "Geral") ?? doAgro[0];
   const aviso = !avisos ? null : avisos.geada.length ? ["❄️ Risco de geada", avisos.geada] : avisos.chuvaForte.length ? ["⛈️ Chuva forte prevista", avisos.chuvaForte] : avisos.calor.length ? ["🌡️ Calor forte previsto", avisos.calor] : null;
 
   return (
@@ -119,7 +124,7 @@ export default function Inicio({ dolar, variacaoDoDolar, onIr, onCastor, childre
           <div className="grid grid-cols-1 gap-x-6 gap-y-6 mt-6 sm:grid-cols-2">
             <section>
               <Titulo>Mercado</Titulo>
-              <Notas consulta={mercado} />
+              <Notas consulta={mercado} itens={daEconomia} />
             </section>
             <section>
               <Titulo>Lavouras do Paraná</Titulo>
@@ -141,7 +146,7 @@ export default function Inicio({ dolar, variacaoDoDolar, onIr, onCastor, childre
         {/* coluna 1: as notícias do agronegócio, no lugar do texto corrido do modelo */}
         <section className="sm:order-1">
           <Titulo>Agronegócio</Titulo>
-          <Notas consulta={noticias} de={1} ate={6} />
+          <Notas consulta={noticias} itens={doAgro.filter(item => item !== manchete)} />
           <VerMais onClick={() => onIr({ aba: "noticias" })}>Ver todas as notícias</VerMais>
         </section>
       </div>

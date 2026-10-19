@@ -7,8 +7,10 @@ const AVISO = "Não digite dados pessoais. As conversas podem ser usadas pelo Go
   + "As perguntas ficam guardadas para o Castor aprender.";
 const MAX_PERGUNTA = 500;
 // Enquanto o Castor está em construção, toda pergunta recebe só este aviso: nada vai para o Apps
-// Script nem para o Gemini (e nada fica guardado). Para religar, trocar para false.
-const EM_CONSTRUCAO = true;
+// Script nem para o Gemini (e nada fica guardado). A saudação avisa, as sugestões de pergunta somem,
+// o botão do castor vira "Em breve" e o App esconde os atalhos "Perguntar ao Castor" (busca do topo,
+// Resumo do dia e simulação da safra). Para religar, trocar para false.
+export const EM_CONSTRUCAO = true;
 const MSG_EM_CONSTRUCAO = "Ainda estou em construção! Logo vou conseguir responder às suas dúvidas. Enquanto isso, explore as abas do site: as cotações, o clima, a safra e as notícias estão lá.";
 const MAX_HISTORICO = 6;
 // Mesma mensagem do Assistente.gs para Gemini sobrecarregado (500/503): vale tentar de novo.
@@ -47,7 +49,9 @@ function TextoFormatado({ texto }) {
   });
 }
 
-const SAUDACAO = "Oi! Eu sou o Castor do AgroInfo. Pergunte sobre as cotações do painel que eu explico.";
+const SAUDACAO = EM_CONSTRUCAO
+  ? "Oi! Eu sou o Castor do AgroInfo. Ainda estou em construção, mas logo vou tirar suas dúvidas sobre o mercado."
+  : "Oi! Eu sou o Castor do AgroInfo. Pergunte sobre as cotações do painel que eu explico.";
 const MS_POR_LETRA = 28;
 const DIGITACAO_MAXIMA_MS = 18000; // respostas longas aceleram para terminar em uns 20 s
 
@@ -248,7 +252,7 @@ export default function AssistenteAgro({ url, dadosDashboard, aberto, pergunta, 
               <Digitado texto={m.texto} animar={!!m.digitar} pausado={!aberto} onFim={() => terminouDeDigitar(m.id)} onAvanco={acompanhar} />
               {m.origem === "memoria" && !m.digitar && <p className="assistente-origem" title="Resposta que o Castor já tinha aprendido, sem consultar a IA">Da memória do Castor</p>}
             </div>)}
-        {!mensagens.length && saudou && url && (
+        {!EM_CONSTRUCAO && !mensagens.length && saudou && url && (
           <div className="assistente-sugestoes">
             {SUGESTOES.map(s => <button key={s} type="button" onClick={() => enviar(s)} disabled={pensando}>{s}</button>)}
           </div>

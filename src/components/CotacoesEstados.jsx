@@ -4,7 +4,8 @@ import { FAIXAS_DE_PRECO as FAIXAS, faixaDePreco } from "../calculos";
 
 // Cotações de outros estados na aba "Cotações Cooperativas", cada um pela fonte oficial dele:
 // Rio Grande do Sul pelo boletim semanal da Emater/RS-Ascar (lido do PDF por scripts/precos-rs.py, que
-// grava public/dados/precos-rs.json) e Mato Grosso pelo IMEA (/api/market?type=mt, server/imea.js).
+// grava public/dados/precos-rs.json); Mato Grosso (IMEA), Mato Grosso do Sul (Famasul) e São Paulo (IEA)
+// com cotação diária, por /api/market?type=mt|ms|sp.
 // O Paraná continua em CotacoesCooperativas, com o mapa das regiões do DERAL.
 const ATUALIZAR_MS = 30 * 60 * 1000;
 const ORDEM_RS = ["Soja", "Milho", "Trigo", "Arroz", "Feijão", "Boi", "Vaca", "Suíno", "Cordeiro", "Búfalo", "Leite"];
@@ -73,8 +74,9 @@ function Quadros({ media, rotuloMedia, variacao, rotuloVariacao, maior, menor })
   );
 }
 
-// Tabela das cidades com o sinal do semáforo (verde paga mais, vermelho paga menos) ao lado do preço.
-function TabelaDeLocais({ locais, rotuloLocal, comVariacao }) {
+// Tabela das cidades com o sinal do semáforo (verde paga mais, vermelho paga menos) ao lado do preço; quando
+// cada lugar tem a sua data (São Paulo), ela aparece numa coluna.
+function TabelaDeLocais({ locais, rotuloLocal, comVariacao, comData }) {
   const [busca, setBusca] = useState("");
   const valores = locais.map(l => l.valor);
   const menor = Math.min(...valores), maior = Math.max(...valores);
@@ -102,6 +104,7 @@ function TabelaDeLocais({ locais, rotuloLocal, comVariacao }) {
           <thead>
             <tr style={{ background: "#166534", color: "#fff" }}>
               <th className="py-1.5 px-2 text-left">{rotuloLocal}</th>
+              {comData && <th className="py-1.5 px-2 text-right">Data</th>}
               <th className="py-1.5 px-2 text-right">Preço</th>
               {comVariacao && <th className="py-1.5 px-2 text-right">Variação</th>}
             </tr>
@@ -112,6 +115,7 @@ function TabelaDeLocais({ locais, rotuloLocal, comVariacao }) {
               return (
                 <tr key={l.nome} style={{ background: i % 2 ? "#fff" : "#f8fafc" }}>
                   <td className="py-1 px-2 font-semibold">{l.nome}</td>
+                  {comData && <td className="py-1 px-2 text-right text-slate-600 whitespace-nowrap">{l.data ? diaMesAno(l.data).slice(0, 5) : "—"}</td>}
                   <td className="py-1 px-2 text-right font-mono font-bold whitespace-nowrap">
                     <span className="inline-flex items-center justify-center rounded mr-1.5 align-middle" style={{ width: 14, height: 14, background: f.fundo, color: f.cor, fontSize: 8 }} title={f.nome} aria-hidden="true">{f.sinal}</span>
                     {reais(l.valor)}
@@ -135,9 +139,9 @@ function Indisponivel({ children }) {
   return <p role="alert" className="rounded-xl border p-3 text-sm text-amber-800 bg-amber-50">{children}</p>;
 }
 
-export function CotacaoRioGrandeDoSul() {
+function CotacaoRioGrandeDoSul({ produtoInicial }) {
   const { dados, erro } = useDados("/dados/precos-rs.json");
-  const [escolhido, setEscolhido] = useState("Soja");
+  const [escolhido, setEscolhido] = useState(produtoInicial ?? "Soja");
   const produtos = useMemo(() => (dados?.produtos ?? []).slice().sort((a, b) => {
     const ia = ORDEM_RS.indexOf(a.nome), ib = ORDEM_RS.indexOf(b.nome);
     return (ia < 0 ? 99 : ia) - (ib < 0 ? 99 : ib);
@@ -208,51 +212,90 @@ export function CotacaoRioGrandeDoSul() {
   );
 }
 
-export function CotacaoMatoGrosso() {
-  const { dados, erro } = useDados("/api/market?type=mt", ATUALIZAR_MS);
-  const [escolhido, setEscolhido] = useState("Soja");
+// Estados com cotação diária, cada um com os textos da sua fonte. Os dados vêm de /api/market?type=<sigla>
+// no mesmo formato (server/imea.js, server/famasul.js, server/iea.js).
+const ESTADOS_DIARIOS = {
+  MT: {
+    titulo: "Mato Grosso", fonte: "IMEA", siteFonte: "https://www.imea.com.br/imea-site/indicador-soja", rotuloMedia: "Média de Mato Grosso",
+    intro: "Quanto o produtor mato-grossense recebe à vista em cada cidade, segundo o IMEA (Instituto Mato-grossense de Economia Agropecuária): soja e milho disponíveis, boi e vaca gordos.",
+    quando: "o IMEA publica nos dias úteis",
+    comoFeita: [
+      ["Quem levanta", "o IMEA, instituto de pesquisa de mercado do agro de Mato Grosso, ligado ao Sistema Famato."],
+      ["Soja e milho disponíveis", "o preço pago ao produtor para entrega imediata do grão, em reais por saca de 60 kg, em cada cidade pesquisada."],
+      ["Boi e vaca gordos à vista", "o preço da arroba com pagamento à vista, por município e nas sete macrorregiões do IMEA."],
+      ["Média de Mato Grosso e variação", "calculadas pelo próprio IMEA; a variação compara com a cotação anterior."],
+    ],
+    regioes: "Macrorregiões do IMEA",
+    rodape: "IMEA, Instituto Mato-grossense de Economia Agropecuária, indicadores de soja, milho e boi",
+  },
+  MS: {
+    titulo: "Mato Grosso do Sul", fonte: "Famasul", siteFonte: "https://portal.sistemafamasul.com.br/cotacoes-online", rotuloMedia: "Média de Mato Grosso do Sul",
+    intro: "Quanto o produtor sul-mato-grossense recebe pela soja e pelo milho em cada cidade e pelo boi e pela vaca em cada região, segundo as cotações diárias do Sistema Famasul.",
+    quando: "a Famasul publica nos dias úteis",
+    comoFeita: [
+      ["Quem levanta", "o Sistema Famasul (Federação da Agricultura e Pecuária de Mato Grosso do Sul), nas \"Cotações online\"."],
+      ["Soja e milho", "o preço da saca de 60 kg nas principais praças do estado (Dourados, Maracaju, Chapadão do Sul, Campo Grande e outras)."],
+      ["Boi e vaca gordos", "o preço da arroba em cada região do estado, sem o Funrural (a contribuição do produtor rural); com ele, o valor fica um pouco maior."],
+      ["Média do estado", "a da própria Famasul. A variação de cada praça é calculada pelo site, sobre a cotação anterior dela."],
+    ],
+    rodape: "Sistema Famasul, cotações online de soja, milho, boi e vaca",
+  },
+  SP: {
+    titulo: "São Paulo", fonte: "IEA", siteFonte: "https://infoiea.agricultura.sp.gov.br/BancoDeDados/PrecosDiarios/Recebidos", rotuloMedia: null,
+    intro: "Quanto o produtor paulista recebe em cada regional da Secretaria de Agricultura (os EDRs), segundo os preços diários do IEA (Instituto de Economia Agrícola).",
+    quando: "o IEA publica nos dias úteis, só com as regionais que informaram no dia",
+    comoFeita: [
+      ["Quem levanta", "o IEA, Instituto de Economia Agrícola da Secretaria de Agricultura e Abastecimento de São Paulo, com os escritórios regionais (EDRs)."],
+      ["O que é", "o preço médio recebido pelo produtor naquele dia, na regional, em reais por unidade (saca de 60 kg, arroba ou caixa)."],
+      ["Quais regionais", "a cada dia só algumas regionais informam cada produto. Por isso a tabela mostra o preço mais recente de cada uma nos últimos cinco dias úteis, com a data."],
+      ["Média do estado", "o IEA não publica nesta consulta; ficam o maior e o menor preço entre as regionais."],
+    ],
+    rodape: "IEA, Instituto de Economia Agrícola de São Paulo, preços diários recebidos pelos produtores",
+  },
+};
+
+function CotacaoDiaria({ sigla, produtoInicial }) {
+  const e = ESTADOS_DIARIOS[sigla];
+  const { dados, erro } = useDados(`/api/market?type=${sigla.toLowerCase()}`, ATUALIZAR_MS);
+  const [escolhido, setEscolhido] = useState(produtoInicial ?? "Soja");
   const produtos = dados?.produtos ?? [];
   const produto = produtos.find(p => p.nome === escolhido) ?? produtos[0];
   const [maior, menor] = extremos(produto?.locais ?? []);
+  const comData = produto?.locais.some(l => l.data);
 
   return (
     <>
       <section className="rounded-xl border bg-white p-3 shadow-sm">
-        <h2 className="text-sm font-bold text-green-800">Mato Grosso</h2>
-        <p className="text-xs text-slate-600 mt-1">
-          Quanto o produtor mato-grossense recebe à vista em cada cidade, segundo o IMEA (Instituto Mato-grossense
-          de Economia Agropecuária): soja e milho disponíveis, boi e vaca gordos.
-        </p>
+        <h2 className="text-sm font-bold text-green-800">{e.titulo}</h2>
+        <p className="text-xs text-slate-600 mt-1">{e.intro}</p>
         {produto && (
           <Aviso>
-            <div><strong>Cotação de {diaMesAno(produto.data)}</strong> · IMEA</div>
-            <div className="mt-0.5">Não é em tempo real: o IMEA publica nos dias úteis. O site confere a cada 30 minutos e mostra a cotação nova assim que ela sai.</div>
+            <div><strong>{produto.desde && produto.desde !== produto.data ? `Preços de ${diaMesAno(produto.desde)} a ${diaMesAno(produto.data)}` : `Cotação de ${diaMesAno(produto.data)}`}</strong> · {e.fonte}</div>
+            <div className="mt-0.5">Não é em tempo real: {e.quando}. O site confere a cada 30 minutos e mostra a cotação nova assim que ela sai.</div>
           </Aviso>
         )}
         <details className="mt-2 text-xs text-slate-600">
           <summary className="cursor-pointer font-semibold text-green-800">Como esta cotação é feita</summary>
           <ul className="mt-2 space-y-1 pl-5" style={{ listStyle: "disc" }}>
-            <li><strong>Quem levanta:</strong> o IMEA, instituto de pesquisa de mercado do agro de Mato Grosso, ligado ao Sistema Famato.</li>
-            <li><strong>Soja e milho disponíveis:</strong> o preço pago ao produtor para entrega imediata do grão, em reais por saca de 60 kg, em cada cidade pesquisada.</li>
-            <li><strong>Boi e vaca gordos à vista:</strong> o preço da arroba com pagamento à vista, por município e nas sete macrorregiões do IMEA.</li>
-            <li><strong>Média de Mato Grosso e variação:</strong> calculadas pelo próprio IMEA; a variação compara com a cotação anterior.</li>
+            {e.comoFeita.map(([rotulo, texto]) => <li key={rotulo}><strong>{rotulo}:</strong> {texto}</li>)}
           </ul>
         </details>
         {produtos.length > 0 && <BotoesDeProduto nomes={produtos.map(p => p.nome)} ativo={produto?.nome} onEscolher={setEscolhido} />}
       </section>
 
-      {!dados && !erro && <p className="text-sm text-slate-500">Carregando a cotação do IMEA…</p>}
-      {erro && !dados && <Indisponivel>A cotação do IMEA não está disponível agora. Tente mais tarde ou veja no <a className="underline" href="https://www.imea.com.br/" target="_blank" rel="noopener noreferrer">site do IMEA</a>.</Indisponivel>}
+      {!dados && !erro && <p className="text-sm text-slate-500">Carregando a cotação do {e.fonte}…</p>}
+      {erro && !dados && <Indisponivel>A cotação do {e.fonte} não está disponível agora. Tente mais tarde ou veja no <a className="underline" href={e.siteFonte} target="_blank" rel="noopener noreferrer">site do {e.fonte}</a>.</Indisponivel>}
 
       {produto && (
         <section className="rounded-xl border bg-white p-3 shadow-sm">
           <h3 className="text-sm font-bold" style={{ color: "#14532d" }}>
             {produto.descricao} <span className="text-xs font-normal text-slate-500">· R$ por {produto.unidade}</span>
           </h3>
-          <Quadros media={produto.mediaEstado} rotuloMedia="Média de Mato Grosso" variacao={produto.variacaoEstado} rotuloVariacao="sobre a cotação anterior" maior={maior} menor={menor} />
+          <Quadros media={e.rotuloMedia ? produto.mediaEstado : null} rotuloMedia={e.rotuloMedia} variacao={produto.variacaoEstado} rotuloVariacao="sobre a cotação anterior" maior={maior} menor={menor} />
+          {produto.comFunruralEstado != null && <p className="mt-2 text-xs text-slate-600">Com o Funrural, a média do estado fica em <strong>{reais(produto.comFunruralEstado)}</strong> por {produto.unidade}.</p>}
           {produto.regioes?.length > 0 && (
             <>
-              <strong className="block text-xs text-slate-700 mt-3">Macrorregiões do IMEA</strong>
+              <strong className="block text-xs text-slate-700 mt-3">{e.regioes}</strong>
               <ul className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 mt-1 text-xs">
                 {produto.regioes.map(r => (
                   <li key={r.nome} className="rounded-lg p-2" style={{ background: "#f8fafc" }}>
@@ -264,15 +307,19 @@ export function CotacaoMatoGrosso() {
               </ul>
             </>
           )}
-          {produto.locais.length > 0 && <TabelaDeLocais key={produto.nome} locais={produto.locais} rotuloLocal={produto.tipoLocal} comVariacao />}
+          {produto.locais.length > 0 && <TabelaDeLocais key={produto.nome} locais={produto.locais} rotuloLocal={produto.tipoLocal} comVariacao={!comData} comData={comData} />}
         </section>
       )}
 
       <p className="text-xs text-slate-500">
-        Fonte: IMEA, Instituto Mato-grossense de Economia Agropecuária, indicadores de soja, milho e boi
-        (<a className="underline" href="https://www.imea.com.br/imea-site/indicador-soja" target="_blank" rel="noopener noreferrer">imea.com.br</a>).
+        Fonte: {e.rodape} (<a className="underline" href={e.siteFonte} target="_blank" rel="noopener noreferrer">site do {e.fonte}</a>).
         Valores de referência para estudo; o preço de cada negócio depende do comprador, da qualidade e do prazo.
       </p>
     </>
   );
+}
+
+// Rio Grande do Sul (semanal) ou um dos estados com cotação diária.
+export function CotacaoDoEstado({ sigla, produtoInicial }) {
+  return sigla === "RS" ? <CotacaoRioGrandeDoSul produtoInicial={produtoInicial} /> : <CotacaoDiaria key={sigla} sigla={sigla} produtoInicial={produtoInicial} />;
 }

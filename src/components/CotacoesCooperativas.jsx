@@ -2,17 +2,17 @@ import { useEffect, useState } from "react";
 import { Clock, ExternalLink } from "lucide-react";
 import { APELIDOS_PARANA as APELIDOS } from "../catalogo";
 import { FAIXAS_DE_PRECO as FAIXAS, faixaDePreco } from "../calculos";
-import { CotacaoMatoGrosso, CotacaoRioGrandeDoSul } from "./CotacoesEstados";
+import { CotacaoDoEstado } from "./CotacoesEstados";
 
 // Aba "Cotações Cooperativas": o preço pago ao produtor em cada estado, pela fonte oficial dele.
 // Paraná (aqui): cotação diária do SIMA (DERAL/SEAB-PR), o preço de compra pago pelos atacadistas
-// (cooperativas, cerealistas e indústrias) em cada região do estado. Rio Grande do Sul e Mato Grosso
-// ficam em CotacoesEstados.jsx. O estado escolhido fica lembrado neste navegador; quem chega por um
+// (cooperativas, cerealistas e indústrias) em cada região do estado. São Paulo, Mato Grosso do Sul, Mato
+// Grosso e Rio Grande do Sul ficam em CotacoesEstados.jsx. O estado escolhido fica lembrado neste navegador; quem chega por um
 // link de produto (Resumo do dia, busca) cai no Paraná.
 const ATUALIZAR_MS = 30 * 60 * 1000; // o DERAL publica uma vez por dia útil
 const REGIAO_DA_ESCOLA = "Cornélio Procópio";
 const PAGINA_DERAL = "https://www.agricultura.pr.gov.br/Cotacao-Diaria-SIMA";
-const ESTADOS = [["PR", "Paraná", "diária · DERAL"], ["RS", "Rio Grande do Sul", "semanal · Emater"], ["MT", "Mato Grosso", "diária · IMEA"]];
+const ESTADOS = [["PR", "Paraná", "diária · DERAL"], ["SP", "São Paulo", "diária · IEA"], ["MS", "Mato Grosso do Sul", "diária · Famasul"], ["MT", "Mato Grosso", "diária · IMEA"], ["RS", "Rio Grande do Sul", "semanal · Emater"]];
 const LS_ESTADO = "agroinfo.estadoDasCotacoes";
 function estadoLembrado() {
   try {
@@ -154,8 +154,7 @@ export default function CotacoesCooperativas({ produtoInicial, children }) {
         </div>
       </section>
 
-      {estado === "RS" && <CotacaoRioGrandeDoSul />}
-      {estado === "MT" && <CotacaoMatoGrosso />}
+      {estado !== "PR" && <CotacaoDoEstado sigla={estado} />}
       {estado === "PR" && <>
       <section className="rounded-xl border bg-white p-3 shadow-sm">
         <h2 className="text-sm font-bold text-green-800">Paraná</h2>

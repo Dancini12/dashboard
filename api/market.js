@@ -4,6 +4,8 @@ import { dadosDeSafra } from '../server/safra.js';
 import { combustiveisDoParana } from '../server/combustiveis.js';
 import { canaisAoVivo } from '../server/tv.js';
 import { cotacaoMatoGrosso } from '../server/imea.js';
+import { cotacaoMatoGrossoDoSul } from '../server/famasul.js';
+import { cotacaoSaoPaulo } from '../server/iea.js';
 import { boletimDaEmater } from '../server/emater.js';
 import { indicadoresDaEconomia, selicAtual } from '../server/indicadores.js';
 import { exportacoesPorProduto, destinosDasExportacoes, comercioComPais, paisDoComex, LimiteDePedidos } from '../server/exportacoes.js';
@@ -211,13 +213,16 @@ export default async function handler(req, res) {
     }
   }
 
-  if (type === 'mt') {
+  // cotações diárias de outros estados na aba Cotações Cooperativas (cada fonte publica uma vez por dia útil)
+  const ESTADOS = { mt: [cotacaoMatoGrosso, 'IMEA'], ms: [cotacaoMatoGrossoDoSul, 'Famasul'], sp: [cotacaoSaoPaulo, 'IEA'] };
+  if (ESTADOS[type]) {
+    const [buscar, fonte] = ESTADOS[type];
     try {
-      const cotacao = await cotacaoMatoGrosso();
-      res.setHeader('Cache-Control', 's-maxage=1800, stale-while-revalidate=3600'); // o IMEA publica uma vez por dia útil
+      const cotacao = await buscar();
+      res.setHeader('Cache-Control', 's-maxage=1800, stale-while-revalidate=3600');
       return res.status(200).json(cotacao);
     } catch {
-      return res.status(502).json({ error: 'Cotação do IMEA indisponível no momento.' });
+      return res.status(502).json({ error: `Cotação do ${fonte} indisponível no momento.` });
     }
   }
 

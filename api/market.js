@@ -5,6 +5,7 @@ import { combustiveisDoParana } from '../server/combustiveis.js';
 import { canaisAoVivo } from '../server/tv.js';
 import { cotacaoMatoGrosso } from '../server/imea.js';
 import { boletimDaEmater } from '../server/emater.js';
+import { indicadoresDaEconomia, selicAtual } from '../server/indicadores.js';
 import { exportacoesPorProduto, destinosDasExportacoes, comercioComPais, paisDoComex, LimiteDePedidos } from '../server/exportacoes.js';
 
 // Ativos liberados sem chave na BRAPI; com BRAPI_TOKEN no servidor, o plano define o resto.
@@ -73,20 +74,6 @@ async function historicoFuturo(symbol) {
 // IPCA acumulado em 12 meses, CDI em % ao ano e rendimento mensal da poupança.
 const SERIES_BCB = { ipca: 433, ipca12: 13522, inpc: 188, igpm: 189, cdi: 4389, poupanca: 195 };
 
-// Último valor de uma série. O serviço às vezes devolve resposta vazia: tenta mais uma vez.
-async function serieDoBancoCentral(codigo) {
-  for (let tentativa = 0; ; tentativa++) {
-    try {
-      const response = await fetch(`https://api.bcb.gov.br/dados/serie/bcdata.sgs.${codigo}/dados/ultimos/1?formato=json`, { signal: AbortSignal.timeout(8000) });
-      const linha = response.ok ? (await response.json())?.at?.(-1) : null;
-      const valor = Number(linha?.valor);
-      if (!linha?.data || linha.valor === '' || !Number.isFinite(valor)) throw new Error('série vazia');
-      return { valor, data: linha.data };
-    } catch (erro) {
-      if (tentativa >= 1) throw erro;
-    }
-  }
-}
 
 // O contrato contínuo traz o vencimento no nome ("Soybean Futures,Nov-2026"). Quando o ano
 // vem cortado ("…,Dec-2"), vale o próximo mês com esse nome a partir de hoje.
@@ -160,11 +147,10 @@ export default async function handler(req, res) {
   }
 
   if (type === 'indicadores') {
-    const respostas = await Promise.allSettled(Object.values(SERIES_BCB).map(serieDoBancoCentral));
-    const indicadores = Object.fromEntries(Object.keys(SERIES_BCB).map((nome, i) => [nome, respostas[i].status === 'fulfilled' ? respostas[i].value : null]));
+    const indicadores = await indicadoresDaEconomia(SERIES_BCB); // IPCA e INPC do IBGE quando o SGS falha
     if (!Object.values(indicadores).some(Boolean)) return res.status(502).json({ error: 'Indicadores do Banco Central indisponíveis no momento.' });
     // completo: vale por 6 horas; faltando algum, tenta de novo em 5 minutos
-    res.setHeader('Cache-Control', Object.values(indicadores).every(Boolean) ? 's-maxage=21600, stale-while-revalidate=86400' : 's-maxage=300');
+    res.setHeader('Cache-Control', Object.values(indicadores).every(Boolean) ? 's-maxage=21600, stale-while-revalidate=86400' : 's-maxage=300, stale-while-revalidate=600');
     return res.status(200).json({ indicadores, source: 'Banco Central · SGS' });
   }
 
@@ -247,6 +233,16 @@ export default async function handler(req, res) {
     }
   }
 
+  if (type === 'selic') {
+    try {
+      const selic = await selicAtual(); // SGS do Banco Central; se falhar, a lista de decisões do Copom
+      res.setHeader('Cache-Control', 's-maxage=300, stale-while-revalidate=60');
+      return res.status(200).json(selic);
+    } catch {
+      return res.status(502).json({ error: 'Não foi possível obter a Selic. Tente novamente.' });
+    }
+  }
+
   if (type === 'search') {
     const term = q.trim();
     if (!term || term.length > 40) {
@@ -318,12 +314,10 @@ export default async function handler(req, res) {
     }
   }
 
-  if (type !== 'selic' && (type !== 'stock' || !/^[A-Z]{4}[0-9]{1,2}$/.test(symbol))) {
+  if (type !== 'stock' || !/^[A-Z]{4}[0-9]{1,2}$/.test(symbol)) {
     return res.status(400).json({ error: 'Informe um código válido, como PETR4 ou BOVA11.' });
   }
-  const url = type === 'selic'
-    ? 'https://api.bcb.gov.br/dados/serie/bcdata.sgs.432/dados/ultimos/1?formato=json'
-    : `https://brapi.dev/api/quote/${encodeURIComponent(symbol)}`;
+  const url = `https://brapi.dev/api/quote/${encodeURIComponent(symbol)}`;
   try {
     const response = await fetch(url, {
       signal: AbortSignal.timeout(12000),
@@ -336,18 +330,11 @@ export default async function handler(req, res) {
         : 'Fonte indisponível ou ativo não encontrado. Tente novamente.' });
     }
     const data = await response.json();
-    let result;
-    if (type === 'selic') {
-      const row = data?.[0];
-      if (!row?.data || !row.valor || !Number.isFinite(Number(row.valor))) throw new Error('Invalid Selic');
-      result = { value: Number(row.valor), date: row.data, source: 'Banco Central · SGS 432' };
-    } else {
-      const row = data?.results?.find(item => item.symbol === symbol);
-      if (!Number.isFinite(row?.regularMarketPrice) || !row?.regularMarketTime || !row?.currency) throw new Error('Invalid quote');
-      result = { symbol, name: row.longName || row.shortName || symbol, value: row.regularMarketPrice,
-        change: row.regularMarketChangePercent, currency: row.currency, date: row.regularMarketTime, source: 'BRAPI' };
-    }
-    res.setHeader('Cache-Control', `s-maxage=${type === 'selic' ? 300 : 60}, stale-while-revalidate=60`);
+    const row = data?.results?.find(item => item.symbol === symbol);
+    if (!Number.isFinite(row?.regularMarketPrice) || !row?.regularMarketTime || !row?.currency) throw new Error('Invalid quote');
+    const result = { symbol, name: row.longName || row.shortName || symbol, value: row.regularMarketPrice,
+      change: row.regularMarketChangePercent, currency: row.currency, date: row.regularMarketTime, source: 'BRAPI' };
+    res.setHeader('Cache-Control', 's-maxage=60, stale-while-revalidate=60');
     return res.status(200).json(result);
   } catch {
     return res.status(502).json({ error: 'Não foi possível obter uma cotação válida. Tente novamente.' });

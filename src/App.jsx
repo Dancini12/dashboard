@@ -60,17 +60,38 @@ const MESES_CURTOS = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "s
 // "01/08/2026" → "ago/26" nos índices mensais; nas taxas diárias, a própria data
 const periodoDe = (data, mensal) => (mensal ? `${MESES_CURTOS[Number(data.slice(3, 5)) - 1]}/${data.slice(-2)}` : data.slice(0, 5));
 
+// Últimos indicadores recebidos, guardados neste navegador: quando a fonte falha (como a API do Banco Central
+// em outubro de 2026), o quadro mostra o último valor que chegou, avisando, em vez de "Indisponível".
+const LS_INDICADORES = "agroinfo.indicadores.v1";
+function indicadoresGuardados() {
+  try {
+    const g = JSON.parse(localStorage.getItem(LS_INDICADORES));
+    if (!g || typeof g !== "object") return {};
+    const antigos = Object.fromEntries(Object.entries(g.dados ?? {}).map(([k, v]) => [k, { ...v, antigo: true }]));
+    return { dados: Object.keys(antigos).length ? antigos : undefined, selic: g.selic ? { ...g.selic, antigo: true } : undefined };
+  } catch { return {}; }
+}
+function guardarIndicadores(parte) {
+  try {
+    const atual = JSON.parse(localStorage.getItem(LS_INDICADORES)) ?? {};
+    localStorage.setItem(LS_INDICADORES, JSON.stringify({ ...atual, ...parte }));
+  } catch { /* sem storage: só não guarda */ }
+}
+// para guardar: tira a marca de antigo (o valor guardado continua valendo como o último recebido)
+const semAntigo = dados => Object.fromEntries(Object.entries(dados).filter(([, v]) => v).map(([k, v]) => [k, { valor: v.valor, data: v.data, ...(v.fonte && { fonte: v.fonte }) }]));
+
 // Junta a lista acima com o que chegou do Banco Central (bcb.dados) e com a Selic.
 function indicadoresAtuais(bcb, selic) {
   return INDICADORES.map(ind => {
     if (ind.nome === "Selic") return {
       ...ind, valor: selic.value != null ? `${fmt(selic.value)}% a.a.` : selic.error ? "Indisponível" : "Carregando…",
-      periodo: selic.date, desc: selic.error ? (selic.value != null ? "Falha na atualização; última taxa recebida" : "Banco Central indisponível; nova tentativa automática") : "Meta BC · atualização automática",
+      periodo: selic.date, desc: selic.error || selic.antigo ? (selic.value != null ? "Último valor recebido; nova tentativa automática" : "Banco Central indisponível; nova tentativa automática") : "Meta BC · atualização automática",
     };
     const dado = bcb.dados?.[ind.chave];
     if (!dado) return { ...ind, periodo: "", valor: bcb.dados || bcb.erro ? "Indisponível" : "Carregando…" };
     const em12Meses = ind.chave === "ipca" && bcb.dados.ipca12 ? ` · 12 meses: ${fmt(bcb.dados.ipca12.valor)}%` : "";
-    return { ...ind, periodo: periodoDe(dado.data, ind.sinal), valor: `${ind.sinal && dado.valor > 0 ? "+" : ""}${fmt(dado.valor)}${ind.sufixo}`, desc: `${ind.desc}${em12Meses}` };
+    const aviso = dado.antigo ? " · último valor recebido" : dado.fonte === "IBGE" ? " · direto do IBGE" : "";
+    return { ...ind, periodo: periodoDe(dado.data, ind.sinal), valor: `${ind.sinal && dado.valor > 0 ? "+" : ""}${fmt(dado.valor)}${ind.sufixo}`, desc: `${ind.desc}${em12Meses}${aviso}` };
   });
 }
 const GLOSSARIO = [
@@ -118,7 +139,7 @@ function MoedasCard({ moedas, pm, flash, situacao, atualizadoEm }) {
 }
 function IndicadoresCard({ indicadores }) {
   return (
-    <Card id="card-indicadores" className="p-3"><SecTitle icon={BarChart3} title="Indicadores Econômicos" color="#6b21a8" /><div className="grid grid-cols-2 md:grid-cols-3 gap-2">{indicadores.map((ind, i) => (<div key={i} className="rounded-lg p-2 text-center" style={{ background: i % 2 === 0 ? "#faf5ff" : "#f5f3ff" }}><div className="text-xs font-semibold opacity-60">{ind.nome} {ind.periodo && `(${ind.periodo})`}</div><div className="text-base font-bold" style={{ color: "#6b21a8" }}>{ind.valor}</div><div className="text-xs opacity-40">{ind.desc}</div></div>))}</div><div className="mt-2 text-xs opacity-50 text-right">Fonte: Banco Central (SGS), com dados do IBGE e da FGV · atualização automática</div></Card>
+    <Card id="card-indicadores" className="p-3"><SecTitle icon={BarChart3} title="Indicadores Econômicos" color="#6b21a8" /><div className="grid grid-cols-2 md:grid-cols-3 gap-2">{indicadores.map((ind, i) => (<div key={i} className="rounded-lg p-2 text-center" style={{ background: i % 2 === 0 ? "#faf5ff" : "#f5f3ff" }}><div className="text-xs font-semibold opacity-60">{ind.nome} {ind.periodo && `(${ind.periodo})`}</div><div className="text-base font-bold" style={{ color: "#6b21a8" }}>{ind.valor}</div><div className="text-xs opacity-40">{ind.desc}</div></div>))}</div><div className="mt-2 text-xs opacity-50 text-right">Fonte: Banco Central (SGS e decisões do Copom), com dados do IBGE e da FGV; IPCA e INPC direto do IBGE quando o Banco Central não responde · atualização automática</div></Card>
   );
 }
 
@@ -359,8 +380,9 @@ export default function App() {
   const [count, setCount] = useState(0);
   const [moedasEm, setMoedasEm] = useState(null); // hora da última resposta da fonte das moedas
   const [flash, setFlash] = useState(new Set());
-  const [selic, setSelic] = useState({});
-  const [bcb, setBcb] = useState({}); // IPCA, INPC, IGP-M, CDI e poupança
+  // começam com o último valor guardado neste navegador (marcado como antigo) até a fonte responder
+  const [selic, setSelic] = useState(() => indicadoresGuardados().selic ?? {});
+  const [bcb, setBcb] = useState(() => ({ dados: indicadoresGuardados().dados })); // IPCA, INPC, IGP-M, CDI e poupança
   const [dataSource, setDataSource] = useState("aguardando");
   const [mascote, setMascote] = useMascote();
 
@@ -416,7 +438,14 @@ export default function App() {
     let ativo = true;
     const carregar = () => fetch("/api/market?type=indicadores", { signal: AbortSignal.timeout(30000) })
       .then(r => (r.ok ? r.json() : Promise.reject(new Error("indisponível"))))
-      .then(d => { if (ativo) setBcb({ dados: d.indicadores }); })
+      .then(d => {
+        if (!ativo) return;
+        // o que não veio agora fica com o último valor recebido, avisando
+        const guardados = indicadoresGuardados().dados ?? {};
+        const novos = Object.fromEntries(Object.entries(d.indicadores ?? {}).filter(([, v]) => v));
+        guardarIndicadores({ dados: { ...semAntigo(guardados), ...novos } });
+        setBcb({ dados: { ...guardados, ...novos } });
+      })
       .catch(() => { if (ativo) setBcb(anterior => ({ ...anterior, erro: true })); });
     carregar();
     const t = setInterval(carregar, 30 * 60 * 1000);
@@ -450,7 +479,7 @@ export default function App() {
           return r.json();
         }),
       ]);
-      if (sRes.status === 'fulfilled') setSelic({ ...sRes.value, error: false });
+      if (sRes.status === 'fulfilled') { setSelic({ ...sRes.value, error: false }); guardarIndicadores({ selic: sRes.value }); }
       else setSelic(previous => ({ ...previous, error: true }));
       if (mRes.status === "fulfilled" && mRes.value) {
         const d = mRes.value;

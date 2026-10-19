@@ -1,0 +1,40 @@
+# Cotações do Rio Grande do Sul na aba "Cotações Cooperativas": todo dia, no fim da tarde, confere se a
+# Emater/RS-Ascar publicou um boletim semanal novo (sai às quintas); quando publicou, lê o PDF
+# (scripts/precos-rs.py) e envia public/dados/precos-rs.json para o repositório, o que publica o site sozinho.
+name: Preços do Rio Grande do Sul
+
+on:
+  schedule:
+    - cron: '0 22 * * *' # 19h no horário de Brasília
+  workflow_dispatch: # permite rodar na hora, pelo botão "Run workflow" do GitHub
+
+permissions:
+  contents: write
+
+concurrency: precos-rs
+
+jobs:
+  atualizar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Ler o boletim da Emater
+        run: |
+          pip install pypdf==6.19.0
+          python scripts/precos-rs.py
+      - name: Enviar para o repositório, se mudou
+        run: |
+          if [ -z "$(git status --porcelain public/dados/precos-rs.json)" ]; then
+            echo "Nada mudou."
+            exit 0
+          fi
+          git config user.name "AgroInfo (dados automáticos)"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add public/dados/precos-rs.json
+          git commit -m "Preços do Rio Grande do Sul atualizados pela Emater"
+          git pull --rebase origin main
+          git push origin HEAD:main

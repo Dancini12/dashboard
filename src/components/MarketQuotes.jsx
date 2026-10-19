@@ -165,7 +165,7 @@ export function CommodityQuotes({ refresh, onViewChart, adicionar, buscaInicial 
 
   return <section id="consultar-commodity" className="rounded-xl border bg-white p-3 shadow-sm" style={{ scrollMarginTop: 90 }}>
     <h2 className="text-sm font-bold text-green-800">Indicadores de preço do Brasil</h2>
-    <p className="text-xs text-slate-600 mt-1">Digite o nome (ex.: soja, café, boi) e aperte Enter ou clique em Adicionar para ver o valor. Também dá pra escolher direto na lista abaixo. São indicadores nacionais, como os do CEPEA: servem de comparação para os preços por região do Paraná, acima. Chicago e Nova Iorque estão na aba Bolsas.</p>
+    <p className="text-xs text-slate-600 mt-1">Digite o nome (ex.: soja, café, boi) e aperte Enter ou clique em Adicionar para ver o valor. Também dá pra escolher direto na lista abaixo. São indicadores nacionais, como os do CEPEA: servem de comparação para os preços dos estados, acima. Chicago e Nova Iorque estão na aba Bolsas.</p>
     <div className="flex gap-2 mt-3">
       <label className="flex-1 min-w-0 text-xs">Nome da commodity
         <input

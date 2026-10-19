@@ -1,15 +1,26 @@
 import { useEffect, useState } from "react";
 import { Clock, ExternalLink } from "lucide-react";
 import { APELIDOS_PARANA as APELIDOS } from "../catalogo";
-import { faixaDePreco } from "../calculos";
+import { FAIXAS_DE_PRECO as FAIXAS, faixaDePreco } from "../calculos";
+import { CotacaoMatoGrosso, CotacaoRioGrandeDoSul } from "./CotacoesEstados";
 
-// Aba "Cotações Cooperativas", por enquanto só com o Paraná: cotação diária do SIMA
-// (DERAL/SEAB-PR), o preço de compra pago pelos atacadistas (cooperativas, cerealistas
-// e indústrias) em cada região do estado. Para incluir outros estados no futuro, a API
-// ganha uma fonte por estado e esta aba, um seletor.
+// Aba "Cotações Cooperativas": o preço pago ao produtor em cada estado, pela fonte oficial dele.
+// Paraná (aqui): cotação diária do SIMA (DERAL/SEAB-PR), o preço de compra pago pelos atacadistas
+// (cooperativas, cerealistas e indústrias) em cada região do estado. Rio Grande do Sul e Mato Grosso
+// ficam em CotacoesEstados.jsx. O estado escolhido fica lembrado neste navegador; quem chega por um
+// link de produto (Resumo do dia, busca) cai no Paraná.
 const ATUALIZAR_MS = 30 * 60 * 1000; // o DERAL publica uma vez por dia útil
 const REGIAO_DA_ESCOLA = "Cornélio Procópio";
 const PAGINA_DERAL = "https://www.agricultura.pr.gov.br/Cotacao-Diaria-SIMA";
+const ESTADOS = [["PR", "Paraná", "diária · DERAL"], ["RS", "Rio Grande do Sul", "semanal · Emater"], ["MT", "Mato Grosso", "diária · IMEA"]];
+const LS_ESTADO = "agroinfo.estadoDasCotacoes";
+function estadoLembrado() {
+  try {
+    const salvo = localStorage.getItem(LS_ESTADO);
+    if (ESTADOS.some(([sigla]) => sigla === salvo)) return salvo;
+  } catch { /* sem storage: Paraná */ }
+  return "PR";
+}
 
 const apelido = nome => APELIDOS.find(([re]) => re.test(nome))?.[1] ?? nome.split(" ").slice(0, 2).join(" ");
 const ordem = nome => { const i = APELIDOS.findIndex(([re]) => re.test(nome)); return i < 0 ? 99 : i; };
@@ -45,14 +56,6 @@ const MAPA = {
   "Toledo": [0, 2], "Cascavel": [1, 2], "Pitanga": [2, 2], "Ponta Grossa": [4, 2, "P. Grossa"],
   "Laranjeiras do Sul": [1, 3, "L. do Sul"], "Guarapuava": [2, 3], "Irati": [3, 3], "Curitiba": [5, 3],
   "Francisco Beltrão": [0, 4, "F. Beltrão"], "Pato Branco": [1, 4, "P. Branco"], "União da Vitória": [3, 4, "U. Vitória"],
-};
-// Semáforo do preço, do ponto de vista de quem vende: verde nas regiões que pagam mais, amarelo
-// nas do meio e vermelho nas que pagam menos. Cada faixa leva também um sinal (▲ ◆ ▼), para não
-// depender só da cor.
-const FAIXAS = {
-  caro: { nome: "Pagam mais", sinal: "▲", fundo: "#15803d", cor: "#fff" },
-  meio: { nome: "No meio", sinal: "◆", fundo: "#facc15", cor: "#422006" },
-  barato: { nome: "Pagam menos", sinal: "▼", fundo: "#dc2626", cor: "#fff" },
 };
 const duasCasas = v => v.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
@@ -101,10 +104,15 @@ function MapaDePrecos({ regioes, precos, onVerRegiao }) {
   );
 }
 
-export default function CotacoesCooperativas({ produtoInicial = "Soja", children }) {
+export default function CotacoesCooperativas({ produtoInicial, children }) {
+  const [estado, setEstado] = useState(() => (produtoInicial ? "PR" : estadoLembrado()));
+  const escolherEstado = (sigla) => {
+    setEstado(sigla);
+    try { localStorage.setItem(LS_ESTADO, sigla); } catch { /* ignora */ }
+  };
   const [cotacao, setCotacao] = useState(null);
   const [erro, setErro] = useState(false);
-  const [escolhido, setEscolhido] = useState(produtoInicial);
+  const [escolhido, setEscolhido] = useState(produtoInicial ?? "Soja");
   const [destaque, setDestaque] = useState(null);
 
   useEffect(() => {
@@ -132,7 +140,25 @@ export default function CotacoesCooperativas({ produtoInicial = "Soja", children
   return (
     <div className="space-y-4">
       <section className="rounded-xl border bg-white p-3 shadow-sm">
-        <h2 className="text-sm font-bold text-green-800">Cotações Cooperativas · Paraná</h2>
+        <h2 className="text-sm font-bold text-green-800">Cotações Cooperativas</h2>
+        <p className="text-xs text-slate-600 mt-1">Quanto o produtor recebe em cada estado, pela fonte oficial de cada um. Escolha o estado:</p>
+        <div className="flex flex-wrap gap-2 mt-2" role="group" aria-label="Estado">
+          {ESTADOS.map(([sigla, nome, frequencia]) => (
+            <button key={sigla} type="button" onClick={() => escolherEstado(sigla)} aria-pressed={estado === sigla}
+              className="rounded-lg border px-3 py-1.5 text-left text-xs"
+              style={estado === sigla ? { background: "#166534", borderColor: "#166534", color: "#fff" } : { background: "#fff", borderColor: "#bbf7d0", color: "#166534" }}>
+              <strong className="block text-sm">{nome}</strong>
+              <span style={{ opacity: 0.8 }}>{frequencia}</span>
+            </button>
+          ))}
+        </div>
+      </section>
+
+      {estado === "RS" && <CotacaoRioGrandeDoSul />}
+      {estado === "MT" && <CotacaoMatoGrosso />}
+      {estado === "PR" && <>
+      <section className="rounded-xl border bg-white p-3 shadow-sm">
+        <h2 className="text-sm font-bold text-green-800">Paraná</h2>
         <p className="text-xs text-slate-600 mt-1">
           Quanto quem compra do produtor (cooperativas, cerealistas e indústrias) está pagando em cada região do
           Paraná, segundo o levantamento diário do DERAL, da Secretaria da Agricultura do estado. A região de
@@ -286,6 +312,7 @@ export default function CotacoesCooperativas({ produtoInicial = "Soja", children
         <a className="underline" href={PAGINA_DERAL} target="_blank" rel="noopener noreferrer">Boletins do DERAL</a>.
         Valores de referência para estudo; o preço de cada negócio depende do comprador, da qualidade e do prazo.
       </p>
+      </>}
 
       {children}
     </div>

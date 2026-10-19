@@ -3,6 +3,7 @@ import lerPlanilha from 'read-excel-file/node';
 import { dadosDeSafra } from '../server/safra.js';
 import { combustiveisDoParana } from '../server/combustiveis.js';
 import { canaisAoVivo } from '../server/tv.js';
+import { cotacaoMatoGrosso } from '../server/imea.js';
 import { exportacoesPorProduto, destinosDasExportacoes, comercioComPais, paisDoComex, LimiteDePedidos } from '../server/exportacoes.js';
 
 // Ativos liberados sem chave na BRAPI; com BRAPI_TOKEN no servidor, o plano define o resto.
@@ -220,6 +221,16 @@ export default async function handler(req, res) {
       return res.status(200).json(cotacao);
     } catch {
       return res.status(502).json({ error: 'Cotação do DERAL indisponível no momento.' });
+    }
+  }
+
+  if (type === 'mt') {
+    try {
+      const cotacao = await cotacaoMatoGrosso();
+      res.setHeader('Cache-Control', 's-maxage=1800, stale-while-revalidate=3600'); // o IMEA publica uma vez por dia útil
+      return res.status(200).json(cotacao);
+    } catch {
+      return res.status(502).json({ error: 'Cotação do IMEA indisponível no momento.' });
     }
   }
 

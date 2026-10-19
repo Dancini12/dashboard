@@ -67,6 +67,14 @@ export function hedge({ sacas, travado, naColheita, custoPorSaca = 0 }) {
   return { semHedge: fisico, comHedge: fisico + ajusteDaBolsa, fisico, ajusteDaBolsa, lucroSemHedge: fisico - custo, lucroComHedge: fisico + ajusteDaBolsa - custo };
 }
 
+// Semáforo do preço, do ponto de vista de quem vende: verde onde pagam mais, amarelo no meio e vermelho
+// onde pagam menos. Cada faixa leva também um sinal (▲ ◆ ▼), para não depender só da cor.
+export const FAIXAS_DE_PRECO = {
+  caro: { nome: 'Pagam mais', sinal: '▲', fundo: '#15803d', cor: '#fff' },
+  meio: { nome: 'No meio', sinal: '◆', fundo: '#facc15', cor: '#422006' },
+  barato: { nome: 'Pagam menos', sinal: '▼', fundo: '#dc2626', cor: '#fff' },
+};
+
 // Faixa de um preço entre o menor e o maior do dia: o terço de baixo é "barato", o de cima é
 // "caro" e o resto fica no "meio". Com todos os preços iguais, todos ficam no meio.
 export function faixaDePreco(valor, menor, maior) {

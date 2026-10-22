@@ -6,12 +6,12 @@
   "Búfalo": "kg vivo",
   "Cordeiro": "kg vivo",
   "Feijão": "60 kg",
+  "Leite": "Litro",
   "Milho": "60 kg",
   "Soja": "60 kg",
   "Suíno": "kg vivo",
   "Trigo": "60 kg",
-  "Vaca": "kg vivo",
-  "Leite": "Litro"
+  "Vaca": "kg vivo"
  },
  "semanas": [
   {
@@ -1686,6 +1686,25 @@
     "Suíno": 4.94,
     "Trigo": 74.15,
     "Vaca": 11.11
+   }
+  },
+  {
+   "boletim": 2463,
+   "de": "2026-10-19",
+   "ate": "2026-10-23",
+   "pdf": "https://www.emater.tche.br/site/arquivos_pdf/precos/preco_22102026.pdf",
+   "medias": {
+    "Arroz": 80.37,
+    "Boi": 12.47,
+    "Búfalo": 10.06,
+    "Cordeiro": 14.83,
+    "Feijão": 212.22,
+    "Leite": 2.5,
+    "Milho": 62.59,
+    "Soja": 138.0,
+    "Suíno": 4.92,
+    "Trigo": 73.69,
+    "Vaca": 11.04
    }
   }
  ]

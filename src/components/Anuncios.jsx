@@ -1,11 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 
-// Anúncios do Google AdSense. Tudo aqui fica desligado enquanto o site não tiver o código de editor
-// (VITE_ADSENSE_CLIENT, "ca-pub-…", configurado na hospedagem): sem ele, nada aparece e nada é
-// carregado. Com ele, o aviso de cookies aparece uma vez; o script do AdSense só é carregado depois da
-// escolha, e quem escolhe "só os necessários" recebe anúncios não personalizados. Os espaços <Anuncio>
-// aparecem quando há também o código do bloco de anúncio (VITE_ADSENSE_SLOT); sem ele, valem os
-// anúncios automáticos que o AdSense posiciona sozinho.
+// A presença do código de editor não autoriza veiculação. Manter bloqueado até aprovação.
+const ADSENSE_APROVADO = import.meta.env.VITE_ADSENSE_APPROVED === "true";
 const CLIENTE_ADSENSE = import.meta.env.VITE_ADSENSE_CLIENT || "";
 const BLOCO_ADSENSE = import.meta.env.VITE_ADSENSE_SLOT || "";
 const ESCOLHA_GUARDADA = "agroinfo_cookies"; // "todos" ou "necessarios"
@@ -16,7 +12,7 @@ function escolhaGuardada() {
 
 let carregado = false;
 function carregarAdsense(personalizados) {
-  if (carregado || !CLIENTE_ADSENSE) return;
+  if (!ADSENSE_APROVADO || carregado || !CLIENTE_ADSENSE) return;
   carregado = true;
   window.adsbygoogle = window.adsbygoogle || [];
   if (!personalizados) window.adsbygoogle.requestNonPersonalizedAds = 1;
@@ -30,7 +26,7 @@ function carregarAdsense(personalizados) {
 export function AvisoDeCookies() {
   const [escolha, setEscolha] = useState(escolhaGuardada);
   useEffect(() => { if (escolha) carregarAdsense(escolha === "todos"); }, [escolha]);
-  if (!CLIENTE_ADSENSE || escolha) return null;
+  if (!ADSENSE_APROVADO || !CLIENTE_ADSENSE || escolha) return null;
   const escolher = valor => {
     try { localStorage.setItem(ESCOLHA_GUARDADA, valor); } catch { /* sem armazenamento: vale só nesta visita */ }
     setEscolha(valor);
@@ -50,11 +46,11 @@ export function AvisoDeCookies() {
 export function Anuncio() {
   const espaco = useRef(null);
   useEffect(() => {
-    if (!CLIENTE_ADSENSE || !BLOCO_ADSENSE || !espaco.current || espaco.current.dataset.pedido) return;
+    if (!ADSENSE_APROVADO || !CLIENTE_ADSENSE || !BLOCO_ADSENSE || !espaco.current || espaco.current.dataset.pedido) return;
     espaco.current.dataset.pedido = "1";
     try { (window.adsbygoogle = window.adsbygoogle || []).push({}); } catch { /* bloqueador de anúncios: o espaço fica vazio */ }
   }, []);
-  if (!CLIENTE_ADSENSE || !BLOCO_ADSENSE) return null;
+  if (!ADSENSE_APROVADO || !CLIENTE_ADSENSE || !BLOCO_ADSENSE) return null;
   return (
     <aside className="my-5 print:hidden" aria-label="Publicidade">
       <p className="text-center uppercase" style={{ fontSize: 9, letterSpacing: "0.12em", color: "#64748b", fontFamily: "system-ui, sans-serif" }}>Publicidade</p>

@@ -1,3 +1,4 @@
+import guiasHtml from "../editorial/guias.html?raw";
 import { Calculator, ChevronRight, GitCompareArrows, GraduationCap, MapPin, MessageCircleQuestion, Search } from "lucide-react";
 import { getWmo, WEEK } from "../clima";
 import { ESTADOS } from "../estados";
@@ -87,6 +88,7 @@ export default function Inicio({ dolar, variacaoDoDolar, onIr, onCastor, childre
   return (
     <div className="space-y-6">
       <h2 className="sr-only">Resumo do dia</h2>
+      <div dangerouslySetInnerHTML={{ __html: guiasHtml }} />
 
       {/* manchete: a notícia mais recente do agronegócio */}
       <section className="text-center" aria-label="Manchete do dia">

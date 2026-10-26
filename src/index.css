@@ -51,3 +51,9 @@ img[src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAA
   border-color: #dcebdf !important;
   border-top: 2px solid #166534 !important;
 }
+
+.guias-agro { border: 1px solid #cbd5c5; padding: 18px; background: #fafcf8; line-height: 1.6; color: #17251b; }
+.guias-agro h2 { font-size: 23px; font-weight: bold; line-height: 1.25; }
+.guias-agro h3 { font-weight: bold; margin-top: 14px; }
+.guias-agro p { margin-top: 8px; }
+.guias-agro a { color: #166534; text-decoration: underline; }

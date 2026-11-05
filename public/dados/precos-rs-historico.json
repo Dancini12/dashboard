@@ -1724,6 +1724,24 @@
     "Trigo": 72.56,
     "Vaca": 11.04
    }
+  },
+  {
+   "boletim": 2465,
+   "de": "2026-11-02",
+   "ate": "2026-11-06",
+   "pdf": "https://www.emater.tche.br/site/arquivos_pdf/precos/preco_05112026.pdf",
+   "medias": {
+    "Arroz": 80.67,
+    "Boi": 12.54,
+    "Búfalo": 10.08,
+    "Cordeiro": 15.07,
+    "Feijão": 221.0,
+    "Milho": 62.83,
+    "Soja": 139.17,
+    "Suíno": 4.94,
+    "Trigo": 72.18,
+    "Vaca": 11.1
+   }
   }
  ]
 }

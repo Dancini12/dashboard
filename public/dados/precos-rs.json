@@ -1,32 +1,32 @@
 {
   "fonte": "Emater/RS-Ascar, Cotações Agropecuárias",
-  "boletim": 2466,
+  "boletim": 2467,
   "semana": {
-    "de": "09/11/2026",
-    "ate": "13/11/2026"
+    "de": "16/11/2026",
+    "ate": "20/11/2026"
   },
   "comparacao": {
-    "semanaAnterior": "05/11/2026",
-    "mesAnterior": "15/10/2026",
-    "anoAnterior": "13/11/2025"
+    "semanaAnterior": "12/11/2026",
+    "mesAnterior": "22/10/2026",
+    "anoAnterior": "20/11/2025"
   },
-  "pdf": "https://www.emater.tche.br/site/arquivos_pdf/precos/preco_12112026.pdf",
+  "pdf": "https://www.emater.tche.br/site/arquivos_pdf/precos/preco_19112026.pdf",
   "pagina": "https://www.emater.tche.br/site/info-agro/precos_semanais.php",
-  "geradoEm": "2026-11-12T02:42:44+00:00",
+  "geradoEm": "2026-11-19T02:56:34+00:00",
   "produtos": [
     {
       "nome": "Arroz",
       "unidade": "50 kg",
       "minimo": 70.0,
-      "medio": 80.4,
+      "medio": 79.38,
       "maximo": 84.65,
-      "semanaAnterior": 80.67,
-      "mesAnterior": 80.27,
-      "anoAnterior": 55.79,
+      "semanaAnterior": 80.4,
+      "mesAnterior": 80.37,
+      "anoAnterior": 54.94,
       "municipios": [
         {
           "nome": "Alegrete",
-          "valor": 79.61
+          "valor": 80.07
         },
         {
           "nome": "Arroio Grande",
@@ -34,15 +34,19 @@
         },
         {
           "nome": "Cachoeira do Sul",
-          "valor": 81.0
+          "valor": 77.0
         },
         {
           "nome": "Camaquã",
-          "valor": 84.0
+          "valor": 83.0
         },
         {
           "nome": "Candelária",
           "valor": 70.0
+        },
+        {
+          "nome": "Garruchos",
+          "valor": 75.0
         },
         {
           "nome": "Pelotas",
@@ -53,16 +57,8 @@
           "valor": 79.0
         },
         {
-          "nome": "Santa Cruz do Sul",
-          "valor": 78.0
-        },
-        {
-          "nome": "Santa Vitória do Palmar",
-          "valor": 79.74
-        },
-        {
           "nome": "Santo Antônio da Patrulha",
-          "valor": 84.0
+          "valor": 82.0
         },
         {
           "nome": "São Borja",
@@ -70,11 +66,15 @@
         },
         {
           "nome": "São Gabriel",
-          "valor": 81.0
+          "valor": 80.0
         },
         {
           "nome": "São Lourenço do Sul",
           "valor": 82.0
+        },
+        {
+          "nome": "São Sepé",
+          "valor": 76.0
         },
         {
           "nome": "Uruguaiana",
@@ -86,11 +86,11 @@
       "nome": "Boi",
       "unidade": "kg vivo",
       "minimo": 12.0,
-      "medio": 12.51,
-      "maximo": 13.0,
-      "semanaAnterior": 12.54,
-      "mesAnterior": 12.61,
-      "anoAnterior": 10.52,
+      "medio": 12.61,
+      "maximo": 13.2,
+      "semanaAnterior": 12.51,
+      "mesAnterior": 12.47,
+      "anoAnterior": 10.57,
       "municipios": [
         {
           "nome": "Alegrete",
@@ -102,10 +102,14 @@
         },
         {
           "nome": "Cachoeira do Sul",
-          "valor": 12.62
+          "valor": 13.2
         },
         {
           "nome": "Camaquã",
+          "valor": 12.0
+        },
+        {
+          "nome": "Dom Pedrito",
           "valor": 12.5
         },
         {
@@ -122,23 +126,19 @@
         },
         {
           "nome": "Pinheiro Machado",
-          "valor": 12.48
+          "valor": 12.58
         },
         {
           "nome": "Rio Pardo",
           "valor": 12.5
         },
         {
-          "nome": "Santa Vitória do Palmar",
+          "nome": "Santo Antônio da Patrulha",
           "valor": 12.5
         },
         {
-          "nome": "Santo Antônio da Patrulha",
-          "valor": 13.0
-        },
-        {
           "nome": "Santo Antônio das Missões",
-          "valor": 12.0
+          "valor": 13.0
         },
         {
           "nome": "Santo Cristo",
@@ -150,11 +150,11 @@
         },
         {
           "nome": "São Gabriel",
-          "valor": 12.5
+          "valor": 12.6
         },
         {
           "nome": "Uruguaiana",
-          "valor": 12.2
+          "valor": 13.0
         }
       ]
     },
@@ -162,8 +162,8 @@
       "nome": "Búfalo",
       "unidade": "kg vivo",
       "minimo": 8.0,
-      "medio": 10.09,
-      "maximo": 11.5,
+      "medio": 10.16,
+      "maximo": 11.75,
       "municipios": [
         {
           "nome": "Alegrete",
@@ -179,11 +179,11 @@
         },
         {
           "nome": "Santo Antônio da Patrulha",
-          "valor": 9.95
+          "valor": 10.0
         },
         {
           "nome": "Santo Antônio das Missões",
-          "valor": 11.5
+          "valor": 11.75
         },
         {
           "nome": "São Borja",
@@ -191,7 +191,7 @@
         },
         {
           "nome": "São Gabriel",
-          "valor": 11.3
+          "valor": 11.5
         }
       ]
     },
@@ -199,11 +199,11 @@
       "nome": "Cordeiro",
       "unidade": "kg vivo",
       "minimo": 12.5,
-      "medio": 14.97,
-      "maximo": 16.0,
-      "semanaAnterior": 15.07,
-      "mesAnterior": 14.64,
-      "anoAnterior": 12.08,
+      "medio": 15.1,
+      "maximo": 17.0,
+      "semanaAnterior": 14.97,
+      "mesAnterior": 14.83,
+      "anoAnterior": 12.15,
       "municipios": [
         {
           "nome": "Alegrete",
@@ -214,8 +214,12 @@
           "valor": 15.0
         },
         {
+          "nome": "Dom Pedrito",
+          "valor": 15.0
+        },
+        {
           "nome": "Pinheiro Machado",
-          "valor": 15.25
+          "valor": 15.2
         },
         {
           "nome": "Piratini",
@@ -223,7 +227,7 @@
         },
         {
           "nome": "Santo Antônio das Missões",
-          "valor": 16.0
+          "valor": 17.0
         },
         {
           "nome": "São Borja",
@@ -231,7 +235,7 @@
         },
         {
           "nome": "São Gabriel",
-          "valor": 15.5
+          "valor": 15.7
         },
         {
           "nome": "Uruguaiana",
@@ -242,24 +246,16 @@
     {
       "nome": "Feijão",
       "unidade": "60 kg",
-      "minimo": 180.0,
-      "medio": 219.89,
+      "minimo": 210.0,
+      "medio": 225.57,
       "maximo": 245.0,
-      "semanaAnterior": 221.0,
-      "mesAnterior": 215.0,
-      "anoAnterior": 120.0,
+      "semanaAnterior": 219.89,
+      "mesAnterior": 212.22,
+      "anoAnterior": 111.88,
       "municipios": [
         {
-          "nome": "Cruz Alta",
-          "valor": 225.0
-        },
-        {
           "nome": "Entre Rios do Sul",
-          "valor": 220.0
-        },
-        {
-          "nome": "Erechim",
-          "valor": 205.0
+          "valor": 230.0
         },
         {
           "nome": "Frederico Westphalen",
@@ -279,11 +275,72 @@
         },
         {
           "nome": "Santo Antônio da Patrulha",
-          "valor": 230.0
+          "valor": 220.0
         },
         {
           "nome": "São José do Ouro",
-          "valor": 180.0
+          "valor": 210.0
+        }
+      ]
+    },
+    {
+      "nome": "Leite",
+      "unidade": "Litro",
+      "minimo": 2.08,
+      "medio": 2.4,
+      "maximo": 2.7,
+      "municipios": [
+        {
+          "nome": "Alegrete",
+          "valor": 2.46
+        },
+        {
+          "nome": "Chapada",
+          "valor": 2.7
+        },
+        {
+          "nome": "Frederico Westphalen",
+          "valor": 2.3
+        },
+        {
+          "nome": "Ibiraiaras",
+          "valor": 2.41
+        },
+        {
+          "nome": "Ijuí",
+          "valor": 2.4
+        },
+        {
+          "nome": "Marau",
+          "valor": 2.08
+        },
+        {
+          "nome": "Pelotas",
+          "valor": 2.32
+        },
+        {
+          "nome": "Santa Rosa",
+          "valor": 2.5
+        },
+        {
+          "nome": "Santo Cristo",
+          "valor": 2.38
+        },
+        {
+          "nome": "Sertão",
+          "valor": 2.45
+        },
+        {
+          "nome": "São Lourenço do Sul",
+          "valor": 2.39
+        },
+        {
+          "nome": "Tupanciretã",
+          "valor": 2.5
+        },
+        {
+          "nome": "Venâncio Aires",
+          "valor": 2.3
         }
       ]
     },
@@ -291,15 +348,19 @@
       "nome": "Milho",
       "unidade": "60 kg",
       "minimo": 60.0,
-      "medio": 62.59,
-      "maximo": 68.5,
-      "semanaAnterior": 62.83,
-      "mesAnterior": 62.95,
-      "anoAnterior": 62.52,
+      "medio": 61.96,
+      "maximo": 70.0,
+      "semanaAnterior": 62.59,
+      "mesAnterior": 62.59,
+      "anoAnterior": 61.86,
       "municipios": [
         {
           "nome": "Alegrete",
           "valor": 61.0
+        },
+        {
+          "nome": "Alpestre",
+          "valor": 60.0
         },
         {
           "nome": "Cachoeira do Sul",
@@ -307,31 +368,31 @@
         },
         {
           "nome": "Campo Novo",
-          "valor": 62.0
+          "valor": 60.0
         },
         {
           "nome": "Candelária",
           "valor": 63.0
         },
         {
+          "nome": "Capão Bonito do Sul",
+          "valor": 62.0
+        },
+        {
           "nome": "Carazinho",
           "valor": 60.0
         },
         {
-          "nome": "Cruz Alta",
-          "valor": 63.0
-        },
-        {
-          "nome": "Erechim",
+          "nome": "Frederico Westphalen",
           "valor": 60.0
         },
         {
-          "nome": "Frederico Westphalen",
-          "valor": 62.0
+          "nome": "Giruá",
+          "valor": 60.0
         },
         {
           "nome": "Ijuí",
-          "valor": 62.04
+          "valor": 61.0
         },
         {
           "nome": "Lagoa Vermelha",
@@ -343,7 +404,7 @@
         },
         {
           "nome": "Nova Bassano",
-          "valor": 68.5
+          "valor": 70.0
         },
         {
           "nome": "Passo Fundo",
@@ -355,23 +416,23 @@
         },
         {
           "nome": "Quatro Irmãos",
-          "valor": 62.0
-        },
-        {
-          "nome": "Roca Sales",
-          "valor": 65.0
-        },
-        {
-          "nome": "Santa Bárbara do Sul",
-          "valor": 62.04
-        },
-        {
-          "nome": "Santa Cruz do Sul",
           "valor": 60.0
         },
         {
+          "nome": "Roca Sales",
+          "valor": 67.0
+        },
+        {
+          "nome": "Santa Bárbara do Sul",
+          "valor": 61.02
+        },
+        {
           "nome": "Santa Rosa",
-          "valor": 61.0
+          "valor": 60.0
+        },
+        {
+          "nome": "Seberi",
+          "valor": 60.0
         },
         {
           "nome": "Sertão",
@@ -379,127 +440,123 @@
         },
         {
           "nome": "São Borja",
-          "valor": 61.0
+          "valor": 60.0
         },
         {
           "nome": "São Lourenço do Sul",
-          "valor": 67.0
+          "valor": 64.0
         },
         {
           "nome": "Venâncio Aires",
-          "valor": 62.0
+          "valor": 60.0
         }
       ]
     },
     {
       "nome": "Soja",
       "unidade": "60 kg",
-      "minimo": 136.0,
-      "medio": 138.78,
-      "maximo": 144.0,
-      "semanaAnterior": 139.17,
-      "mesAnterior": 138.32,
-      "anoAnterior": 124.04,
+      "minimo": 140.0,
+      "medio": 144.61,
+      "maximo": 150.0,
+      "semanaAnterior": 138.78,
+      "mesAnterior": 138.0,
+      "anoAnterior": 125.24,
       "municipios": [
         {
           "nome": "Alegrete",
-          "valor": 136.0
+          "valor": 143.0
         },
         {
           "nome": "Arroio Grande",
-          "valor": 140.0
+          "valor": 145.0
         },
         {
           "nome": "Cachoeira do Sul",
-          "valor": 139.0
+          "valor": 144.5
         },
         {
           "nome": "Camaquã",
-          "valor": 144.0
+          "valor": 150.0
         },
         {
           "nome": "Carazinho",
-          "valor": 137.0
+          "valor": 144.0
         },
         {
           "nome": "Chapada",
-          "valor": 137.0
+          "valor": 144.0
         },
         {
-          "nome": "Cruz Alta",
-          "valor": 138.0
-        },
-        {
-          "nome": "Erechim",
-          "valor": 139.0
+          "nome": "Dom Pedrito",
+          "valor": 140.0
         },
         {
           "nome": "Espumoso",
-          "valor": 137.0
+          "valor": 143.0
         },
         {
           "nome": "Frederico Westphalen",
-          "valor": 137.0
+          "valor": 144.0
         },
         {
           "nome": "Ijuí",
-          "valor": 137.04
+          "valor": 144.0
         },
         {
           "nome": "Lagoa Vermelha",
-          "valor": 143.5
+          "valor": 150.0
         },
         {
           "nome": "Marau",
-          "valor": 137.0
+          "valor": 145.0
         },
         {
           "nome": "Passo Fundo",
-          "valor": 137.0
+          "valor": 144.0
         },
         {
           "nome": "Pelotas",
-          "valor": 144.0
+          "valor": 150.0
         },
         {
           "nome": "Quatro Irmãos",
-          "valor": 139.0
+          "valor": 146.0
         },
         {
           "nome": "Rio Pardo",
-          "valor": 139.0
+          "valor": 142.0
         },
         {
           "nome": "Roca Sales",
-          "valor": 137.0
-        },
-        {
-          "nome": "Santa Bárbara do Sul",
-          "valor": 137.04
-        },
-        {
-          "nome": "Santa Rosa",
-          "valor": 137.0
-        },
-        {
-          "nome": "Sertão",
           "valor": 144.0
         },
         {
+          "nome": "Santa Bárbara do Sul",
+          "valor": 143.04
+        },
+        {
+          "nome": "Santa Rosa",
+          "valor": 142.0
+        },
+        {
+          "nome": "Sertão",
+          "valor": 145.0
+        },
+        {
           "nome": "São Borja",
-          "valor": 137.0
+          "valor": 142.0
         },
         {
           "nome": "São Gabriel",
-          "valor": 139.0
+          "valor": 144.0
         },
         {
           "nome": "São Lourenço do Sul",
-          "valor": 141.0
+          "valor": 149.0
         },
         {
           "nome": "Tupanciretã",
-          "valor": 137.0
+          "valor": 143.0
         }
       ]
     },
@@ -507,16 +564,12 @@
       "nome": "Suíno",
       "unidade": "kg vivo",
       "minimo": 4.75,
-      "medio": 4.93,
+      "medio": 4.98,
       "maximo": 5.1,
-      "semanaAnterior": 4.94,
-      "mesAnterior": 4.94,
+      "semanaAnterior": 4.93,
+      "mesAnterior": 4.92,
       "anoAnterior": 6.38,
       "municipios": [
-        {
-          "nome": "Erechim",
-          "valor": 4.75
-        },
         {
           "nome": "Frederico Westphalen",
           "valor": 4.95
@@ -538,16 +591,16 @@
     {
       "nome": "Trigo",
       "unidade": "60 kg",
-      "minimo": 70.0,
-      "medio": 71.94,
-      "maximo": 77.0,
-      "semanaAnterior": 72.18,
-      "mesAnterior": 74.15,
-      "anoAnterior": 57.16,
+      "minimo": 68.0,
+      "medio": 72.14,
+      "maximo": 78.0,
+      "semanaAnterior": 71.94,
+      "mesAnterior": 73.69,
+      "anoAnterior": 55.23,
       "municipios": [
         {
           "nome": "Cachoeira do Sul",
-          "valor": 73.0
+          "valor": 68.0
         },
         {
           "nome": "Campinas do Sul",
@@ -555,39 +608,27 @@
         },
         {
           "nome": "Carazinho",
-          "valor": 72.0
-        },
-        {
-          "nome": "Cruz Alta",
-          "valor": 72.0
+          "valor": 73.0
         },
         {
           "nome": "Entre-Ijuís",
           "valor": 70.0
         },
         {
-          "nome": "Erechim",
-          "valor": 72.0
-        },
-        {
           "nome": "Espumoso",
-          "valor": 71.0
+          "valor": 72.0
         },
         {
           "nome": "Frederico Westphalen",
           "valor": 72.0
         },
         {
-          "nome": "Ijuí",
-          "valor": 71.04
-        },
-        {
           "nome": "Marau",
-          "valor": 72.0
+          "valor": 73.0
         },
         {
           "nome": "Passo Fundo",
-          "valor": 72.0
+          "valor": 73.0
         },
         {
           "nome": "Santa Rosa",
@@ -599,7 +640,7 @@
         },
         {
           "nome": "Sertão",
-          "valor": 77.0
+          "valor": 78.0
         },
         {
           "nome": "São Borja",
@@ -611,7 +652,7 @@
         },
         {
           "nome": "Tupanciretã",
-          "valor": 71.0
+          "valor": 73.0
         }
       ]
     },
@@ -619,11 +660,11 @@
       "nome": "Vaca",
       "unidade": "kg vivo",
       "minimo": 10.5,
-      "medio": 11.08,
+      "medio": 11.17,
       "maximo": 12.0,
-      "semanaAnterior": 11.1,
-      "mesAnterior": 11.11,
-      "anoAnterior": 9.04,
+      "semanaAnterior": 11.08,
+      "mesAnterior": 11.04,
+      "anoAnterior": 9.14,
       "municipios": [
         {
           "nome": "Alegrete",
@@ -635,11 +676,15 @@
         },
         {
           "nome": "Cachoeira do Sul",
-          "valor": 11.05
+          "valor": 11.25
         },
         {
           "nome": "Camaquã",
-          "valor": 10.9
+          "valor": 10.5
+        },
+        {
+          "nome": "Dom Pedrito",
+          "valor": 11.0
         },
         {
           "nome": "Frederico Westphalen",
@@ -655,23 +700,19 @@
         },
         {
           "nome": "Pinheiro Machado",
-          "valor": 11.5
+          "valor": 11.6
         },
         {
           "nome": "Rio Pardo",
           "valor": 11.0
         },
         {
-          "nome": "Santa Vitória do Palmar",
-          "valor": 10.8
-        },
-        {
           "nome": "Santo Antônio da Patrulha",
-          "valor": 10.75
+          "valor": 10.9
         },
         {
           "nome": "Santo Antônio das Missões",
-          "valor": 11.5
+          "valor": 11.75
         },
         {
           "nome": "Santo Cristo",
@@ -683,11 +724,11 @@
         },
         {
           "nome": "São Gabriel",
-          "valor": 11.3
+          "valor": 11.5
         },
         {
           "nome": "Uruguaiana",
-          "valor": 11.2
+          "valor": 12.0
         }
       ]
     }

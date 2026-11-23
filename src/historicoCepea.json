@@ -1,45 +1,45 @@
 {
   "fonte": "CEPEA/ESALQ",
-  "ultimoDia": "2026-11-13",
+  "ultimoDia": "2026-11-19",
   "series": {
     "boi": {
       "nome": "Indicador do Boi Gordo CEPEA/ESALQ (São Paulo)",
       "unidade": "R$/@",
       "ultimo": {
-        "data": "2026-11-13",
-        "valor": 395.4
+        "data": "2026-11-19",
+        "valor": 395.5
       }
     },
     "soja": {
       "nome": "Indicador da Soja CEPEA/ESALQ, Paraná",
       "unidade": "R$/saca de 60 kg",
       "ultimo": {
-        "data": "2026-11-13",
-        "valor": 157.45
+        "data": "2026-11-19",
+        "valor": 160.65
       }
     },
     "milho": {
       "nome": "Indicador do Milho ESALQ/B3 (Campinas)",
       "unidade": "R$/saca de 60 kg",
       "ultimo": {
-        "data": "2026-11-13",
-        "valor": 67.34
+        "data": "2026-11-19",
+        "valor": 67.68
       }
     },
     "cafe": {
       "nome": "Indicador do Café Arábica CEPEA/ESALQ",
       "unidade": "R$/saca de 60 kg",
       "ultimo": {
-        "data": "2026-11-13",
-        "valor": 1647.96
+        "data": "2026-11-19",
+        "valor": 1709.06
       }
     },
     "trigo": {
       "nome": "Preço médio do trigo CEPEA/ESALQ, Paraná",
       "unidade": "R$/tonelada",
       "ultimo": {
-        "data": "2026-11-13",
-        "valor": 1571.11
+        "data": "2026-11-19",
+        "valor": 1572.74
       }
     }
   },
@@ -94,11 +94,11 @@
     },
     {
       "ano": "2026",
-      "boi": 350.34,
-      "soja": 132.88,
+      "boi": 351.15,
+      "soja": 133.37,
       "milho": 67.11,
-      "cafe": 1750.43,
-      "trigo": 1361.83
+      "cafe": 1749.29,
+      "trigo": 1365.63
     }
   ]
 }

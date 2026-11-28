@@ -3,7 +3,6 @@ import { Calculator, ChevronRight, GitCompareArrows, GraduationCap, MapPin, Mess
 import { getWmo, WEEK } from "../clima";
 import { ESTADOS } from "../estados";
 import { horaDaCotacao, organizarNoticias, rotuloDoPreco } from "../inicio";
-import { Anuncio } from "./Anuncios";
 import useResumoDoDia, { REGIAO } from "./useResumoDoDia";
 
 // "Resumo do dia", a página que abre o site, montada como a primeira página de um jornal: a manchete
@@ -228,7 +227,6 @@ export default function Inicio({ dolar, variacaoDoDolar, onIr, onCastor, childre
         </div>
       </section>
 
-      <Anuncio />
 
       <section>
         <Titulo>Moedas e indicadores da economia</Titulo>
